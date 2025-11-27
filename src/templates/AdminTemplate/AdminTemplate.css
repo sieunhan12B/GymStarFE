@@ -1,0 +1,9 @@
+/* global.css hoặc tailwind.css */
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: #1f2937 !important; /* màu nền nếu muốn */
+  color: #ffffffc2 !important; /* đổi chữ sang trắng */
+}
+
+.ant-menu-dark .ant-menu-item-selected .ant-menu-item-icon {
+  color: #ffffffb7 !important; /* đổi icon sang trắng */
+}

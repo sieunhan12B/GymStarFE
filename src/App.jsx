@@ -1,0 +1,43 @@
+import './App.css'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { AppRouter } from "@/routes/AppRouter";
+import React from 'react';
+import { ToastContainer, toast, Bounce } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+export const NotificationContext = React.createContext();
+function App() {
+  const router = createBrowserRouter(
+    [...AppRouter],
+  );
+
+  const showNotification = (content, type, duration = 4000) => {
+    toast[type](content, {
+      position: "top-right",
+      autoClose: duration,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      progress: undefined,
+      theme: "light",
+      transition: Bounce,
+    });
+  };
+
+
+  return (
+    <>
+      <NotificationContext.Provider
+        value={{
+          showNotification: showNotification,
+        }}
+      >
+        <ToastContainer />
+        <RouterProvider router={router} />
+      </NotificationContext.Provider>
+    </>
+
+  )
+}
+
+export default App
