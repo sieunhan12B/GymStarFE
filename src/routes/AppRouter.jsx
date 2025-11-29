@@ -18,7 +18,9 @@ import { Navigate } from "react-router-dom";
 // ------------------ ADMIN ------------------
 import AdminTemplate from "../templates/AdminTemplate/AdminTemplate";
 import Dashboard from "../pages/admin/Dashboard/Dashboard";
-import User from "../pages/admin/User/User";
+import UserManager from "../pages/admin/UserManager/UserManager";
+import ProductManager from "../pages/admin/ProductManager/ProductManager";
+import CategoryManager from "../pages/admin/CategoryManager/CategoryManager";
 export const AppRouter = [
 
     {
@@ -91,7 +93,14 @@ export const AppRouter = [
             { path: "", element: <Navigate to="dashboard" replace /> },
 
             { path: path.dashboard, element: <Dashboard /> },
-            { path: path.user, element: <User /> },
+            { path: path.userManager, element: <UserManager /> },
+            { path: path.productManager, element: <ProductManager /> },
+            { path: path.categoryManager, element: <CategoryManager /> }
+
+
+            
+
+
 
             // { path: "users", element: <User /> },
             // { path: "orders", element: <Order /> },

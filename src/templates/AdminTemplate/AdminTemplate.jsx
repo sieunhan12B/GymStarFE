@@ -28,7 +28,7 @@ const menuItems = [
     label: 'Dashboard',
   },
   {
-    key: path.product,
+    key: path.productManager,
     icon: <ProductOutlined /> ,
     label: 'Sản phẩm',
     
@@ -39,12 +39,12 @@ const menuItems = [
     label:'Đơn hàng',
   },
   {
-    key: path.category,
+    key: path.categoryManager,
     icon: <TagOutlined />,
     label: 'Danh mục',
   },
   {
-    key: path.user,
+    key: path.userManager,
     icon: <UserOutlined />,
     label: 'Người dùng',
   },

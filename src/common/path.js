@@ -47,6 +47,9 @@ export const path = {
 
     // ------------------ ADMIN ------------------
   dashboard: "/admin/dashboard",
-  user: "/admin/user",
+  userManager: "/admin/user-manager",
+  productManager:"/admin/product-manager",
   order: "/admin/order",  
+  categoryManager:"/admin/category-manager",
+
 };
