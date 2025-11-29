@@ -4,6 +4,9 @@ export const userService = {
 
 
     // ------------------ ADMIN ------------------
+
+
+    // Lấy danh sách tất cả người dùng
     getAll: async () => {
         try {
             return await http.get(
@@ -11,6 +14,27 @@ export const userService = {
             );
         } catch (error) {
             console.error("Lỗi trong userService:", error);
+            throw error;
+        }
+    },
+
+
+    // Cập nhật trạng thái người dùng (kích hoạt / vô hiệu hóa)
+    updateStatus: async (user_id) => {
+        try {
+            return await http.put(`/QuanLyNguoiDung/CapNhatTrangThai/${user_id}`);
+        } catch (error) {
+            console.error("Lỗi cập nhật trạng thái người dùng:", error);
+            throw error;
+        }
+    },
+
+    // Cập nhật loại người dùng
+    updateRole: async (user_id, data) => {
+        try {
+            return await http.put(`/QuanLyNguoiDung/PhanQuyenRole/${user_id}`, data);
+        } catch (error) {
+            console.error("Lỗi cập nhật loại người dùng:", error);
             throw error;
         }
     },

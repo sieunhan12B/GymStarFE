@@ -4,14 +4,13 @@ import { AppRouter } from "@/routes/AppRouter";
 import React from 'react';
 import { ToastContainer, toast, Bounce } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import {router} from '@/routes/index.jsx';
 
 export const NotificationContext = React.createContext();
 function App() {
-  const router = createBrowserRouter(
-    [...AppRouter],
-  );
+ 
 
-  const showNotification = (content, type, duration = 4000) => {
+  const showNotification = (content, type, duration = 5000) => {
     toast[type](content, {
       position: "top-right",
       autoClose: duration,
