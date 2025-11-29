@@ -6,7 +6,7 @@ import { danhMucService } from '@/services/category.service';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { NotificationContext } from "@/App";
-import Header from '../../../templates/AdminTemplate/Header';
+import Header from '@/templates/AdminTemplate/Header';
 
 dayjs.extend(customParseFormat);
 
@@ -18,31 +18,53 @@ const CategoryManager = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalLoading, setModalLoading] = useState(false);
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+
+
     const [editingCategory, setEditingCategory] = useState(null); // null: thêm mới
-    const [categoryForm, setCategoryForm] = useState({
+
+    const [formData, setFormData] = useState({
         name: "",
-        parent_id: null,
-        secondary_id: null,
+        level1: null,
+        level2: null,
     });
 
-    const [secondaryOptions, setSecondaryOptions] = useState([]);
-    const [secondaryDisabled, setSecondaryDisabled] = useState(true);
-
     // Chuẩn hoá dữ liệu cây cho DataTable
-    const normalizeCategories = (nodes) => {
-        return nodes.map(node => {
-            const hasChildren = node.children && node.children.length > 0;
-            return {
-                key: node.category_id,
-                id: node.category_id,
-                name: node.name,
-                parent_id: node.parent_id || null,
-                secondary_id: node.secondary_id || null,
-                createdAt: node.createdAt || null,
-                ...(hasChildren && { children: normalizeCategories(node.children) })
-            };
-        });
+    // const normalizeCategories = (nodes) => {
+    //     return nodes.map(node => {
+    //         const hasChildren = node.children && node.children.length > 0;
+    //         return {
+    //             key: node.category_id,
+    //             id: node.category_id,
+    //             name: node.name,
+    //             parent_id: node.parent_id || null,
+    //             secondary_id: node.secondary_id || null,
+    //             createdAt: node.createdAt || null,
+    //             ...(hasChildren && { children: normalizeCategories(node.children) })
+    //         };
+    //     });
+    // };
+
+    const getLevel1 = categories => categories;
+
+    const getLevel2 = (categories, parentId) => {
+        if (!parentId) return [];
+        const parent = categories.find(c => c.category_id === parentId);
+        return parent?.children || [];
     };
+
+    const getLevel3 = (categories, level1Id, level2Id) => {
+        if (!level1Id || !level2Id) return [];
+        const level2 = categories
+            .find(c => c.category_id === level1Id)
+            ?.children.find(c => c.category_id === level2Id);
+        return level2?.children || [];
+    };
+
+
+
+
 
     // Lấy danh mục từ API
     const fetchCategories = async () => {
@@ -50,8 +72,13 @@ const CategoryManager = () => {
             setLoading(true);
             const res = await danhMucService.getAll();
             const data = res?.data?.data || [];
-            const formatted = normalizeCategories(data);
-            setCategories(formatted);
+            console.log(data);
+
+            //  const formatted = normalizeCategories(data);
+            // setCategories(formatted);
+
+            setCategories(data);
+            showNotification(res.data.message, "success");
         } catch (error) {
             showNotification('Không thể tải danh mục!', "error");
         } finally {
@@ -64,89 +91,120 @@ const CategoryManager = () => {
         document.title = "Quản lý danh mục sản phẩm - GymStar Admin";
     }, []);
 
-    // ========== XỬ LÝ MODAL THÊM/SỬA ==========
-
+    // ===== HÀM MỞ MODAL THÊM DANH MỤC =====
     const openAddModal = () => {
         setEditingCategory(null);
-        setCategoryForm({ name: "", parent_id: null, secondary_id: null });
-        setSecondaryOptions([]);
-        setSecondaryDisabled(true);
+
+        setFormData({
+            name: "",
+            level1: null,
+            level2: null,
+        });
         setIsModalOpen(true);
     };
 
+    // ===== HÀM MỞ MODAL SỬA DANH MỤC =====
     const openEditModal = (category) => {
+        console.log(category)
         setEditingCategory(category);
-        setCategoryForm({
+
+        let level1 = null, level2 = null, level3 = null;
+
+        if (!category.parent_id) {
+            level1 = category.category_id;
+        } else {
+            categories.forEach(l1 => {
+                l1.children.forEach(l2 => {
+                    l2.children.forEach(l3Item => {
+                        if (l3Item.category_id === category.category_id) {
+                            level1 = l1.category_id;
+                            level2 = l2.category_id;
+                            level3 = l3Item.category_id;
+                        }
+                    });
+
+                    if (l2.category_id === category.category_id) {
+                        level1 = l1.category_id;
+                        level2 = l2.category_id;
+                    }
+                });
+
+                if (l1.category_id === category.category_id) {
+                    level1 = l1.category_id;
+                }
+            });
+        }
+
+        setFormData({
             name: category.name,
-            parent_id: category.parent_id || null,
-            secondary_id: category.secondary_id || null,
+            level1,
+            level2,
         });
 
-        if (category.parent_id === 23 || category.parent_id === 24) {
-            const topCategory = categories.find(c => c.id === category.parent_id);
-            setSecondaryOptions(topCategory.children?.map(c => ({
-                label: c.name,
-                value: c.id
-            })) || []);
-            setSecondaryDisabled(false);
-        } else {
-            setSecondaryOptions([]);
-            setSecondaryDisabled(true);
-        }
-
         setIsModalOpen(true);
     };
 
+    // ===== XỬ LÝ THÊM/SỬA DANH MỤC =====
     const submitModal = async () => {
-        if (!categoryForm.name.trim()) {
-            message.error("Tên danh mục không được để trống!");
-            showNotification('Tên danh mục không được để trống!', "error");
-            return;
-        }
+        setModalLoading(true);
+        console.log(formData)
+
+        const parent_id = formData.level3 || formData.level2 || formData.level1 || null;
 
         try {
-            setModalLoading(true);
-
-            const actualParentId = categoryForm.secondary_id || categoryForm.parent_id || null;
-            const payload = {
-                name: categoryForm.name,
-                parent_id: actualParentId,
-            };
-
             if (editingCategory) {
-                // Sửa danh mục
-                await danhMucService.update(editingCategory.id, payload);
-                showNotification('Cập nhật danh mục thành công!', "success");
+                const res = await danhMucService.update(editingCategory.category_id, {
+                    name: formData.name,
+                    parent_id
+                });
+
+
+                console.log(res);
+                showNotification(res.data.message || "Cập nhật danh mục thành công!", "success");
             } else {
-                // Thêm danh mục mới
-                await danhMucService.add(payload);
-                showNotification('Thêm danh mục thành công!', "success");
+                const res = await danhMucService.add({
+                    name: formData.name,
+                    parent_id
+                });
+
+                showNotification(res.data.message || "Thêm danh mục thành công!", "success");
             }
 
+            fetchCategories();
             setIsModalOpen(false);
-            setEditingCategory(null);
+        } catch (err) {
+            console.log(err);
+            showNotification(err.response.data.message || "Lỗi thao tác danh mục!", "error");
+        }
+
+        setModalLoading(false);
+    };
+
+
+    // ===== HÀM MỞ MODAL XÁC NHẬN XÓA DANH MỤC =====
+    const openDeleteModal = (category) => {
+        setSelectedCategory(category);
+        setIsDeleteModalOpen(true);
+    };
+
+
+    // ========== XỬ LÝ XOÁ DANH MỤC ==========
+    const handleDeleteCategory = async () => {
+        if (!selectedCategory) return;
+
+        try {
+            setLoading(true);
+            const res = await danhMucService.delete(selectedCategory.category_id);
+            showNotification(res.data.message, "success");
             fetchCategories();
         } catch (error) {
-            showNotification(error.response?.data?.message || "Có lỗi xảy ra!", "error");
+            console.log(error)
+            showNotification(error.response?.data?.message || "Không thể xóa danh mục!", "error");
         } finally {
-            setModalLoading(false);
+            setIsDeleteModalOpen(false);
         }
     };
 
-    // ========== XỬ LÝ XOÁ DANH MỤC ==========
-    const handleDeleteCategory = async (id) => {
-        try {
-            setLoading(true);
-            await danhMucService.delete(id);
-            showNotification("Xóa danh mục thành công!", "success");
-            fetchCategories();
-        } catch (error) {
-            console.error(error);
-            showNotification(error.response?.data?.message || "Không thể xóa danh mục!", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // ========== DATA TABLE ==========
     const categoryColumns = [
@@ -181,121 +239,147 @@ const CategoryManager = () => {
                         onClick={() => openEditModal(record)}
                     />
                     <Button
-                        onClick={() => handleDeleteCategory(record.id)}
+                        onClick={() => openDeleteModal(record)}
                         icon={<DeleteOutlined />}
                         size="small"
                         danger
                     />
+
                 </Space>
             ),
         },
     ];
 
-    // ========== OPTIONS CẤP 1 ==========
-    const topLevelOptions = [
-        { label: "Không chọn", value: null },
-        ...categories.map(cat => ({
-            label: cat.name,
-            value: cat.id
-        }))
-    ];
+    // ========== MODAL XOÁ DANH MỤC ==========
+    const renderDeleteModal = () => (
+        <Modal
+            title="Xác nhận xoá danh mục"
+            open={isDeleteModalOpen}
+            onOk={handleDeleteCategory}
+            onCancel={() => setIsDeleteModalOpen(false)}
+            okText="Xác nhận"
+            cancelText="Hủy"
+            centered
+            okButtonProps={{
+                className:
+                    "bg-black text-white hover:!bg-white rounded-lg px-5 py-2 font-medium hover:!text-black border-black border-2"
+            }}
+            cancelButtonProps={{
+                className:
+                    "bg-white text-black hover:!bg-black rounded-lg px-5 py-2 font-medium hover:!text-white border-black border-2"
+            }}
+        >
+            <p>
+                Bạn có chắc muốn xoá danh mục:
+                <b> {selectedCategory?.name}</b> không?
+            </p>
+        </Modal>
+    );
+
+
+    // ========== MODAL THÊM/SỬA DANH MỤC ==========
+    const renderAddEditModal = () => (
+        <Modal
+            title={<span className="text-gray-900 font-semibold text-lg">{editingCategory ? "Cập nhật danh mục" : "Thêm danh mục mới"}</span>}
+            open={isModalOpen}
+            onCancel={() => setIsModalOpen(false)}
+            footer={[
+                <Button
+                    key="cancel"
+                    onClick={() => setIsModalOpen(false)}
+                    className="font-semibold bg-white border-black border-2 hover:bg-black hover:text-white"
+                >
+                    Hủy
+                </Button>,
+
+                <Button
+                    key="submit"
+                    onClick={submitModal}
+                    loading={modalLoading}
+                    className="font-semibold bg-black text-white border border-black rounded-lg px-5 py-2 
+               hover:bg-white hover:text-black hover:border-black"
+                >
+                    {editingCategory ? "Cập nhật" : "Thêm"}
+                </Button>,
+
+            ]}
+            centered
+            className="rounded-xl"
+        >
+            <div className="flex flex-col gap-6">
+                {/* Tên danh mục */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-1">Tên danh mục</label>
+                    <Input
+                        placeholder="Nhập tên danh mục..."
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="rounded-md border-2 border-black"
+                    />
+                </div>
+
+                {/* Select cấp 1 */}
+                <div className='space-x-5'>
+
+                    <Select
+                        placeholder="Danh mục cấp 1"
+                        value={formData.level1}
+                        onChange={(val) =>
+                            setFormData({ ...formData, level1: val, level2: null, level3: null })
+                        }
+                        options={getLevel1(categories).map(c => ({ label: c.name, value: c.category_id }))}
+                        allowClear
+                    />
+
+                    <Select
+                        placeholder="Danh mục cấp 2"
+                        value={formData.level2}
+                        onChange={(val) =>
+                            setFormData({ ...formData, level2: val, level3: null })
+                        }
+                        disabled={!formData.level1}
+                        options={getLevel2(categories, formData.level1).map(c => ({ label: c.name, value: c.category_id }))}
+                        allowClear
+                    />
+
+                  
+
+                </div>
+
+
+            </div>
+        </Modal>
+    );
+
+
+    // ========== RENDER TABLE ==========
+    const renderTable = () => (
+        <DataTable
+            columns={categoryColumns}
+            dataSource={categories}
+            totalText="danh mục"
+            loading={loading}
+            rowKey={"category_id"}
+        />
+    );
+
+
+    // ========== RENDER HEADER ==========
+    const renderHeader = () => (
+        <Header
+            filterOn={false}
+            itemName={"danh mục"}
+            // onAdd={openAddModal} //?openAddModal
+            onAddItem={openAddModal}
+        />
+    );
 
     return (
         <div className="bg-white rounded-lg shadow-sm">
-            <Header
-                filterOn={false}
-                onAddItem={openAddModal}
-                itemName={"danh mục"}
-            />
-
-            {/* MODAL THÊM/SỬA DANH MỤC */}
-            <Modal
-                title={<span className="text-gray-900 font-semibold text-lg">{editingCategory ? "Cập nhật danh mục" : "Thêm danh mục mới"}</span>}
-                open={isModalOpen}
-                onCancel={() => setIsModalOpen(false)}
-                footer={[
-                    <Button
-                        key="cancel"
-                        onClick={() => setIsModalOpen(false)}
-                        className="font-semibold bg-white border-black border-2 hover:!bg-black hover:!text-white hover:!border-transparent"
-                    >
-                        Hủy
-                    </Button>,
-                    <Button
-                        key="submit"
-                        type="primary"
-                        onClick={submitModal}
-                        loading={modalLoading}
-                        className="font-semibold bg-white text-black border-2 border-black hover:!bg-black hover:!text-white hover:!border-transparent"
-                    >
-                        {editingCategory ? "Cập nhật" : "Thêm"}
-                    </Button>,
-                ]}
-                centered
-                className="rounded-xl"
-            >
-                <div className="flex flex-col gap-6">
-                    {/* Tên danh mục */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-800 mb-1">Tên danh mục</label>
-                        <Input
-                            placeholder="Nhập tên danh mục..."
-                            value={categoryForm.name}
-                            onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                            className="rounded-md border-2 border-black"
-                        />
-                    </div>
-
-                    {/* Select cấp 1 */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-800 mb-1">Chọn danh mục cấp 1</label>
-                        <Select
-                            placeholder="Chọn danh mục cấp 1"
-                            value={categoryForm.parent_id}
-                            onChange={(value) => {
-                                setCategoryForm({ ...categoryForm, parent_id: value, secondary_id: null });
-
-                                if (value === 23 || value === 24) {
-                                    const topCategory = categories.find(c => c.id === value);
-                                    setSecondaryOptions(topCategory.children?.map(c => ({
-                                        label: c.name,
-                                        value: c.id
-                                    })) || []);
-                                    setSecondaryDisabled(false);
-                                } else {
-                                    setSecondaryOptions([]);
-                                    setSecondaryDisabled(true);
-                                }
-                            }}
-                            allowClear
-                            options={topLevelOptions}
-                            className="w-full border-2 rounded-md bg-transparent border-black"
-                        />
-                    </div>
-
-                    {/* Select thứ 2 */}
-                    <div>
-                        <label className="block text-sm font-medium  text-gray-800 mb-1">Chọn danh mục phụ</label>
-                        <Select
-                            placeholder="Chọn danh mục phụ"
-                            value={categoryForm.secondary_id}
-                            onChange={(value) => setCategoryForm({ ...categoryForm, secondary_id: value })}
-                            allowClear
-                            options={secondaryOptions}
-                            disabled={secondaryDisabled}
-                            className="w-full border-2 rounded-md"
-                        />
-                    </div>
-                </div>
-            </Modal>
-
-            {/* BẢNG DANH MỤC */}
-            <DataTable
-                columns={categoryColumns}
-                dataSource={categories}
-                totalText="danh mục"
-                loading={loading}
-            />
+            {renderHeader()}
+            {renderTable()}
+            {renderAddEditModal()}
+            {renderDeleteModal()}
         </div>
     );
 };

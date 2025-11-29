@@ -15,25 +15,25 @@ export const danhMucService = {
 
   add: async (data) => {
     try {
-      return await http.post("/QuanLyDanhMuc/ThemDanhMuc", data);
+      return await http.post("/QuanLyDanhMuc/TaoDanhMuc", data);
     } catch (error) {
       console.error("Lỗi thêm danh mục:", error);
       throw error;
     }
   },
 
-  update: async (id, data) => {
+  update: async (category_id, data) => {
     try {
-      return await http.put(`/QuanLyDanhMuc/CapNhatDanhMuc/${id}`, data);
+      return await http.put(`/QuanLyDanhMuc/CapNhatDanhMuc/${category_id}`, data);
     } catch (error) {
       console.error("Lỗi cập nhật danh mục:", error);
       throw error;
     }
   },
 
-  delete: async (id) => {
+  delete: async (category_id) => {
     try {
-      return await http.delete(`/QuanLyDanhMuc/XoaDanhMuc/${id}`);
+      return await http.delete(`/QuanLyDanhMuc/XoaDanhMuc/${category_id}`);
     } catch (error) {
       console.error("Lỗi xóa danh mục:", error);
       throw error;

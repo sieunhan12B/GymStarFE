@@ -1,5 +1,5 @@
-import { Form, Radio, DatePicker, Select } from "antd";
-import { EditOutlined, DeleteOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
+import { Form, Select } from "antd";
+import { EditOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import DataTable from '@/components/DataTable/DataTable';
 import { userService } from '@/services/user.service';
 import dayjs from 'dayjs';
@@ -7,7 +7,7 @@ import { useState, useEffect, useContext } from "react";
 import { NotificationContext } from "@/App";
 import { Button, Space, Modal, Input, Tag } from 'antd';
 import { removeVietnameseTones } from '@/utils/removeVietnameseTones';
-import Header from "../../../templates/AdminTemplate/Header";
+import Header from "@/templates/AdminTemplate/Header";
 
 
 
@@ -18,9 +18,9 @@ const UserManager = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [editingUser, setEditingUser] = useState(null); // user đang sửa
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const { showNotification } = useContext(NotificationContext);
-  const [openModal, setOpenModal] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
 
@@ -59,52 +59,53 @@ const UserManager = () => {
     fetchUsers();
   }, []);
 
-  // ===== HÀM MỞ MODAL EDIT =====
-  const handleEdit = (user) => {
+  // ===== HÀM MỞ MODAL EDIT ROLE =====
+  const handleOpenRoleModal = (user) => {
     setEditingUser(user);
     form.setFieldsValue({
       role_id: user.role_id, // role hiện tại
     });
-    setIsModalOpen(true);
+    setIsRoleModalOpen(true);
   };
 
 
-  // ===== HÀM LƯU THAY ĐỔI =====
-  const handleSaveRole = async () => {
+  // ===== HÀM THAY ĐỔI ROLE =====
+  const handleChangeRole = async () => {
     try {
       const values = await form.validateFields();
+      console.log(values);
       const res = await userService.updateRole(editingUser.user_id, {
         role_id: values.role_id
       });
       showNotification(res.data.message, "success");
-      setIsModalOpen(false);
+      setIsRoleModalOpen(false);
       fetchUsers(); // tải lại danh sách
     } catch (error) {
       console.log(error);
-      showNotification('Cập nhật phân quyền thất bại!', 'error');
+      showNotification(error.response?.data?.message || "Không thể xóa danh mục!", "error");
     }
   };
 
-
-  const openDisableModal = (record) => {
+  // ===== HÀM MỞ MODAL THAY ĐỔI TRẠNG THÁI NGƯỜI DÙNG =====
+  const handleOpenChangeStatusModal = (record) => {
     setSelectedUser(record);
-    setOpenModal(true);
+    setIsStatusModalOpen(true);
   };
 
 
   // ===== HÀM CHUYỂN TRẠNG THÁI NGƯỜI DÙNG =====
-  const handleDisableUser = async () => {
+  const handleChangeStatusUser = async () => {
     if (!selectedUser) return;
     try {
       const res = await userService.updateStatus(selectedUser.user_id);
       showNotification(res.data.message, "success");
-      setOpenModal(false);
+      setIsStatusModalOpen(false);
       fetchUsers();
     } catch (error) {
       console.log(error)
       showNotification(error.response.data.message, "error");
     } finally {
-      setOpenModal(false);
+      setIsStatusModalOpen(false);
     }
   };
 
@@ -213,7 +214,7 @@ const UserManager = () => {
         <Space size="small">
           <Button
             icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
+            onClick={() => handleOpenRoleModal(record)}
           />
           <Button
             type="default"
@@ -224,7 +225,7 @@ const UserManager = () => {
                 : <UnlockOutlined />
             }
             // size="small"
-            onClick={() => openDisableModal(record)}
+            onClick={() => handleOpenChangeStatusModal(record)}
           />
         </Space>
       ),
@@ -259,12 +260,21 @@ const UserManager = () => {
   const renderEditModal = () => (
     <Modal
       title="Thay đổi phân quyền người dùng"
-      open={isModalOpen}
-      onOk={handleSaveRole}
-      onCancel={() => setIsModalOpen(false)}
+      open={isRoleModalOpen}
+      onOk={handleChangeRole}
+      onCancel={() => setIsRoleModalOpen(false)}
       okText="Lưu"
       cancelText="Hủy"
       centered
+      okButtonProps={{
+        className:
+          "bg-black text-white hover:!bg-white rounded-lg px-5 py-2 font-medium hover:!text-black border-black border-2"
+      }}
+
+      cancelButtonProps={{
+        className:
+          "bg-white text-black hover:!bg-black rounded-lg px-5 py-2 font-medium hover:!text-white border-black border-2"
+      }}
     >
       <Form form={form} layout="vertical">
         <div className="mb-3">
@@ -278,11 +288,17 @@ const UserManager = () => {
           rules={[{ required: true, message: 'Vui lòng chọn phân quyền!' }]}
         >
           <Select placeholder="Chọn phân quyền">
-            <Select.Option value="2">Admin</Select.Option>
-            <Select.Option value="4">Order Manager</Select.Option>
-            <Select.Option value="1">Customer</Select.Option>
-            <Select.Option value="3">Product Manager</Select.Option>
-            <Select.Option value="5">Feedback Manager</Select.Option>
+            {[
+              { id: 1, name: "Customer" },
+              { id: 2, name: "Admin" },
+              { id: 3, name: "Product Manager" },
+              { id: 4, name: "Order Manager" },
+              { id: 5, name: "Feedback Manager" },
+            ].map(role => (
+              <Select.Option key={role.id} value={role.id}>
+                {role.name}
+              </Select.Option>
+            ))}
           </Select>
         </Form.Item>
       </Form>
@@ -294,13 +310,13 @@ const UserManager = () => {
   const renderStatusModal = () => (
     <Modal
       title="Xác nhận thay đổi trạng thái"
-      open={openModal}
-      onCancel={() => setOpenModal(false)}
+      open={isStatusModalOpen}
+      onCancel={() => setIsStatusModalOpen(false)}
 
       okText="Xác nhận"
       cancelText="Hủy"
 
-      onOk={handleDisableUser}
+      onOk={handleChangeStatusUser}
       centered
 
       okButtonProps={{
