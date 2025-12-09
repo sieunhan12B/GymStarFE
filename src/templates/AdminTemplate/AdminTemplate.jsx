@@ -8,72 +8,48 @@ import {
   UploadOutlined,
   UserOutlined,
   VideoCameraOutlined,
-   MenuFoldOutlined,
+  MenuFoldOutlined,
   MenuUnfoldOutlined,
   ProductOutlined,
   TagOutlined,
   StarOutlined,
   FormOutlined,
 } from '@ant-design/icons';
-import {Button, Image, Layout, Menu } from 'antd';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Button, Image, Layout, Menu } from 'antd';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { path } from '@/common/path';
+import { useSelector } from "react-redux";
+import { ROLES } from '@/constants/role';
+
 
 const { Header, Content, Footer, Sider } = Layout;
 
-const menuItems = [
-  {
-    key: path.dashboard,
-    icon: <BarChartOutlined />,
-    label: 'Dashboard',
-  },
-  {
-    key: path.productManager,
-    icon: <ProductOutlined /> ,
-    label: 'Sản phẩm',
-    
-  },
-  {
-    key:path.order,
-    icon:<ShopOutlined />,
-    label:'Đơn hàng',
-  },
-  {
-    key: path.categoryManager,
-    icon: <TagOutlined />,
-    label: 'Danh mục',
-  },
-  {
-    key: path.userManager,
-    icon: <UserOutlined />,
-    label: 'Người dùng',
-  },
-  {
-    key:path.review,
-    icon:<StarOutlined />,
-    label:'Đánh giá',
-  },
-  {
-    key:path.feedback,
-    icon:<FormOutlined />,
-    label:'Góp ý',
-  },
- 
-  {
-    key: 'media',
-    icon: <VideoCameraOutlined />,
-    label: 'Media',
-    children: [
-      { key: 'videos', label: 'Videos', icon: <VideoCameraOutlined /> },
-      { key: 'uploads', label: 'Uploads', icon: <UploadOutlined /> },
-    ],
-  },
-];
 
 
 const AdminTemplate = () => {
-    const [collapsed, setCollapsed] = useState(false);
-    const navigate =useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Lấy phần sau "/admin/"
+  const currentKey = location.pathname.replace("/admin/", "");
+
+  const user = useSelector((state) => state.userSlice.user);
+
+  const getMenuItemsByRole = (role_id) => {
+    const allItems = [
+      { key: path.dashboard, icon: <BarChartOutlined />, label: 'Dashboard', roles: [ROLES.ADMIN] },
+      { key: path.userManager, icon: <UserOutlined />, label: 'Người dùng', roles: [ROLES.ADMIN] },
+      { key: path.productManager, icon: <ProductOutlined />, label: 'Sản phẩm', roles: [ROLES.ADMIN, ROLES.PRODUCT_MANAGER] },
+      { key: path.categoryManager, icon: <TagOutlined />, label: 'Danh mục', roles: [ROLES.ADMIN, ROLES.PRODUCT_MANAGER] },
+      { key: path.orderManager, icon: <ShopOutlined />, label: 'Đơn hàng', roles: [ROLES.ADMIN, ROLES.ORDER_MANAGER] },
+      { key: path.feedback, icon: <FormOutlined />, label: 'Góp ý', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
+      { key: path.reviewManager, icon: <StarOutlined />, label: 'Đánh giá', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
+    ];
+
+    return allItems.filter(item => item.roles.includes(role_id));
+  };
+
 
 
   return (
@@ -81,17 +57,18 @@ const AdminTemplate = () => {
       <Sider collapsible collapsed={collapsed} className="overflow-auto h-screen sticky left-0 top-0 bottom-0 bg-black">
         <div className="h-16 flex items-center justify-center border-b border-white/10">
           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-bold text-xl text-black">
-            <Image src={logo} preview={false}/>
+            <Image src={logo} preview={false} />
           </div>z
         </div>
-        <Menu 
-          theme="dark" 
-          mode="inline" 
-          defaultSelectedKeys={['4']} 
-          items={menuItems}
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[currentKey]}
+          items={getMenuItemsByRole(user.role_id)}
           className="bg-black border-r-0"
-          onClick={({key})=>{navigate(key)}}
+          onClick={({ key }) => navigate(`/admin/${key}`)}
         />
+
       </Sider>
       <Layout>
         <Header className="px-6 bg-white border-b border-gray-200 flex items-center shadow-sm sticky top-0 z-10">
@@ -106,22 +83,11 @@ const AdminTemplate = () => {
             }}
           />
           <div className="w-30 h-10 bg-transparent rounded-md flex items-center justify-center font-bold text-lg text-white tracking-widest">
-                        <Image src={logo} preview={false} width={100}/>
+            <Image src={logo} preview={false} width={100} />
 
           </div>
         </Header>
         <Content className="my-6 mx-4 overflow-auto">
-          {/* <div className="p-6 text-center bg-white rounded-lg border border-gray-200 min-h-[280px]">
-            <p className="text-base font-medium text-black">Long content</p>
-            {
-              Array.from({ length: 100 }, (_, index) => (
-                <React.Fragment key={index}>
-                  {index % 20 === 0 && index ? 'more' : '...'}
-                  <br />
-                </React.Fragment>
-              ))
-            }
-          </div> */}
           <Outlet />
         </Content>
         <Footer className="text-center bg-white text-gray-600 border-t border-gray-200">

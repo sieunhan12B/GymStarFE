@@ -10,7 +10,7 @@ export const userService = {
     getAll: async () => {
         try {
             return await http.get(
-                "/QuanLyNguoiDung/LayDanhSachNguoiDung?page=0&limit=0"
+                "/QuanLyNguoiDung/LayDanhSachNguoiDung?page=1&limit=99999"
             );
         } catch (error) {
             console.error("Lỗi trong userService:", error);

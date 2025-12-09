@@ -40,27 +40,24 @@ const UserManager = () => {
     }
   };
 
-  // ===== FILTERING =====
-  const filteredData = data.filter(item => {
-    if (!searchText) return true;
-
-    const text = searchText.toLowerCase();
-
-    const fullName = removeVietnameseTones(item.full_name || '').toLowerCase();
-    const email = (item.email || '').toLowerCase();
-
-    return (
-      fullName.includes(text) ||
-      email.includes(text)
-    );
-  });
-
   useEffect(() => {
     fetchUsers();
   }, []);
 
+  // ===== FILTERING =====
+  const filteredData = data.filter(item => {
+    if (!searchText) return true;
+
+    return (
+      removeVietnameseTones(item.full_name || '').toLowerCase().includes(searchText.toLowerCase()) ||
+      (item.email || '').toLowerCase().includes(searchText.toLowerCase())
+    );
+  });
+
+
+
   // ===== HÀM MỞ MODAL EDIT ROLE =====
-  const handleOpenRoleModal = (user) => {
+  const openRoleModal = (user) => {
     setEditingUser(user);
     form.setFieldsValue({
       role_id: user.role_id, // role hiện tại
@@ -68,8 +65,15 @@ const UserManager = () => {
     setIsRoleModalOpen(true);
   };
 
+  // ===== HÀM MỞ MODAL THAY ĐỔI TRẠNG THÁI NGƯỜI DÙNG =====
+  const openChangeStatusModal = (record) => {
+    setSelectedUser(record);
+    setIsStatusModalOpen(true);
+  };
 
-  // ===== HÀM THAY ĐỔI ROLE =====
+
+
+  // ===== XỬ LÝ THAY ĐỔI ROLE =====
   const handleChangeRole = async () => {
     try {
       const values = await form.validateFields();
@@ -86,14 +90,7 @@ const UserManager = () => {
     }
   };
 
-  // ===== HÀM MỞ MODAL THAY ĐỔI TRẠNG THÁI NGƯỜI DÙNG =====
-  const handleOpenChangeStatusModal = (record) => {
-    setSelectedUser(record);
-    setIsStatusModalOpen(true);
-  };
-
-
-  // ===== HÀM CHUYỂN TRẠNG THÁI NGƯỜI DÙNG =====
+  // ===== XỬ LÝ THAY ĐỔI TRẠNG THÁI NGƯỜI DÙNG =====
   const handleChangeStatusUser = async () => {
     if (!selectedUser) return;
     try {
@@ -111,7 +108,7 @@ const UserManager = () => {
 
 
 
-  // ===== TABLE COLUMNS =====
+  // ===== PRODUCT COLUMNS =====
   const userColumns = [
     {
       title: 'Người dùng',
@@ -141,60 +138,107 @@ const UserManager = () => {
       ),
     },
     {
-      title: 'Phân quyền',
+      title: 'Phân quyền',
       dataIndex: 'role_name',
       key: 'role_name',
-      width: 150,
-      filters: [
-        { text: 'Admin', value: 'admin' },
-        { text: 'Order Manager', value: 'order_manager' },
-        { text: 'Customer', value: 'customer' },
-        { text: 'Product Manager', value: 'product_manager' },
-        { text: 'Feedback Manager', value: 'feedback_manager' },
-      ],
-      onFilter: (value, record) => record.role_name === value,
-      render: (role_name) => {
-        let color = 'default';
+      width: 200,
 
-        if (role_name === 'admin') color = 'gold';
-        else if (role_name === 'order_manager') color = 'blue';
-        else if (role_name === 'customer') color = 'green';
-        else if (role_name === 'product_manager') color = 'purple';
-        else if (role_name === 'feedback_manager') color = 'cyan';
+      filters: [
+        { text: 'Quản trị viên', value: 'quản trị viên' },
+        { text: 'Khách hàng', value: 'khách hàng' },
+        { text: 'Quản lý sản phẩm', value: 'quản lý sản phẩm' },
+        { text: 'Quản lý đơn hàng', value: 'quản lý đơn hàng' },
+        { text: 'Quản lý phản hồi', value: 'quản lý phản hồi' },
+      ],
+
+      onFilter: (value, record) =>
+        record.role_name?.trim().toLowerCase() === value.toLowerCase(),
+
+      render: (_, record) => {
+        const { role_id, role_name } = record;
+
+        const colorMap = {
+          1: 'green',
+          2: 'gold',
+          3: 'purple',
+          4: 'blue',
+          5: 'cyan',
+        };
 
         return (
-          <Tag color={color} className="rounded-full px-3 py-1">
-            {role_name.toUpperCase()}
-          </Tag>
+          <div className="flex items-center justify-between w-full">
+            {/* Tag phân quyền */}
+            <Tag color={colorMap[role_id]} className="rounded-full px-3 py-1">
+              {role_name}
+            </Tag>
+
+            {/* Icon chỉnh sửa */}
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => openRoleModal(record)}
+            />
+          </div>
         );
       },
     },
 
     {
-      title: 'Trạng thái',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 180,
+
       filters: [
-        { text: 'Active', value: 'active' },
-        { text: 'Disable', value: 'disabled' },
-        { text: 'Unverified', value: 'unverified' },
+        { text: 'Đang hoạt động', value: 'đang hoạt động' },
+        { text: 'Bị cấm', value: 'bị cấm' },
+        { text: 'Chưa xác nhận', value: 'chưa xác nhận' },
       ],
-      onFilter: (value, record) => record.status === value,
-      render: (status) => {
-        let color;
-        if (status === 'active') color = 'green';
-        else if (status === 'disabled') color = 'red';
-        else if (status === 'unverified') color = 'orange';
-        else color = 'default';
+
+      onFilter: (value, record) => {
+        const normalized = record.status?.trim().normalize("NFC").toLowerCase();
+        return normalized === value.toLowerCase();
+      },
+
+      render: (statusRaw, record) => {
+        const status = statusRaw?.trim().normalize("NFC").toLowerCase();
+
+        const colorMap = {
+          "đang hoạt động": "green",
+          "bị cấm": "red",
+          "chưa xác nhận": "orange",
+        };
+
+        const color = colorMap[status] || "default";
 
         return (
-          <Tag color={color} className="rounded-full">
-            {status.toUpperCase()}
-          </Tag>
+          <div className="flex justify-between items-center w-full">
+            {/* TAG trạng thái */}
+            <Tag color={color} className="rounded-full">
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Tag>
+
+            {/* Button bên phải */}
+            {status !== 'chưa xác nhận' && (
+              <Button
+                type="text"
+                icon={
+                  status === 'đang hoạt động'
+                    ? <LockOutlined />
+                    : <UnlockOutlined />
+                }
+                onClick={() => openChangeStatusModal(record)}
+              />
+            )}
+          </div>
         );
       },
     },
+
+
+
+
+
     {
       title: 'Được tạo',
       dataIndex: 'createdAt',
@@ -206,30 +250,7 @@ const UserManager = () => {
           : "—",
     },
 
-    {
-      title: 'Hành động',
-      key: 'action',
 
-      render: (_, record) => (
-        <Space size="small">
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => handleOpenRoleModal(record)}
-          />
-          <Button
-            type="default"
-            danger={record.status === 'active'}
-            icon={
-              record.status === 'active'
-                ? <LockOutlined />
-                : <UnlockOutlined />
-            }
-            // size="small"
-            onClick={() => handleOpenChangeStatusModal(record)}
-          />
-        </Space>
-      ),
-    }
 
   ];
 
@@ -244,7 +265,6 @@ const UserManager = () => {
     />
   );
 
-
   // ===== RENDER TABLE =====
   const renderTable = () => (
     <DataTable
@@ -255,9 +275,8 @@ const UserManager = () => {
     />
   );
 
-
-  // ===== RENDER MODALS =====
-  const renderEditModal = () => (
+  // ===== RENDER EDIT ROLE MODALS =====
+  const renderEditRoleModal = () => (
     <Modal
       title="Thay đổi phân quyền người dùng"
       open={isRoleModalOpen}
@@ -307,42 +326,56 @@ const UserManager = () => {
 
 
   // ===== RENDER MODAL CHANGE STATUS =====
-  const renderStatusModal = () => (
-    <Modal
-      title="Xác nhận thay đổi trạng thái"
-      open={isStatusModalOpen}
-      onCancel={() => setIsStatusModalOpen(false)}
+  const renderEditStatusModal = () => {
+    const currentStatus = selectedUser?.status
+      ?.trim()
+      ?.normalize("NFC")
+      ?.toLowerCase();
 
-      okText="Xác nhận"
-      cancelText="Hủy"
+    // Xác định hành động dựa trên trạng thái hiện tại
+    const actionText =
+      currentStatus === "đang hoạt động"
+        ? "Vô hiệu hóa"
+        : "Kích hoạt";
 
-      onOk={handleChangeStatusUser}
-      centered
+    return (
+      <Modal
+        title="Xác nhận thay đổi trạng thái"
+        open={isStatusModalOpen}
+        onCancel={() => setIsStatusModalOpen(false)}
+        onOk={handleChangeStatusUser}
+        centered
 
-      okButtonProps={{
-        className:
-          "bg-black text-white hover:!bg-white rounded-lg px-5 py-2 font-medium hover:!text-black border-black border-2"
-      }}
+        okText="Xác nhận"
+        cancelText="Hủy"
 
-      cancelButtonProps={{
-        className:
-          "bg-white text-black hover:!bg-black rounded-lg px-5 py-2 font-medium hover:!text-white border-black border-2"
-      }}
-    >
-      <p>
-        Bạn có chắc muốn {selectedUser?.status === "active" ? <span className="text-red-800 font-bold"> vô hiệu hoá</span> : <span className="text-red-800 font-bold"> kích hoạt </span>} người dùng:
-        <b> {selectedUser?.full_name}</b> không?
-      </p>
-    </Modal>
-  );
+        okButtonProps={{
+          className:
+            "bg-black text-white hover:!bg-white rounded-lg px-5 py-2 font-medium hover:!text-black border-black border-2"
+        }}
+
+        cancelButtonProps={{
+          className:
+            "bg-white text-black hover:!bg-black rounded-lg px-5 py-2 font-medium hover:!text-white border-black border-2"
+        }}
+      >
+        <p>
+          Bạn có chắc muốn
+          <span className="text-red-800 font-bold"> {actionText} </span>
+          người dùng:
+          <b> {selectedUser?.full_name}</b> không?
+        </p>
+      </Modal>
+    );
+  };
 
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
       {renderHeader()}
       {renderTable()}
-      {renderEditModal()}
-      {renderStatusModal()}
+      {renderEditRoleModal()}
+      {renderEditStatusModal()}
     </div>
   );
 

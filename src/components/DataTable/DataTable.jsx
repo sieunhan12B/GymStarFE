@@ -18,6 +18,9 @@ const DataTable = ({ columns, dataSource, totalText, loading, rowKey = "id" }) =
                     }}
                     scroll={{ x: 1200 }}
                     className="border border-gray-200 rounded-lg"
+                     locale={{
+                        emptyText: loading ? <span>Đang tải...</span> : 'Không có sản phẩm'
+                    }}
                 />
 
             </ConfigProvider>

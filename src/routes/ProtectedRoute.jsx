@@ -1,13 +1,18 @@
-// guards/ProtectedRoute.jsx
-import React from "react";
+import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
+import { path } from "../common/path";
 
-export const ProtectedRoute = ({ children, allowedRoles }) => {
-  const user = JSON.parse(localStorage.getItem("user")); // hoặc từ Redux
+export default function ProtectedRoute({ children, allowedRoles }) {
+  const user = useSelector((state) => state.userSlice.user);
+  console.log(user);
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    return <Navigate to={path.logIn} replace />;
+  }
 
-  if (!allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
+  if (!allowedRoles.includes(user.role_id)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
 
   return children;
-};
+}

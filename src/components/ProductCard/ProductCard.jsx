@@ -15,7 +15,7 @@ const ProductCard = ({ product ,hoverSize=true}) => {
     return (
         <Link
             // to={`${generateSlug(product.danhMuc)}/${product.id}`} 
-            to={`/${generateSlug(product.parent)}/${product.id}`}
+            to={`/${generateSlug(product.parent)}/${generateSlug( product.name)}`}
             className="relative group cursor-point  er"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
