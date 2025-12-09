@@ -5,7 +5,7 @@ import logo from "@/assets/images/logo.svg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
 import { NotificationContext } from "@/App"; // giả sử bạn có NotificationContext trong App.jsx
-import { authService } from "../../services/auth.service";
+import { authService } from "@/services/auth.service";
 
 const { Title, Text } = Typography;
 

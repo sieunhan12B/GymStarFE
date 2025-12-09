@@ -6,7 +6,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
 import { authService } from "@/services/auth.service";
 import { NotificationContext } from "@/App"; // giả sử bạn có NotificationContext trong App.jsx
-import { getLocalStorage, setLocalStorage } from "../../utils/utils";
+
+// Redux
+import { useDispatch } from "react-redux";
+// import { loginStart, loginSuccess, loginFailed } from "@/redux/userSlice";
+import { setUser } from "@/redux/userSlice";
+import { ROLES } from "../../../constants/role";
 
 
 const { Title, Text } = Typography;
@@ -16,10 +21,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showNotification } = useContext(NotificationContext);
+  const dispatch = useDispatch();
+  const AdminPath = "/admin";
 
 
   const onFinish = async (values) => {
     setLoading(true);
+    console.log("📤 Đăng nhập với:", values);
     try {
       // Chuẩn bị dữ liệu gửi lên API
       const payload = {
@@ -33,23 +41,40 @@ const Login = () => {
       const response = await authService.logIn(payload);
       console.log(response);
 
-      setLocalStorage("user", response.data.user);
-      const user=getLocalStorage("user");
-      console.log(user)
+
+
+      dispatch(setUser(response.data.user));
 
       showNotification("Đăng nhập thành công!", "success");
-      // Nếu API trả về thành công
-      navigate(path.home);
-    } catch (error) {
-      // Xử lý lỗi trả về từ API
-      if (error.response?.data?.message) {
-        showNotification("Đăng nhập thất bại: " + error.response.data.message, "error");
-      } else {
-        showNotification("Đã xảy ra lỗi. Vui lòng thử lại!", "error");
-      }
-      console.error(error);
 
-    } finally {
+      if (response.data.user.role_id === ROLES.ADMIN) {
+        navigate(`${AdminPath}/dashboard`);
+      }
+      else if (response.data.user.role_id === ROLES.PRODUCT_MANAGER) {
+        navigate(`${AdminPath}/product-manager`);
+      }
+      else if (response.data.user.role_id === ROLES.ORDER_MANAGER) {
+        navigate(`${AdminPath}/order-manager`);
+      }
+      else if (response.data.user.role_id === ROLES.FEEDBACK_MANAGER) {
+        navigate(`${AdminPath}/feedback-manager`);
+      }
+      else {
+        navigate("/");
+      }
+
+    } catch (error) {
+      console.error("❌ Lỗi đăng nhập:", error);
+
+      // Lấy thông báo lỗi an toàn
+      const errorMessage =
+        error?.response?.data?.message || // lỗi từ API
+        error?.message ||                  // lỗi JS thông thường
+        "Đăng nhập thất bại";            // thông báo mặc định
+
+      showNotification(errorMessage, "error");
+    }
+    finally {
       setLoading(false);
     }
   };

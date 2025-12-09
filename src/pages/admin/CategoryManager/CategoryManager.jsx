@@ -30,21 +30,7 @@ const CategoryManager = () => {
         level2: null,
     });
 
-    // Chuẩn hoá dữ liệu cây cho DataTable
-    // const normalizeCategories = (nodes) => {
-    //     return nodes.map(node => {
-    //         const hasChildren = node.children && node.children.length > 0;
-    //         return {
-    //             key: node.category_id,
-    //             id: node.category_id,
-    //             name: node.name,
-    //             parent_id: node.parent_id || null,
-    //             secondary_id: node.secondary_id || null,
-    //             createdAt: node.createdAt || null,
-    //             ...(hasChildren && { children: normalizeCategories(node.children) })
-    //         };
-    //     });
-    // };
+ 
 
     const getLevel1 = categories => categories;
 
@@ -53,15 +39,6 @@ const CategoryManager = () => {
         const parent = categories.find(c => c.category_id === parentId);
         return parent?.children || [];
     };
-
-    const getLevel3 = (categories, level1Id, level2Id) => {
-        if (!level1Id || !level2Id) return [];
-        const level2 = categories
-            .find(c => c.category_id === level1Id)
-            ?.children.find(c => c.category_id === level2Id);
-        return level2?.children || [];
-    };
-
 
 
 
@@ -90,6 +67,54 @@ const CategoryManager = () => {
         fetchCategories();
         document.title = "Quản lý danh mục sản phẩm - GymStar Admin";
     }, []);
+
+    // ========== DATA TABLE ==========
+    const categoryColumns = [
+        {
+            title: "Tên danh mục",
+            dataIndex: "name",
+            key: "name",
+            render: (text) => <span className="font-medium text-gray-900">{text}</span>,
+        },
+        {
+            title: "Ngày tạo",
+            dataIndex: "createdAt",
+            key: "createdAt",
+            align: "center",
+            render: (date) =>
+                dayjs(date, "HH:mm:ss DD/MM/YYYY").isValid()
+                    ? dayjs(date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
+                    : "—",
+        },
+        {
+            title: "Thao tác",
+            key: "action",
+            width: 150,
+            fixed: "right",
+            render: (_, record) => (
+                <Space size="small">
+                    <Button
+                        type="default"
+                        icon={<EditOutlined />}
+                        size="small"
+                        className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                        onClick={() => openEditModal(record)}
+                    />
+                    <Button
+                        onClick={() => openDeleteModal(record)}
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        danger
+                    />
+
+                </Space>
+            ),
+        },
+    ];
+
+
+
+
 
     // ===== HÀM MỞ MODAL THÊM DANH MỤC =====
     const openAddModal = () => {
@@ -144,8 +169,17 @@ const CategoryManager = () => {
         setIsModalOpen(true);
     };
 
+    // ===== HÀM MỞ MODAL XÁC NHẬN XÓA DANH MỤC =====
+    const openDeleteModal = (category) => {
+        setSelectedCategory(category);
+        setIsDeleteModalOpen(true);
+    };
+
+
+
+
     // ===== XỬ LÝ THÊM/SỬA DANH MỤC =====
-    const submitModal = async () => {
+    const handleSubmitModal = async () => {
         setModalLoading(true);
         console.log(formData)
 
@@ -180,14 +214,6 @@ const CategoryManager = () => {
         setModalLoading(false);
     };
 
-
-    // ===== HÀM MỞ MODAL XÁC NHẬN XÓA DANH MỤC =====
-    const openDeleteModal = (category) => {
-        setSelectedCategory(category);
-        setIsDeleteModalOpen(true);
-    };
-
-
     // ========== XỬ LÝ XOÁ DANH MỤC ==========
     const handleDeleteCategory = async () => {
         if (!selectedCategory) return;
@@ -206,51 +232,9 @@ const CategoryManager = () => {
     };
 
 
-    // ========== DATA TABLE ==========
-    const categoryColumns = [
-        {
-            title: "Tên danh mục",
-            dataIndex: "name",
-            key: "name",
-            render: (text) => <span className="font-medium text-gray-900">{text}</span>,
-        },
-        {
-            title: "Ngày tạo",
-            dataIndex: "createdAt",
-            key: "createdAt",
-            align: "center",
-            render: (date) =>
-                dayjs(date, "HH:mm:ss DD/MM/YYYY").isValid()
-                    ? dayjs(date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
-                    : "—",
-        },
-        {
-            title: "Thao tác",
-            key: "action",
-            width: 150,
-            fixed: "right",
-            render: (_, record) => (
-                <Space size="small">
-                    <Button
-                        type="default"
-                        icon={<EditOutlined />}
-                        size="small"
-                        className="text-blue-500 border-blue-500 hover:bg-blue-50"
-                        onClick={() => openEditModal(record)}
-                    />
-                    <Button
-                        onClick={() => openDeleteModal(record)}
-                        icon={<DeleteOutlined />}
-                        size="small"
-                        danger
-                    />
 
-                </Space>
-            ),
-        },
-    ];
 
-    // ========== MODAL XOÁ DANH MỤC ==========
+     // ========== MODAL XOÁ DANH MỤC ==========
     const renderDeleteModal = () => (
         <Modal
             title="Xác nhận xoá danh mục"
@@ -276,7 +260,6 @@ const CategoryManager = () => {
         </Modal>
     );
 
-
     // ========== MODAL THÊM/SỬA DANH MỤC ==========
     const renderAddEditModal = () => (
         <Modal
@@ -294,7 +277,7 @@ const CategoryManager = () => {
 
                 <Button
                     key="submit"
-                    onClick={submitModal}
+                    onClick={handleSubmitModal}
                     loading={modalLoading}
                     className="font-semibold bg-black text-white border border-black rounded-lg px-5 py-2 
                hover:bg-white hover:text-black hover:border-black"
@@ -351,7 +334,6 @@ const CategoryManager = () => {
         </Modal>
     );
 
-
     // ========== RENDER TABLE ==========
     const renderTable = () => (
         <DataTable
@@ -363,7 +345,6 @@ const CategoryManager = () => {
         />
     );
 
-
     // ========== RENDER HEADER ==========
     const renderHeader = () => (
         <Header
@@ -373,6 +354,9 @@ const CategoryManager = () => {
             onAddItem={openAddModal}
         />
     );
+
+
+
 
     return (
         <div className="bg-white rounded-lg shadow-sm">

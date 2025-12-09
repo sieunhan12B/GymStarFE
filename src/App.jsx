@@ -1,6 +1,5 @@
 import './App.css'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { AppRouter } from "@/routes/AppRouter";
+import {  RouterProvider } from 'react-router-dom';
 import React from 'react';
 import { ToastContainer, toast, Bounce } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

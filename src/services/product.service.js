@@ -4,7 +4,7 @@ export const productService = {
     // Lấy tất cả sản phẩm
     getAll: async () => {
         try {
-            return await http.get("/QuanLySanPham/LayTatCaSanPhamAdmin?page=0&limit=0");
+            return await http.get("/QuanLySanPham/LayTatCaSanPhamAdmin?page=1&limit=9999");
         } catch (error) {
             console.error("Lỗi trong productService:", error);
             throw error;
@@ -33,22 +33,21 @@ export const productService = {
 
     add: async (data) => {
         try {
-            return await http.post("/QuanLySanPham/TaoSanPham", data);
+            return await http.post("/QuanLySanPham/TaoSanPhamFull", data);
         } catch (error) {
             console.error("Lỗi thêm sản phẩm:", error);
             throw error;
         }
     },
 
-    updateStatus: async (product_id) => {
+    del: async (product_id) => {
         try {
-            return await http.put(`/QuanLyNguoiDung/CapNhatTrangThaiSanPham/${product_id}`);
+            return await http.delete(`/QuanLySanPham/XoaSanPham/${product_id}`);
         } catch (error) {
-            console.error("Lỗi cập nhật trạng thái sản phẩm:", error);
+            console.error("Lỗi xóa sản phẩm:", error);
             throw error;
         }
     },
-
 
 
     // Cập nhật trạng thái sản phẩm theo product_id

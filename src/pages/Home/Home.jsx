@@ -5,6 +5,7 @@ import ProductCard from '../../components/ProductCard/ProductCard';
 import { accessories, menProducts, womenProducts } from '@/data/productData';
 import { Link } from 'react-router-dom';
 import { generateSlug } from '../../utils/generateSlug ';
+import { path } from '../../common/path';
 
 const Home = () => {
   const womanScrollRef = useRef(null);
@@ -73,7 +74,7 @@ const Home = () => {
             </div>
 
             <Link
-              to={"nu"}
+              to={`/danh-muc/nu`}
               className="text-sm font-medium flex items-center hover:underline pb-[2px]"
             >
               Xem Tất Cả
@@ -140,7 +141,7 @@ const Home = () => {
             </div>
 
             <Link
-              to={"nam"}
+              to={`/danh-muc/nam`}
               className="text-sm font-medium flex items-center hover:underline pb-[2px]"
             >
               Xem Tất Cả
@@ -189,7 +190,7 @@ const Home = () => {
             </div>
 
             <Link
-              to={"phu-kien"}
+              to={`/danh-muc/phu-kien`}
               className="text-sm font-medium flex items-center hover:underline pb-[2px]"
             >
               Xem Tất Cả
