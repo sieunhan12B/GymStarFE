@@ -16,7 +16,7 @@ import {
   FormOutlined,
 } from '@ant-design/icons';
 import { Button, Image, Layout, Menu } from 'antd';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { path } from '@/common/path';
 import { useSelector } from "react-redux";
 import { ROLES } from '@/constants/role';
@@ -34,7 +34,8 @@ const AdminTemplate = () => {
   // Lấy phần sau "/admin/"
   const currentKey = location.pathname.replace("/admin/", "");
 
-  const user = useSelector((state) => state.userSlice.user);
+  const user = useSelector((state) => state.userSlice.user?.user);
+  console.log(user)
 
   const getMenuItemsByRole = (role_id) => {
     const allItems = [
@@ -83,7 +84,10 @@ const AdminTemplate = () => {
             }}
           />
           <div className="w-30 h-10 bg-transparent rounded-md flex items-center justify-center font-bold text-lg text-white tracking-widest">
-            <Image src={logo} preview={false} width={100} />
+            <Link to={path.home}>
+              <Image src={logo} preview={false} width={100} />
+
+            </Link>
 
           </div>
         </Header>

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { store } from "@/redux/configStore";
 
 export const http = axios.create({
   baseURL: "http://localhost:5000",
@@ -8,14 +9,15 @@ export const http = axios.create({
 // 🟦 Interceptor request (gắn token nếu có)
 http.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
+    const token = store.getState().userSlice.user?.token;
+    console.log(token) //
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 🟥 Interceptor response (log lỗi + throw)
+// 🟥 Interceptor response (log lỗi + throw)  
 http.interceptors.response.use(
   (response) => response,
   (error) => {

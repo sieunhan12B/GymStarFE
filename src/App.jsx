@@ -30,8 +30,9 @@ function App() {
           showNotification: showNotification,
         }}
       >
-        <ToastContainer />
         <RouterProvider router={router} />
+
+        <ToastContainer />
       </NotificationContext.Provider>
     </>
 

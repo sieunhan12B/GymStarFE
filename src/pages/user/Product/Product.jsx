@@ -1,43 +1,37 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Button, Rate, Tabs, Progress, Radio, InputNumber } from 'antd';
 import { HeartOutlined, HeartFilled, ShareAltOutlined, StarFilled } from '@ant-design/icons';
+import { useParams } from 'react-router-dom';
+import { productService } from '@/services/product.service';
+import { formatPrice } from '@/utils/utils';
+import { useDispatch, useSelector } from "react-redux";
+import { cartService } from "@/services/cart.service";
+
+import { NotificationContext } from "@/App";
+import { setCart } from '@/redux/cartSlice';
+import AddedToCartToast from '../../../components/AddedToCartToast/AddedToCartToast';
+
+
 
 const Product = () => {
+  const { productId } = useParams(); // Lấy productId từ URL
+  const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState('Navy');
-  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const user = useSelector((state) => state.userSlice.user?.user);
+  console.log(user)
+  const dispatch = useDispatch();
 
-  // Product data
-  const product = {
-    name: 'Arrival Long Sleeve T-Shirt',
-    price: 28.50,
-    originalPrice: null,
-    rating: 4.3,
-    reviews: 127,
-    description: 'Premium quality long sleeve t-shirt perfect for your workout sessions.',
-    sku: 'GYM-ARRIVAL-001',
-    images: [
-      'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600',
-      'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600',
-      'https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=600',
-      'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600',
-    ],
-    colors: [
-      { name: 'Navy', hex: '#001f3f', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=100' },
-      { name: 'Black', hex: '#000000', image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=100' },
-      { name: 'White', hex: '#FFFFFF', image: 'https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=100' },
-      { name: 'Gray', hex: '#808080', image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=100' },
-    ],
-    sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    features: [
-      'Moisture-wicking fabric',
-      'Four-way stretch',
-      'Anti-odor technology',
-      'Flatlock seams',
-    ],
-  };
+
+  console.log(user);
+
+  const { showNotification } = useContext(NotificationContext);
+
+
+
 
   const relatedProducts = [
     { id: 1, name: 'Training Short - White', price: 24.50, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
@@ -88,32 +82,103 @@ const Product = () => {
     ],
   };
 
+
+  const handleAddToCart = async () => {
+    if (!user?.user_id) {
+      showNotification("Bạn cần đăng nhập trước!", "error");
+      return;
+    }
+
+    if (!selectedColor || !selectedSize) {
+      showNotification("Vui lòng chọn màu và kích thước!", "warning");
+      return;
+    }
+
+
+
+
+    if (!selectedVariant) {
+      showNotification("Không tìm thấy biến thể sản phẩm!", "error");
+      return;
+    }
+
+    const data = {
+      product_variant_id: selectedVariant.product_variant_id,
+      quantity
+
+    };
+    console.log(product)
+
+    try {
+
+      const res = await cartService.addToCart(data);
+ 
+      const cartRes = await cartService.getCart();
+ 
+      dispatch(setCart(cartRes.data.data));
+      showNotification(<AddedToCartToast product={product} color={selectedVariant.color} size={selectedVariant.size} message={res.data.message} />, "success");
+    } catch (error) {
+      showNotification("Thêm sản phẩm vào giỏ thất bại!", "error");
+      console.error("ADD CART ERROR:", error);
+    }
+  };
+
+
+
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await productService.getProductById(productId);
+        const data = res.data.data;
+        setProduct(data);
+        console.log(data)
+
+        // Mặc định chọn màu và size đầu tiên nếu có
+        if (data.colors && data.colors.length > 0) setSelectedColor(data.colors[0].color);
+        if (data.product_variants && data.product_variants.length > 0) setSelectedSize(data.product_variants[0].size);
+      } catch (error) {
+        console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  if (!product) return <div className="text-center py-20">Đang tải sản phẩm...</div>;
+  const selectedVariant = product.product_variants.find(
+    (v) => v.color === selectedColor && v.size === selectedSize
+  );
+  console.log(selectedVariant)
+
+  const sku = selectedVariant ? selectedVariant.sku : "Chưa chọn";
+
+  // Lấy ảnh theo màu được chọn
+  const colorImages = product.colors.find(c => c.color === selectedColor)?.images || [];
+
   return (
     <div className="min-h-screen bg-white">
-      
+
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Product Main Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
           {/* Left - Images */}
           <div className="space-y-4">
-            {/* Main Image */}
             <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={product.images[selectedImage]}
+                src={colorImages[selectedImage] || product.thumbnail}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
 
-            {/* Thumbnail Images */}
             <div className="grid grid-cols-4 gap-4">
-              {product.images.map((img, idx) => (
+              {colorImages.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === idx ? 'border-black' : 'border-gray-200 hover:border-gray-400'
-                  }`}
+                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx ? 'border-black' : 'border-gray-200 hover:border-gray-400'
+                    }`}
                 >
                   <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
                 </button>
@@ -124,21 +189,20 @@ const Product = () => {
           {/* Right - Product Info */}
           <div className="space-y-6">
             <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Men's Activewear</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">{product.category_name}</p>
               <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <Rate disabled defaultValue={product.rating} allowHalf className="text-sm" />
-                  <span className="text-sm font-medium">{product.rating}</span>
-                </div>
-                <span className="text-sm text-gray-500">({product.reviews} reviews)</span>
-              </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">${product.price}</span>
-                {product.originalPrice && (
-                  <span className="text-xl text-gray-400 line-through">${product.originalPrice}</span>
+                <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
+                {product.discount && (
+                  <span className="text-xl text-gray-400 line-through">
+                    {formatPrice(
+                      parseFloat(product.price) / (1 - parseFloat(product.discount) / 100)
+                    )}
+
+                  </span>
                 )}
               </div>
+              <p className="text-sm text-gray-600 mt-2">{product.description}</p>
             </div>
 
             {/* Color Selection */}
@@ -150,15 +214,20 @@ const Product = () => {
               <div className="flex gap-3">
                 {product.colors.map((color) => (
                   <button
-                    key={color.name}
-                    onClick={() => setSelectedColor(color.name)}
-                    className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedColor === color.name
-                        ? 'border-black scale-105'
-                        : 'border-gray-200 hover:border-gray-400'
-                    }`}
+                    key={color.color}
+                    onClick={() => {
+                      setSelectedColor(color.color);
+                      setSelectedImage(0);
+                      const defaultVariant = product.product_variants.find(v => v.color === color.color);
+                      if (defaultVariant) setSelectedSize(defaultVariant.size);
+                    }}
+
+                    className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedColor === color.color
+                      ? 'border-black scale-105'
+                      : 'border-gray-200 hover:border-gray-400'
+                      }`}
                   >
-                    <img src={color.image} alt={color.name} className="w-full h-full object-cover" />
+                    <img src={color.images[0]} alt={color.color} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -168,25 +237,25 @@ const Product = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-bold uppercase">Size</label>
-                <button className="text-sm text-blue-600 hover:underline">Size Guide</button>
               </div>
               <div className="grid grid-cols-6 gap-2">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`py-3 text-sm font-medium border rounded-lg transition-all ${
-                      selectedSize === size
+                {product.product_variants
+                  .filter(variant => variant.color === selectedColor) // chỉ lấy size theo màu hiện tại
+                  .map((variant) => (
+                    <button
+                      key={variant.product_variant_id}
+                      onClick={() => setSelectedSize(variant.size)}
+                      className={`py-3 text-sm font-medium border rounded-lg transition-all ${selectedSize === variant.size
                         ? 'bg-black text-white border-black'
                         : 'bg-white text-black border-gray-300 hover:border-black'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+                        }`}
+                    >
+                      {variant.size}
+                    </button>
+                  ))}
               </div>
-              <p className="text-xs text-gray-500 mt-2">⚡ Low stock items are selling fast</p>
             </div>
+
 
             {/* Quantity */}
             <div>
@@ -206,10 +275,12 @@ const Product = () => {
                 type="primary"
                 size="large"
                 block
+                onClick={handleAddToCart}
                 className="bg-black hover:bg-gray-800 border-0 h-12 font-bold text-base"
               >
                 Add to Bag
               </Button>
+
               <button
                 onClick={() => setIsFavorite(!isFavorite)}
                 className="w-full h-12 border-2 border-black rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-gray-50 transition-colors"
@@ -219,36 +290,62 @@ const Product = () => {
               </button>
             </div>
 
-            {/* Additional Info */}
-            <div className="pt-6 border-t border-gray-200 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">SKU: {product.sku}</span>
-                <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-black">
-                  <ShareAltOutlined /> Share
-                </button>
-              </div>
-            </div>
+            {/* Product Details & Specifications */}
+            <section className="mb-16 pt-8">
+              <Tabs
 
-            {/* Features */}
-            <div className="pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-bold uppercase mb-3">Features</h3>
-              <ul className="space-y-2">
-                {product.features.map((feature, idx) => (
-                  <li key={idx} className="text-sm text-gray-700 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
+                defaultActiveKey="1"
+                size="large"
+                items={[
+                  {
+                    key: '1',
+                    label: <span className="font-bold text-base text-black">CHI TIẾT SẢN PHẨM</span>,
+                    children: (
+                      <div className="py-6 max-w-4xl">
+                        <div className="prose max-w-none">
 
-            {/* Delivery & Returns */}
-            <div className="pt-6 border-t border-gray-200">
-              <button className="w-full flex items-center justify-between py-3 text-left">
-                <span className="text-sm font-bold uppercase">Delivery & Returns</span>
-                <span>+</span>
-              </button>
-            </div>
+                          {/* Mô tả */}
+                          <p className="text-gray-700 leading-relaxed mb-6 text-base">
+                            {product.description}
+                          </p>
+
+                          {/* Thông số kỹ thuật */}
+                          <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+                            <h3 className="text-lg font-bold mb-4 text-black">Thông số kỹ thuật</h3>
+
+                            <div className="space-y-3">
+
+                              {/* SKU (lấy từ biến thể) */}
+                              <div className="flex border-b border-gray-200 pb-3">
+                                <span className="font-semibold text-gray-900 min-w-[180px]">SKU:</span>
+                                <span className="text-gray-700 flex-1">{sku ? sku : ""}</span>
+                              </div>
+
+                              {/* Các thông số khác */}
+                              {product.spec?.map((spec, index) => (
+                                <div
+                                  key={index}
+                                  className="flex border-b border-gray-200 pb-3 last:border-0"
+                                >
+                                  <span className="font-semibold text-gray-900 min-w-[180px]">
+                                    {spec.label}:
+                                  </span>
+                                  <span className="text-gray-700 flex-1">{spec.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            </section>
+
+
+
+
           </div>
         </div>
 
@@ -299,7 +396,7 @@ const Product = () => {
         {/* Reviews Section */}
         <section className="mb-16">
           <h2 className="text-2xl font-bold mb-8">REVIEWS</h2>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             {/* Review Summary */}
             <div className="lg:col-span-1">

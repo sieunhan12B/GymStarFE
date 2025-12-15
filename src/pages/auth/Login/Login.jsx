@@ -42,8 +42,13 @@ const Login = () => {
       console.log(response);
 
 
-
-      dispatch(setUser(response.data.user));
+      
+      dispatch(
+        setUser({
+          user: response.data.user,
+          token: response.data.access_token,
+        })
+      );
 
       showNotification("Đăng nhập thành công!", "success");
 

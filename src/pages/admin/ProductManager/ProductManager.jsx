@@ -49,6 +49,8 @@ const ProductManager = () => {
 
 
     const [loading, setLoading] = useState(true);
+    const [submitLoading, setSubmitLoading] = useState(false);
+
     const [data, setData] = useState([]);
     const [categoriesForModal, setCategoriesForModal] = useState([]);
 
@@ -424,20 +426,21 @@ const ProductManager = () => {
 
     // ===== XỬ LÝ THÊM SỬA SẢN PHẨM  =====
     const handleSubmitProductForm = async (values) => {
+        setSubmitLoading(true);   // <-- bật loading
+
         const formData = new FormData();
         formData.append("name", values.name);
         formData.append("description", values.description || "");
         formData.append("price", Number(values.price));
         formData.append("discount", Number(values.discount || 0));
+
         const finalCategoryId = values.category_level_3 || values.category_level_2 || values.category_level_1;
         formData.append("category_id", finalCategoryId);
 
-        // 🔹 Xử lý thumbnail: giữ ảnh cũ nếu không chọn mới
+        // Thumbnail
         if (values.thumbnail?.[0]) {
             formData.append("thumbnail", values.thumbnail[0]);
         } else if (selectedProduct?.thumbnail) {
-            // Backend cần nhận url hoặc tên file cũ, hoặc không gửi gì nếu tự giữ
-            // Tùy backend xử lý, ví dụ:
             formData.append("thumbnail_url", selectedProduct.thumbnail);
         }
 
@@ -475,13 +478,19 @@ const ProductManager = () => {
                 await productService.add(formData);
                 showNotification("Thêm sản phẩm thành công", "success");
             }
+
             setIsAddModalVisible(false);
             fetchProducts();
+
         } catch (err) {
             console.error(err);
-            showNotification("Cập nhật thất bại", "error");
+            showNotification(err?.response?.data?.message || "Có lỗi xảy ra", "error");
+
+        } finally {
+            setSubmitLoading(false);  // <-- tắt loading
         }
     };
+
 
 
     // ===== XỬ LÝ THAY ĐỔI TRẠNG THÁI =====
@@ -509,179 +518,10 @@ const ProductManager = () => {
         } catch (error) {
             console.error(error);
             showNotification("Xóa sản phẩm thất bại", "error");
-        }finally{
+        } finally {
             setIsDeleteModalOpen(false);
         }
     };
-
-
-
-
-
-
-    // const renderEditModal = () => (
-    //     <Modal
-    //         title="Chỉnh sửa sản phẩm"
-    //         open={isEditModalVisible}
-    //         onCancel={() => setIsEditModalVisible(false)}
-    //         onOk={handleEditSubmit}
-    //         okText="Lưu thay đổi"
-    //         width={650}
-    //         centered
-    //     >
-    //         <Form form={form} layout="vertical">
-
-    //             {/* Tên sản phẩm */}
-    //             <Form.Item
-    //                 name="name"
-    //                 label="Tên sản phẩm"
-    //                 rules={[{ required: true, message: "Vui lòng nhập tên" }]}
-    //             >
-    //                 <Input />
-    //             </Form.Item>
-
-    //             {/* Mô tả */}
-    //             <Form.Item name="description" label="Mô tả">
-    //                 <Input.TextArea rows={3} />
-    //             </Form.Item>
-
-    //             {/* Giá */}
-    //             <Form.Item
-    //                 name="price"
-    //                 label="Giá gốc"
-    //                 rules={[{ required: true, message: "Vui lòng nhập giá" }]}
-    //             >
-    //                 <InputNumber min={0} style={{ width: "100%" }} />
-    //             </Form.Item>
-
-    //             {/* Giảm giá */}
-    //             <Form.Item name="discount" label="Giảm giá (%)">
-    //                 <InputNumber min={0} max={100} style={{ width: "100%" }} />
-    //             </Form.Item>
-
-    //             {/* Danh mục */}
-    //             <Form.Item
-    //                 name="category_id"
-    //                 label="Danh mục"
-    //                 rules={[{ required: true, message: "Chọn danh mục" }]}
-    //             >
-    //                 <Select>
-    //                     {categoriesForModal.map(c => (
-    //                         <Select.Option key={c.category_id} value={c.category_id}>
-    //                             {c.name}
-    //                         </Select.Option>
-    //                     ))}
-    //                 </Select>
-    //             </Form.Item>
-
-    //             {/* Upload Thumbnail */}
-    //             <Form.Item label="Ảnh thumbnail">
-    //                 <Upload
-    //                     listType="picture-card"
-    //                     beforeUpload={(file) => {
-    //                         setThumbnailFile(file);
-    //                         setThumbnailPreview(URL.createObjectURL(file));
-    //                         return false;
-    //                     }}
-    //                     showUploadList={false}
-    //                 >
-    //                     {thumbnailPreview ? (
-    //                         <img
-    //                             src={thumbnailPreview}
-    //                             alt="thumbnail"
-    //                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
-    //                         />
-    //                     ) : (
-    //                         <PlusOutlined />
-    //                     )}
-    //                 </Upload>
-    //             </Form.Item>
-
-    //             {/* SPEC */}
-    //             <Form.List name="specs">
-    //                 {(fields, { add, remove }) => (
-    //                     <>
-    //                         {fields.map(({ key, name, ...rest }) => (
-    //                             <Space
-    //                                 key={key}
-    //                                 style={{ display: "flex", marginBottom: 8 }}
-    //                                 align="baseline"
-    //                             >
-    //                                 <Form.Item
-    //                                     {...rest}
-    //                                     name={[name, "label"]}
-    //                                     rules={[{ required: true, message: "Nhập tên thông số" }]}
-    //                                 >
-    //                                     <Input placeholder="Tên thông số" />
-    //                                 </Form.Item>
-
-    //                                 <Form.Item
-    //                                     {...rest}
-    //                                     name={[name, "value"]}
-    //                                     rules={[{ required: true, message: "Nhập giá trị" }]}
-    //                                 >
-    //                                     <Input placeholder="Giá trị" />
-    //                                 </Form.Item>
-
-    //                                 <Button danger onClick={() => remove(name)}>
-    //                                     Xóa
-    //                                 </Button>
-    //                             </Space>
-    //                         ))}
-
-    //                         <Button type="dashed" onClick={() => add()} block>
-    //                             + Thêm thông số
-    //                         </Button>
-    //                     </>
-    //                 )}
-    //             </Form.List>
-
-    //         </Form>
-    //     </Modal>
-    // );
-
-
-    // const handleEditSubmit = async () => {
-    //     try {
-    //         const values = await form.validateFields();
-
-    //         const formData = new FormData();
-
-    //         formData.append("name", values.name);
-    //         formData.append("description", values.description || "");
-    //         formData.append("price", values.price);
-    //         formData.append("discount", values.discount || 0);
-    //         formData.append("category_id", values.category_id);
-
-    //         // specs: array -> stringify JSON
-    //         formData.append("spec", JSON.stringify(values.specs || []));
-
-    //         // append thumbnail nếu người dùng đổi ảnh
-    //         if (thumbnailFile) {
-    //             formData.append("thumbnail", thumbnailFile);
-    //         }
-
-    //         const res = await productService.updateInfo(
-    //             selectedProduct.product_id,
-    //             formData
-    //         );
-
-    //         showNotification(res.data.message, "success");
-    //         setIsEditModalVisible(false);
-    //         setIsDetailModalOpen(false);
-    //         fetchProducts();
-
-    //     } catch (err) {
-    //         console.error(err);
-    //         showNotification("Cập nhật thất bại", "error");
-    //     }
-    // };
-
-
-
-
-
-
 
 
     // ===== MODAL CHI TIẾT SẢN PHẨM =====
@@ -805,6 +645,7 @@ const ProductManager = () => {
 
     // ===== MODAL THÊM SẢN PHẨM =====
     const renderAddEditModal = () => (
+
         <Modal
             title={null}
             open={isAddModalVisible}
@@ -1111,7 +952,7 @@ const ProductManager = () => {
                                                                     className="flex-1"
 
                                                                 >
-                                                                    <Input placeholder="VD: S, M, L hoặc 20mm" />
+                                                                    <Input placeholder="VD: S, M, L, XL hoặc XXL " />
                                                                 </Form.Item>
 
                                                                 <Form.Item
@@ -1155,11 +996,20 @@ const ProductManager = () => {
                     {/* Footer */}
                     <div className="flex justify-end gap-3 mt-6">
                         <Button size="large" onClick={() => setIsAddModalVisible(false)}>Hủy</Button>
-                        <Button type="primary" htmlType="submit" size="large" className="bg-blue-600">{selectedProduct ? "Cập nhật sản phẩm" : "Tạo sản phẩm"}</Button>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            size="large"
+                            className="bg-blue-600"
+                            loading={submitLoading}   // <-- thêm dòng này
+                        >
+                            {selectedProduct ? "Cập nhật sản phẩm" : "Tạo sản phẩm"}
+                        </Button>
+
                     </div>
                 </div>
             </Form>
-        </Modal>
+        </Modal >
     );
 
     // ===== MODAL XÁC NHẬN THAY ĐỔI TRẠNG THÁI =====
@@ -1249,7 +1099,9 @@ const ProductManager = () => {
         />
     );
 
-
+    const log = () => {
+        console.log(selectedProduct);
+    }
 
 
 
@@ -1260,6 +1112,7 @@ const ProductManager = () => {
             {renderTable()}
             {renderDetailProductModal()}
             {/* {renderEditModal()} */}
+            {log()}
             {renderAddEditModal()}
             {renderStatusModal()}
             {renderDeleteModal()}

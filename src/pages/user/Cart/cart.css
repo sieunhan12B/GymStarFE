@@ -1,0 +1,10 @@
+.address-select .ant-select-selector {
+  height: 64px !important;
+  padding: 12px 16px !important;
+  display: flex;
+  align-items: center;
+}
+
+.address-select .ant-select-selection-item {
+  line-height: 1.3;
+}

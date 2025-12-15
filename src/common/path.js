@@ -1,9 +1,15 @@
 
 export const path = {
+
+
+    // ------------------ USER ------------------
+
   home: "/",
   // category:":category",
   category: "/danh-muc/:categoryId",
-  product: "/danh-muc/:categoryId/:productId",
+  product: ":category/:subcategory/:productId",
+  cart:"cart",
+  checkout:"checkout",
 
 
   signUp: "/sign-up",

@@ -30,8 +30,8 @@ const CategoryManager = () => {
         level2: null,
     });
 
- 
 
+    // ===== CHỨC NĂNG =====
     const getLevel1 = categories => categories;
 
     const getLevel2 = (categories, parentId) => {
@@ -68,49 +68,7 @@ const CategoryManager = () => {
         document.title = "Quản lý danh mục sản phẩm - GymStar Admin";
     }, []);
 
-    // ========== DATA TABLE ==========
-    const categoryColumns = [
-        {
-            title: "Tên danh mục",
-            dataIndex: "name",
-            key: "name",
-            render: (text) => <span className="font-medium text-gray-900">{text}</span>,
-        },
-        {
-            title: "Ngày tạo",
-            dataIndex: "createdAt",
-            key: "createdAt",
-            align: "center",
-            render: (date) =>
-                dayjs(date, "HH:mm:ss DD/MM/YYYY").isValid()
-                    ? dayjs(date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
-                    : "—",
-        },
-        {
-            title: "Thao tác",
-            key: "action",
-            width: 150,
-            fixed: "right",
-            render: (_, record) => (
-                <Space size="small">
-                    <Button
-                        type="default"
-                        icon={<EditOutlined />}
-                        size="small"
-                        className="text-blue-500 border-blue-500 hover:bg-blue-50"
-                        onClick={() => openEditModal(record)}
-                    />
-                    <Button
-                        onClick={() => openDeleteModal(record)}
-                        icon={<DeleteOutlined />}
-                        size="small"
-                        danger
-                    />
 
-                </Space>
-            ),
-        },
-    ];
 
 
 
@@ -234,30 +192,69 @@ const CategoryManager = () => {
 
 
 
-     // ========== MODAL XOÁ DANH MỤC ==========
-    const renderDeleteModal = () => (
-        <Modal
-            title="Xác nhận xoá danh mục"
-            open={isDeleteModalOpen}
-            onOk={handleDeleteCategory}
-            onCancel={() => setIsDeleteModalOpen(false)}
-            okText="Xác nhận"
-            cancelText="Hủy"
-            centered
-            okButtonProps={{
-                className:
-                    "bg-black text-white hover:!bg-white rounded-lg px-5 py-2 font-medium hover:!text-black border-black border-2"
-            }}
-            cancelButtonProps={{
-                className:
-                    "bg-white text-black hover:!bg-black rounded-lg px-5 py-2 font-medium hover:!text-white border-black border-2"
-            }}
-        >
-            <p>
-                Bạn có chắc muốn xoá danh mục:
-                <b> {selectedCategory?.name}</b> không?
-            </p>
-        </Modal>
+    // ========== CATEGORY COLUMNS ==========
+    const categoryColumns = [
+        {
+            title: "Tên danh mục",
+            dataIndex: "name",
+            key: "name",
+            render: (text) => <span className="font-medium text-gray-900">{text}</span>,
+        },
+        {
+            title: "Ngày tạo",
+            dataIndex: "createdAt",
+            key: "createdAt",
+            align: "center",
+            render: (date) =>
+                dayjs(date, "HH:mm:ss DD/MM/YYYY").isValid()
+                    ? dayjs(date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
+                    : "—",
+        },
+        {
+            title: "Thao tác",
+            key: "action",
+            width: 150,
+            fixed: "right",
+            render: (_, record) => (
+                <Space size="small">
+                    <Button
+                        type="default"
+                        icon={<EditOutlined />}
+                        size="small"
+                        className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                        onClick={() => openEditModal(record)}
+                    />
+                    <Button
+                        onClick={() => openDeleteModal(record)}
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        danger
+                    />
+
+                </Space>
+            ),
+        },
+    ];
+
+    // ========== RENDER HEADER ==========
+    const renderHeader = () => (
+        <Header
+            filterOn={false}
+            itemName={"danh mục"}
+            // onAdd={openAddModal} //?openAddModal
+            onAddItem={openAddModal}
+        />
+    );
+
+    // ========== RENDER TABLE ==========
+    const renderTable = () => (
+        <DataTable
+            columns={categoryColumns}
+            dataSource={categories}
+            totalText="danh mục"
+            loading={loading}
+            rowKey={"category_id"}
+        />
     );
 
     // ========== MODAL THÊM/SỬA DANH MỤC ==========
@@ -325,7 +322,7 @@ const CategoryManager = () => {
                         allowClear
                     />
 
-                  
+
 
                 </div>
 
@@ -334,26 +331,35 @@ const CategoryManager = () => {
         </Modal>
     );
 
-    // ========== RENDER TABLE ==========
-    const renderTable = () => (
-        <DataTable
-            columns={categoryColumns}
-            dataSource={categories}
-            totalText="danh mục"
-            loading={loading}
-            rowKey={"category_id"}
-        />
+    // ========== MODAL XOÁ DANH MỤC ==========
+    const renderDeleteModal = () => (
+        <Modal
+            title="Xác nhận xoá danh mục"
+            open={isDeleteModalOpen}
+            onOk={handleDeleteCategory}
+            onCancel={() => setIsDeleteModalOpen(false)}
+            okText="Xác nhận"
+            cancelText="Hủy"
+            centered
+            okButtonProps={{
+                className:
+                    "bg-black text-white hover:!bg-white rounded-lg px-5 py-2 font-medium hover:!text-black border-black border-2"
+            }}
+            cancelButtonProps={{
+                className:
+                    "bg-white text-black hover:!bg-black rounded-lg px-5 py-2 font-medium hover:!text-white border-black border-2"
+            }}
+        >
+            <p>
+                Bạn có chắc muốn xoá danh mục:
+                <b> {selectedCategory?.name}</b> không?
+            </p>
+        </Modal>
     );
 
-    // ========== RENDER HEADER ==========
-    const renderHeader = () => (
-        <Header
-            filterOn={false}
-            itemName={"danh mục"}
-            // onAdd={openAddModal} //?openAddModal
-            onAddItem={openAddModal}
-        />
-    );
+
+
+
 
 
 

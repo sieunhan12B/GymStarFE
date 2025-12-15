@@ -3,8 +3,9 @@ import { Navigate } from "react-router-dom";
 import { path } from "../common/path";
 
 export default function ProtectedRoute({ children, allowedRoles }) {
-  const user = useSelector((state) => state.userSlice.user);
-  console.log(user);
+  const user = useSelector((state) => state.userSlice.user?.user);
+
+  console.log(user.role_id);
 
   if (!user) {
     return <Navigate to={path.logIn} replace />;
