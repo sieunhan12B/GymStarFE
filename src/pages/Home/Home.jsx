@@ -1,16 +1,46 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Input, Badge, Dropdown, Card, Row, Col, Button, Image } from 'antd';
 import { SearchOutlined, HeartOutlined, UserOutlined, ShoppingOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons';
 import ProductCard from '../../components/ProductCard/ProductCard';
-import { accessories, menProducts, womenProducts } from '@/data/productData';
 import { Link } from 'react-router-dom';
 import { generateSlug } from '../../utils/generateSlug ';
-import { path } from '../../common/path';
+import { productService } from '../../services/product.service';
+import ProductSection from '../../components/ProductSection/ProductSection';
 
 const Home = () => {
-  const womanScrollRef = useRef(null);
-  const menScrollRef = useRef(null);
-  const accessoriesScrollRef = useRef(null);
+
+  const categoryIds = {
+    nam: 1,
+    nu: 2,
+    phukien: 3,
+  };
+
+  const [menProducts, setMenProducts] = useState([]);
+  const [womenProducts, setWomenProducts] = useState([]);
+  const [accessories, setAccessories] = useState([]);
+
+
+  const menRef = useRef(null);
+  const womenRef = useRef(null);
+  const accessoriesRef = useRef(null);
+
+
+
+  useEffect(() => {
+    Promise.all([
+      productService.getProductsByCategoryId(categoryIds.nu),
+      productService.getProductsByCategoryId(categoryIds.nam),
+      productService.getProductsByCategoryId(categoryIds.phukien),
+    ])
+      .then(([nuRes, namRes, pkRes]) => {
+        setWomenProducts(nuRes.data.data);
+        setMenProducts(namRes.data.data);
+        setAccessories(pkRes.data.data);
+      })
+      .catch((err) => console.error("Lỗi khi load sản phẩm:", err));
+  }, []);
+
+
 
 
   const scrollProducts = (ref, direction) => {
@@ -25,16 +55,18 @@ const Home = () => {
     }
   };
 
+
+ 
+
   return (
     <div className="min-h-screen bg-white">
 
       {/* Banner 1 */}
       <section className="relative">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+        <div className="grid grid-cols-1 md:grid-cols-3">
           <div className="relative h-96 md:h-[600px] overflow-hidden group">
             <img
               src="https://images.unsplash.com/photo-1556817411-31ae72fa3ea0?w=800"
-              alt="Hero 1"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <div className="absolute bottom-8 left-8">
@@ -44,81 +76,40 @@ const Home = () => {
               </Button>
             </div>
           </div>
+
           <div className="relative h-96 md:h-[600px] overflow-hidden group bg-gray-100">
             <img
               src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800"
-              alt="Hero 2"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <div className="absolute top-8 right-8 text-right">
-              <p className="text-black text-xs mb-1">COMING SOON</p>
+              <p className="text-black text-xs">COMING SOON</p>
               <h2 className="text-black text-2xl font-bold">VITAL<br />SEAMLESS 4.0</h2>
             </div>
           </div>
+
           <div className="relative h-96 md:h-[600px] overflow-hidden group">
             <img
               src="https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=800"
-              alt="Hero 3"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           </div>
         </div>
       </section>
 
-      {/* Women Products */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <div className="flex items-end justify-between mb-8">
-          <div className="flex items-end gap-4">
-            <div className="flex flex-col">
-              <h2 className="text-2xl font-bold -mt-1">NỮ</h2>
-            </div>
-
-            <Link
-              to={`/danh-muc/nu`}
-              className="text-sm font-medium flex items-center hover:underline pb-[2px]"
-            >
-              Xem Tất Cả
-              <RightOutlined className="ml-1 text-xs" />
-            </Link>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => scrollProducts(womanScrollRef, 'left')}
-              className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-              aria-label="Scroll left"
-            >
-              <LeftOutlined className="text-sm" />
-            </button>
-            <button
-              onClick={() => scrollProducts(womanScrollRef, 'right')}
-              className="w-10 h-10 rounded-full bg-black hover:bg-gray-800 text-white flex items-center justify-center transition-colors"
-              aria-label="Scroll right"
-            >
-              <RightOutlined className="text-sm" />
-            </button>
-          </div>
-        </div>
-
-        <div
-          ref={womanScrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {womenProducts.map((product) => (
-            <div key={product.id} className="w-72 flex-shrink-0">
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Women */}
+      <ProductSection
+        title="NỮ"
+        link="nu"
+        data={womenProducts}
+        scrollRef={womenRef}
+        scrollProducts={scrollProducts}
+      />
 
       {/* Banner 2 */}
       <section className="relative h-[500px] overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600"
-          alt="Workshop"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
@@ -132,139 +123,52 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Men Products */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <div className="flex items-end justify-between mb-8">
-          <div className="flex items-end gap-4">
-            <div className="flex flex-col">
-              <h2 className="text-2xl font-bold -mt-1">NAM</h2>
-            </div>
+      {/* Men */}
+      <ProductSection
+        title="NAM"
+        link="nam"
+        data={menProducts}
+        scrollRef={menRef}
+        scrollProducts={scrollProducts}
+      />
 
-            <Link
-              to={`/danh-muc/nam`}
-              className="text-sm font-medium flex items-center hover:underline pb-[2px]"
-            >
-              Xem Tất Cả
-              <RightOutlined className="ml-1 text-xs" />
-            </Link>
-          </div>
+      {/* Accessories */}
+      <ProductSection
+        title="PHỤ KIỆN"
+        link="phu-kien"
+        data={accessories}
+        scrollRef={accessoriesRef}
+        scrollProducts={scrollProducts}
+      />
 
-          {/* Navigation Buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => scrollProducts(menScrollRef, 'left')}
-              className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-              aria-label="Scroll left"
-            >
-              <LeftOutlined className="text-sm" />
-            </button>
-            <button
-              onClick={() => scrollProducts(menScrollRef, 'right')}
-              className="w-10 h-10 rounded-full bg-black hover:bg-gray-800 text-white flex items-center justify-center transition-colors"
-              aria-label="Scroll right"
-            >
-              <RightOutlined className="text-sm" />
-            </button>
-          </div>
-        </div>
-
-        <div
-          ref={menScrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {menProducts.map((product) => (
-            <div key={product.id} className="w-72 flex-shrink-0">
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Accessories Products */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <div className="flex items-end justify-between mb-8">
-          <div className="flex items-end gap-4">
-            <div className="flex flex-col">
-              <h2 className="text-2xl font-bold -mt-1">PHỤ KIỆN</h2>
-            </div>
-
-            <Link
-              to={`/danh-muc/phu-kien`}
-              className="text-sm font-medium flex items-center hover:underline pb-[2px]"
-            >
-              Xem Tất Cả
-              <RightOutlined className="ml-1 text-xs" />
-            </Link>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => scrollProducts(accessoriesScrollRef, 'left')}
-              className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-              aria-label="Scroll left"
-            >
-              <LeftOutlined className="text-sm" />
-            </button>
-            <button
-              onClick={() => scrollProducts(accessoriesScrollRef, 'right')}
-              className="w-10 h-10 rounded-full bg-black hover:bg-gray-800 text-white flex items-center justify-center transition-colors"
-              aria-label="Scroll right"
-            >
-              <RightOutlined className="text-sm" />
-            </button>
-          </div>
-        </div>
-
-        <div
-          ref={accessoriesScrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {accessories.map((product) => (
-            <div key={product.id} className="w-72 flex-shrink-0">
-              <ProductCard hoverSize={false} product={product} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-
-      {/* Category Options */}
+      {/* Category Grid */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <Row gutter={[16, 16]}>
           {[
-            { title: 'WOMENS', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800' },
-            { title: 'MENS', image: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800' },
-            { title: 'ACCESSORIES', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800' }
-          ].map((item, index) => {
-            const linkPath = `/${generateSlug(item.title)}`; // tạo đường dẫn theo title
-
-            return (
-              <Col key={index} xs={24} sm={24} md={8} lg={8}>
-                <div className="relative h-96 overflow-hidden group cursor-pointer">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute bottom-6 left-6">
-                    <h3 className="text-white text-xl font-bold mb-2">{item.title}</h3>
-                    <Link
-                      to={linkPath}
-                      className="bg-white text-black border-0 hover:bg-gray-100 px-4 py-2 rounded inline-block"
-                    >
-                      SHOP NOW
-                    </Link>
-                  </div>
+            { title: "WOMENS", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800" },
+            { title: "MENS", image: "https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800" },
+            { title: "ACCESSORIES", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800" },
+          ].map((item, i) => (
+            <Col key={i} xs={24} sm={24} md={8}>
+              <div className="relative h-96 overflow-hidden group cursor-pointer">
+                <img
+                  src={item.image}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute bottom-6 left-6">
+                  <h3 className="text-white text-xl font-bold mb-2">{item.title}</h3>
+                  <Link
+                    to={`/${generateSlug(item.title)}`}
+                    className="bg-white text-black px-4 py-2 rounded hover:bg-gray-100 inline-block"
+                  >
+                    SHOP NOW
+                  </Link>
                 </div>
-              </Col>
-            );
-          })}
+              </div>
+            </Col>
+          ))}
         </Row>
       </section>
-
 
     </div>
   );

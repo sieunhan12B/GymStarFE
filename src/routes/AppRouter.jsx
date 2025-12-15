@@ -30,6 +30,7 @@ import CategoryManager from "../pages/admin/CategoryManager/CategoryManager";
 import Error from "../pages/Error/Error";
 import OrderManager from "../pages/admin/OrderManager/OrderManager";
 import ReviewManager from "../pages/admin/ReviewManager/ReviewManager";
+import Cart from "../pages/user/Cart/Cart";
 
 
 
@@ -78,6 +79,12 @@ export const AppRouter = [
                 path: path.product,
                 element: <Product />,
             },
+            {
+                path: path.cart,
+                element: <Cart />,
+
+            },
+           
             {
                 path: path.account,
                 element: <ManagerAccount />,
@@ -152,7 +159,7 @@ export const AppRouter = [
                 path: path.orderManager,
                 element: (
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.ORDER_MANAGER]}>
-                        <OrderManager/>
+                        <OrderManager />
                     </ProtectedRoute>
                 ),
             },
@@ -170,11 +177,11 @@ export const AppRouter = [
                 path: path.reviewManager,
                 element: (
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FEEDBACK_MANAGER]}>
-                       <ReviewManager/>
+                        <ReviewManager />
                     </ProtectedRoute>
                 ),
             }
-        
+
 
         ],
     },

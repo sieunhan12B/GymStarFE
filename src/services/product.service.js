@@ -59,4 +59,29 @@ export const productService = {
             throw error;
         }
     },
+
+
+        // ------------------ USER ------------------
+
+    // Lấy tất cả sản phẩm theo id danh mục
+    getProductsByCategoryId: async (category_id) => {
+        try {
+            return await http.get(`/QuanLySanPham/LaySanPhamTheoDanhMucCap1/${category_id}?page=1&limit=100`);
+        } catch (error) {
+            console.error("Lỗi lấy danh sách sản phẩm theo danh mục:", error);
+            throw error;
+        }
+    },
+
+    getProductById:async (product_id) => {
+        try {
+            return await http.get(`/QuanLySanPham/LayChiTietSanPham/${product_id}`);
+        } catch (error) {
+            console.error("Lỗi lấy chi tiết sản phẩm theo id:", error);
+            throw error;
+        }
+    },
+   
 };
+
+

@@ -26,7 +26,7 @@ const Account = () => {
   const fetchUserInfo = async () => {
     try {
       setLoading(true);
-      const res = await userService.getInfoUser(authUser.user_id);
+      const res = await userService.getInfoUser();
       setUserInfo(res.data.data);
     } catch (error) {
       message.error("Không thể lấy thông tin người dùng");

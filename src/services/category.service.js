@@ -13,6 +13,18 @@ export const danhMucService = {
     }
   },
 
+  getCategoryLvl1: async () => {
+  try {
+    return await http.get("/QuanLyDanhMuc/LayDanhMucCap1");
+  } catch (error) {
+    console.error("Lỗi lấy danh mục cấp 1:", error);
+    throw error;
+  }
+},
+
+
+  
+
   add: async (data) => {
     try {
       return await http.post("/QuanLyDanhMuc/TaoDanhMuc", data);

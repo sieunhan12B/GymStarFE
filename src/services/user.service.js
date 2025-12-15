@@ -59,9 +59,9 @@ export const userService = {
             throw error;
         }
     },
-    getInfoUser: async (user_id) => {
+    getInfoUser: async () => {
         try {
-            return await http.get(`/QuanLyNguoiDung/LayThongTinNguoiDung/${user_id}`);
+            return await http.get("/QuanLyNguoiDung/LayThongTinNguoiDung");
         } catch (error) {
             console.error("Lỗi lấy thông tin người dùng:", error);
             throw error;

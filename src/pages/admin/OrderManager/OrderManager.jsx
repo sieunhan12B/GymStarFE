@@ -1,76 +1,99 @@
 import { useState, useEffect, useContext } from "react";
 import { Table, Tag, Button, Space, Modal } from "antd";
-import { EditOutlined, LockOutlined, UnlockOutlined } from "@ant-design/icons";
+import { EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import Header from "@/templates/AdminTemplate/Header";
 import { NotificationContext } from "@/App";
-import { removeVietnameseTones } from '@/utils/removeVietnameseTones';
-
-// ===== MOCK DATA =====
-const mockOrders = [
-  {
-    order_id: 1001,
-    customer_name: "Nguyễn Văn A",
-    created_at: "2025-12-01T10:20:30Z",
-    status: "pending",
-    total: 1200000,
-    items: [
-      { name: "Sản phẩm 1", qty: 2, price: 150000 },
-      { name: "Sản phẩm 2", qty: 1, price: 850000 },
-    ],
-  },
-  {
-    order_id: 1002,
-    customer_name: "Trần Thị B",
-    created_at: "2025-12-02T14:10:00Z",
-    status: "shipping",
-    total: 850000,
-    items: [
-      { name: "Sản phẩm 3", qty: 1, price: 850000 },
-    ],
-  },
-  {
-    order_id: 1003,
-    customer_name: "Lê Văn C",
-    created_at: "2025-12-03T09:45:12Z",
-    status: "completed",
-    total: 2500000,
-    items: [
-      { name: "Sản phẩm 4", qty: 1, price: 1500000 },
-      { name: "Sản phẩm 5", qty: 2, price: 500000 },
-    ],
-  },
-  {
-    order_id: 1004,
-    customer_name: "Phạm Thị D",
-    created_at: "2025-12-03T16:30:00Z",
-    status: "cancelled",
-    total: 1100000,
-    items: [
-      { name: "Sản phẩm 6", qty: 1, price: 1100000 },
-    ],
-  },
-];
+import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
+import { orderService } from "../../../services/order.service";
 
 const OrderManager = () => {
-  // ===== STATE =====
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+
+
+
+
 
   const { showNotification } = useContext(NotificationContext);
 
-  // ===== LOAD MOCK DATA =====
-  const fetchOrders = () => {
+
+  const handleUpdateStatus = async () => {
+    const data = {
+      status: newStatus
+    };
+
+    try {
+      const res = await orderService.updateStatus(selectedOrder.order_id, data)
+      console.log(data,selectedOrder.order_id)
+      const data1 = await res.json();
+
+      if (!res.ok) {
+        showNotification(data1.message || "Cập nhật thất bại!", "error");
+        return;
+      }
+
+      showNotification("Cập nhật trạng thái thành công!", "success");
+      setIsStatusModalOpen(false);
+      fetchOrders();
+
+    } catch (error) {
+      console.log(error);
+      showNotification("Lỗi kết nối server!", "error");
+    }
+  };
+
+  const handleOpenChangeStatus = (order) => {
+    console.log(order);
+    setSelectedOrder(order);
+
+    const nextStatuses = allowedTransitions[order.status];
+
+    if (!nextStatuses || nextStatuses.length === 0) {
+      showNotification("Đơn hàng này không thể đổi trạng thái!", "error");
+      return;
+    }
+
+    setNewStatus(nextStatuses[0]); // auto chọn trạng thái tiếp theo đầu tiên
+    setIsStatusModalOpen(true);
+  };
+
+
+
+
+
+
+
+  const allowedTransitions = {
+    "chờ xác nhận": ["đã xác nhận"],
+    "đã xác nhận": ["đang xử lý"],
+    "đang xử lý": ["đang giao"],
+    "đang giao": ["đã giao", "giao thất bại"],
+    "giao thất bại": [],
+    "đã giao": ["đổi hàng"],
+    "đổi hàng": [],
+  };
+
+
+  // ================= CALL API ================
+  const fetchOrders = async () => {
     setLoading(true);
     try {
-      setOrders(mockOrders);
+      const res = await fetch(
+        "http://localhost:5000/QuanLyDonHang/LayDanhSachTatCaDonHang?page=1&limit=100"
+      );
+
+      const data = await res.json();
+      setOrders(data.data);
+
       showNotification("Tải danh sách đơn hàng thành công!", "success");
-    } catch {
-      showNotification("Tải danh sách đơn hàng thất bại!", "error");
+    } catch (error) {
+      showNotification("Tải đơn hàng thất bại!", "error");
     } finally {
       setLoading(false);
     }
@@ -80,70 +103,83 @@ const OrderManager = () => {
     fetchOrders();
   }, []);
 
-  // ===== FILTER SEARCH =====
-  const filteredOrders = orders.filter(order => {
+  // ================= FILTER ==================
+  const filteredOrders = orders.filter((order) => {
     if (!searchText) return true;
-    const text = searchText.toLowerCase();
 
-    return removeVietnameseTones(order.customer_name || "")
-      .toLowerCase()
-      .includes(text);
+    const keyword = removeVietnameseTones(searchText.toLowerCase());
+    const name = removeVietnameseTones((order.receiver_name || "").toLowerCase());
+
+    return name.includes(keyword);
   });
 
-  // ===== CHANGE STATUS =====
-  const handleOpenChangeStatusModal = (order) => {
-    setSelectedOrder(order);
-    setIsStatusModalOpen(true);
-  };
-
-  const handleChangeStatusOrder = () => {
-    if (!selectedOrder) return;
-
-    const newOrders = orders.map(o =>
-      o.order_id === selectedOrder.order_id
-        ? {
-            ...o,
-            status: o.status === "completed" ? "pending" : "completed",
-          }
-        : o
-    );
-
-    setOrders(newOrders);
-    showNotification(`Đơn hàng ${selectedOrder.order_id} đã cập nhật trạng thái!`, "success");
-    setIsStatusModalOpen(false);
-  };
-
-  // ===== TABLE COLUMNS =====
+  // ================= TABLE COLUMNS ============
   const orderColumns = [
-    { title: "Mã đơn hàng", dataIndex: "order_id", key: "order_id" },
-    { title: "Khách hàng", dataIndex: "customer_name", key: "customer_name" },
-
     {
-      title: "Ngày tạo",
-      dataIndex: "created_at",
-      key: "created_at",
-      render: (date) => dayjs(date).format("DD/MM/YYYY"),
+      title: "Mã đơn",
+      dataIndex: "order_id",
+      key: "order_id",
+      render: (id) => <b>#{id}</b>,
     },
 
     {
-      title: "Trạng thái",
+      title: "Khách hàng",
+      render: (_, rec) => (
+        <>
+          <div><b>{rec.receiver_name}</b></div>
+          <div className="text-gray-500">{rec.phone}</div>
+        </>
+      ),
+    },
+
+    {
+      title: "Số SP",
+      key: "items",
+      render: (_, record) => <span>{record.items.length} sản phẩm</span>,
+    },
+
+    {
+      title: "Ngày tạo",
+      dataIndex: "order_date",
+      key: "order_date",
+      render: (date) => date,
+    },
+
+    {
+      title: "Thanh toán",
+      key: "payment",
+      render: (_, rec) => {
+        const color = {
+          "thành công": "green",
+          "đang chờ": "orange",
+          "thất bại": "red",
+        };
+
+        return (
+          <Space direction="vertical">
+            <Tag>{rec.payment.method}</Tag>
+            <Tag color={color[rec.payment.status]}>
+              {rec.payment.status}
+            </Tag>
+          </Space>
+        );
+      },
+    },
+
+    {
+      title: "Trạng thái đơn",
       dataIndex: "status",
       key: "status",
-      filters: [
-        { text: "Chờ xử lý", value: "pending" },
-        { text: "Đang giao", value: "shipping" },
-        { text: "Hoàn thành", value: "completed" },
-        { text: "Hủy", value: "cancelled" },
-      ],
-      onFilter: (value, record) => record.status === value,
       render: (status) => {
-        const colors = {
-          pending: "orange",
-          shipping: "blue",
-          completed: "green",
-          cancelled: "red",
+        const color = {
+          "chờ xác nhận": "orange",
+          "đang giao": "blue",
+          "đã hoàn thành": "green",
+          "đã hủy": "red",
+          "đổi hàng": "purple",
         };
-        return <Tag color={colors[status]}>{status.toUpperCase()}</Tag>;
+
+        return <Tag color={color[status]}>{status}</Tag>;
       },
     },
 
@@ -151,7 +187,7 @@ const OrderManager = () => {
       title: "Tổng tiền",
       dataIndex: "total",
       key: "total",
-      render: (total) => `${total.toLocaleString()}₫`,
+      render: (total) => <b>{total.toLocaleString()}₫</b>,
     },
 
     {
@@ -160,7 +196,6 @@ const OrderManager = () => {
       render: (_, record) => (
         <Space>
           <Button
-            type="default"
             icon={<EditOutlined />}
             onClick={() => {
               setSelectedOrder(record);
@@ -170,63 +205,54 @@ const OrderManager = () => {
             Xem
           </Button>
 
-          <Button
-            type={record.status === "completed" ? "default" : "primary"}
-            danger={record.status !== "completed"}
-            icon={record.status === "completed" ? <UnlockOutlined /> : <LockOutlined />}
-            onClick={() => handleOpenChangeStatusModal(record)}
-          />
+          <Button type="primary" onClick={() => handleOpenChangeStatus(record)}>
+            Đổi trạng thái
+          </Button>
         </Space>
       ),
     },
+
   ];
 
-  // ===== MODAL: CURRENT STATUS =====
-  const statusModal = (
-    <Modal
-      title="Xác nhận thay đổi trạng thái"
-      open={isStatusModalOpen}
-      onCancel={() => setIsStatusModalOpen(false)}
-      onOk={handleChangeStatusOrder}
-      okText="Xác nhận"
-      cancelText="Hủy"
-      centered
-    >
-      <p>Bạn có chắc muốn thay đổi trạng thái đơn hàng: <b>{selectedOrder?.order_id}</b>?</p>
-    </Modal>
-  );
-
-  // ===== MODAL: ORDER DETAIL =====
+  // ================= DETAIL MODAL =============
   const detailModal = (
     <Modal
       title={`Chi tiết đơn hàng #${selectedOrder?.order_id}`}
       open={isDetailModalOpen}
       onCancel={() => setIsDetailModalOpen(false)}
       footer={null}
-      centered
       width={700}
     >
       {selectedOrder && (
         <div className="space-y-4">
 
-          {/* THÔNG TIN KHÁCH */}
+          {/* Khách hàng */}
           <div className="border p-3 rounded-md">
-            <h3 className="font-semibold text-lg mb-2">Thông tin khách hàng</h3>
-            <p><b>Tên:</b> {selectedOrder.customer_name}</p>
-            <p><b>Số điện thoại:</b> 0123456789</p>
-            <p><b>Địa chỉ:</b> 123 Đường ABC, TP.HCM</p>
+            <h3 className="font-semibold text-lg mb-2">Thông tin nhận hàng</h3>
+            <p><b>Tên:</b> {selectedOrder.receiver_name}</p>
+            <p><b>SĐT:</b> {selectedOrder.phone}</p>
+            <p><b>Địa chỉ:</b> {selectedOrder.address_detail}</p>
+            {selectedOrder.note && <p><b>Ghi chú:</b> {selectedOrder.note}</p>}
           </div>
 
-          {/* THÔNG TIN ĐƠN */}
+          {/* Thông tin đơn */}
           <div className="border p-3 rounded-md">
             <h3 className="font-semibold text-lg mb-2">Thông tin đơn hàng</h3>
             <p><b>Mã đơn:</b> {selectedOrder.order_id}</p>
-            <p><b>Ngày tạo:</b> {dayjs(selectedOrder.created_at).format("DD/MM/YYYY HH:mm")}</p>
+            <p><b>Ngày tạo:</b> {selectedOrder.order_date}</p>
             <p><b>Trạng thái:</b> {selectedOrder.status}</p>
             <p><b>Tổng tiền:</b> {selectedOrder.total.toLocaleString()}₫</p>
           </div>
 
-          {/* DANH SÁCH SẢN PHẨM */}
+          {/* Thanh toán */}
+          <div className="border p-3 rounded-md">
+            <h3 className="font-semibold text-lg mb-2">Thanh toán</h3>
+            <p><b>Phương thức:</b> {selectedOrder.payment.method}</p>
+            <p><b>Trạng thái:</b> {selectedOrder.payment.status}</p>
+            <p><b>Ngày thanh toán:</b> {selectedOrder.payment.payment_date ?? "—"}</p>
+          </div>
+
+          {/* Sản phẩm */}
           <div className="border p-3 rounded-md">
             <h3 className="font-semibold text-lg mb-2">Sản phẩm</h3>
 
@@ -234,6 +260,8 @@ const OrderManager = () => {
               <thead>
                 <tr className="border bg-gray-100">
                   <th className="p-2 border">Tên SP</th>
+                  <th className="p-2 border">Màu</th>
+                  <th className="p-2 border">Size</th>
                   <th className="p-2 border">SL</th>
                   <th className="p-2 border">Giá</th>
                   <th className="p-2 border">Tổng</th>
@@ -243,10 +271,14 @@ const OrderManager = () => {
                 {selectedOrder.items.map((item, idx) => (
                   <tr key={idx}>
                     <td className="p-2 border">{item.name}</td>
-                    <td className="p-2 border">{item.qty}</td>
-                    <td className="p-2 border">{item.price.toLocaleString()}₫</td>
+                    <td className="p-2 border">{item.color}</td>
+                    <td className="p-2 border">{item.size}</td>
+                    <td className="p-2 border">{item.quantity}</td>
                     <td className="p-2 border">
-                      {(item.qty * item.price).toLocaleString()}₫
+                      {item.final_price.toLocaleString()}₫
+                    </td>
+                    <td className="p-2 border">
+                      {(item.quantity * item.final_price).toLocaleString()}₫
                     </td>
                   </tr>
                 ))}
@@ -258,6 +290,34 @@ const OrderManager = () => {
       )}
     </Modal>
   );
+
+  const nextStatuses = allowedTransitions[selectedOrder?.status] || [];
+
+  const statusModal = (
+    <Modal
+      title="Cập nhật trạng thái đơn hàng"
+      open={isStatusModalOpen}
+      onCancel={() => setIsStatusModalOpen(false)}
+      onOk={handleUpdateStatus}
+      okText="Xác nhận"
+      cancelText="Hủy"
+    >
+      {nextStatuses.length === 0 ? (
+        <p className="text-red-500">Đơn hàng không thể đổi trạng thái.</p>
+      ) : (
+        <select
+          value={newStatus}
+          className="border px-2 py-1 rounded w-full"
+          onChange={(e) => setNewStatus(e.target.value)}
+        >
+          {nextStatuses.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      )}
+    </Modal>
+  );
+
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
@@ -276,8 +336,9 @@ const OrderManager = () => {
         pagination={{ pageSize: 10 }}
       />
 
-      {statusModal}
       {detailModal}
+      {statusModal}
+
     </div>
   );
 };
