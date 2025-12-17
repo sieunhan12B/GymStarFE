@@ -13,6 +13,8 @@ import { NotificationContext } from '@/App';
 import { cartService } from '../../services/cart.service';
 import { clearCart, setCart } from '../../redux/cartSlice';
 import './header.css'
+import Cookies from "js-cookie";
+
 
 
 const Header = () => {
@@ -25,7 +27,7 @@ const Header = () => {
   const navigate = useNavigate();
   const cartItems = useSelector((state) => state.cartSlice.items);
   const cartCount = useSelector((state) => state.cartSlice.count);
-  const user = useSelector((state) => state.userSlice.user?.user);
+  const user = useSelector((state) => state.userSlice.user);
 
   const [isUserOpen, setIsUserOpen] = useState(false);
 
@@ -61,6 +63,7 @@ const Header = () => {
 
   // HANDLE LOGOUT
   const handleLogout = () => {
+    Cookies.remove("access_token");
     dispatch(clearCart());
     dispatch(logout());
     showNotification("Đăng xuất thành công!", "success");
@@ -75,50 +78,7 @@ const Header = () => {
   };
 
   // Tính tổng tiền
-  const totalAmount = cartItems.reduce((sum, item) => {
-    return sum + (parseFloat(item.product_variant.product.final_price) * item.quantity);
-  }, 0);
 
-  const userMenuItems = [
-    {
-      key: "1",
-      label: (
-        <Link to="/account" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black rounded-lg transition">
-          Tài khoản
-        </Link>
-      ),
-    },
-    {
-      key: "2",
-      label: (
-        <Link to="/orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black rounded-lg transition">
-          Đơn hàng
-        </Link>
-      ),
-    },
-    {
-      type: "divider"
-    },
-    {
-      key: "3",
-      label: (
-        <span onClick={handleLogout} className="block px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition cursor-pointer">
-          Đăng xuất
-        </span>
-      ),
-    },
-  ];
-
-  const userNoLoginMenuItems = [
-    {
-      key: "1",
-      label: (
-        <Link to={path.logIn} className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black rounded-lg transition">
-          Đăng nhập
-        </Link>
-      ),
-    },
-  ];
 
   return (
     <>
@@ -208,7 +168,7 @@ const Header = () => {
                           {user ? (
                             <>
                               <Link
-                                to={path.account}
+                                to={`${path.account}/${path.accountInfo}`}
                                 className="block px-4 py-2 text-sm hover:bg-gray-100"
                                 onClick={() => setIsUserOpen(false)}
                               >
@@ -367,7 +327,7 @@ const Header = () => {
                                 <button
                                   onClick={() => {
                                     setIsCartOpen(false);
-                                    navigate('/cart');
+                                    navigate(path.cart);
                                   }}
                                   className="w-full bg-black text-white py-2.5 rounded-lg font-semibold hover:bg-gray-800 transition-colors text-sm"
                                 >

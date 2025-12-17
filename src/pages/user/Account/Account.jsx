@@ -17,8 +17,8 @@ const Account = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
-    const { showNotification } = useContext(NotificationContext);
-  
+  const { showNotification } = useContext(NotificationContext);
+
 
   const authUser = getLocalStorage("user");
 
@@ -54,7 +54,7 @@ const Account = () => {
 
   // OPEN CHANGE PASSWORD MODAL
   const openPasswordModal = () => {
-    passwordForm.resetFields(); 
+    passwordForm.resetFields();
     setIsPasswordModal(true);
   };
 
@@ -71,8 +71,8 @@ const Account = () => {
           : null,
       };
 
-     const res= await userService.updateProfile(authUser.user_id, payload);
-     showNotification(res.data.message, "success");
+      const res = await userService.updateProfile(authUser.user_id, payload);
+      showNotification(res.data.message, "success");
       fetchUserInfo();
       setIsModalOpen(false);
     } catch (error) {
@@ -87,7 +87,7 @@ const Account = () => {
       const values = passwordForm.getFieldsValue();
 
       if (values.new_password !== values.confirm_password) {
-        showNotification("Mật khẩu xác nhận không khớp!","error");
+        showNotification("Mật khẩu xác nhận không khớp!", "error");
         return;
       }
 
@@ -98,13 +98,13 @@ const Account = () => {
       };
       console.log(payload)
 
-    const res=  await userService.changePassword(authUser.user_id, payload);
+      const res = await userService.changePassword(authUser.user_id, payload);
 
-      showNotification(res.data.message,"success");
+      showNotification(res.data.message, "success");
       setIsPasswordModal(false);
     } catch (error) {
       console.log(error)
-      showNotification(error.response.data.message,"error");
+      showNotification(error.response.data.message, "error");
     }
   };
 
@@ -117,37 +117,48 @@ const Account = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-6">Thông tin tài khoản</h2>
+    <div className="bg-white rounded-lg shadow-sm">
+      {/* Header */}
+      <div className=" flex justify-between items-center p-6 border-b min-h-[128px]">
+        
+        <h2 className="text-2xl font-bold">Thông tin tài khoản</h2>
+        <p className="text-sm text-gray-500 mt-1 ">
 
-      {/* --- THÔNG TIN CÁ NHÂN --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div>
-          <label className="text-gray-600 mb-2 block">Họ và tên</label>
-          <p className="text-lg">{userInfo.full_name}</p>
-        </div>
-
-        <div>
-          <label className="text-gray-600 mb-2 block">Giới tính</label>
-          <p className="text-lg">{userInfo.gender || "Chưa cập nhật"}</p>
-        </div>
-
-        <div>
-          <label className="text-gray-600 mb-2 block">Ngày sinh</label>
-          <p className="text-lg">
-            {userInfo.birth_date
-              ? dayjs(userInfo.birth_date, "DD-MM-YYYY").format("DD/MM/YYYY")
-              : "Chưa cập nhật"}
-          </p>
-        </div>
+        </p>
       </div>
 
-      <button
-        onClick={openModal}
-        className="px-6 py-2 border-2 border-gray-800 rounded-full hover:bg-gray-800 hover:text-white transition"
-      >
-        CẬP NHẬT
-      </button>
+      {/* --- THÔNG TIN CÁ NHÂN --- */}
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <label className="text-gray-600 mb-2 block">Họ và tên</label>
+            <p className="text-lg">{userInfo.full_name}</p>
+          </div>
+
+          <div>
+            <label className="text-gray-600 mb-2 block">Giới tính</label>
+            <p className="text-lg">{userInfo.gender || "Chưa cập nhật"}</p>
+          </div>
+
+          <div>
+            <label className="text-gray-600 mb-2 block">Ngày sinh</label>
+            <p className="text-lg">
+              {userInfo.birth_date
+                ? dayjs(userInfo.birth_date, "DD-MM-YYYY").format("DD/MM/YYYY")
+                : "Chưa cập nhật"}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={openModal}
+          className="px-6 py-2 border-2 border-gray-800 rounded-full hover:bg-gray-800 hover:text-white transition"
+        >
+          CẬP NHẬT
+        </button>
+
+      </div>
+
 
       {/* --- PROFILE MODAL --- */}
       <Modal
@@ -182,7 +193,7 @@ const Account = () => {
       </Modal>
 
       {/* --- THÔNG TIN ĐĂNG NHẬP --- */}
-      <div className="mt-10">
+      <div className="mt-10 p-6">
         <h3 className="text-xl font-bold mb-4">Thông tin đăng nhập</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

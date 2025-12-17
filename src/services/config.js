@@ -1,5 +1,7 @@
 import axios from "axios";
 import { store } from "@/redux/configStore";
+import Cookies from "js-cookie";
+
 
 export const http = axios.create({
   baseURL: "http://localhost:5000",
@@ -9,8 +11,7 @@ export const http = axios.create({
 // 🟦 Interceptor request (gắn token nếu có)
 http.interceptors.request.use(
   (config) => {
-    const token = store.getState().userSlice.user?.token;
-    console.log(token) //
+    const token = Cookies.get("access_token"); console.log(token) //
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },

@@ -1,4 +1,5 @@
 import { http } from "./config";
+import Cookies from "js-cookie";
 
 export const authService = {
 
@@ -13,7 +14,15 @@ export const authService = {
 
     logIn: async (data) => {
         try {
-            return await http.post("/QuanLyNguoiDung/DangNhap", data);
+            const response = await http.post("/QuanLyNguoiDung/DangNhap", data);
+            Cookies.set("access_token", response.data.access_token, {
+                expires: 15,
+                secure: true,
+                sameSite: "Strict"
+            });
+            return response; // trả về user info
+
+
         } catch (error) {
             console.error("Lỗi đăng nhập:", error);
             throw error;
@@ -47,5 +56,5 @@ export const authService = {
         }
     },
 
-   
+
 };

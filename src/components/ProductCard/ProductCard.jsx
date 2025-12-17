@@ -13,7 +13,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
     const { showNotification } = useContext(NotificationContext);
     const dispatch = useDispatch();
 
-    const user = useSelector((state) => state.userSlice.user?.user);
+    const user = useSelector((state) => state.userSlice.user);
     const userId = user?.user_id;
 
     if (!product) {
@@ -35,7 +35,12 @@ const ProductCard = ({ product, hoverSize = true }) => {
     // SIZE
     // ===============================
     const allSizes = ["S", "M", "L", "XL", "XXL"];
-    const availableSizes = product.product_variants?.map((v) => v.size) || [];
+    // Lọc size còn hàng
+    const availableVariants = product.product_variants || [];
+    const availableSizes = availableVariants
+        .filter(v => v.stock > 0)
+        .map(v => v.size);
+
 
     // ===============================
     // HANDLE ADD TO CART
@@ -56,7 +61,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
         try {
             const res = await cartService.addToCart({
                 product_variant_id: variant.product_variant_id,
-                quantity:1,
+                quantity: 1,
             });
 
             const cartRes = await cartService.getCart();
@@ -129,20 +134,21 @@ const ProductCard = ({ product, hoverSize = true }) => {
                                             handleSelectSize(size);
                                         }}
                                         className={`py-2 text-xs font-medium border transition-all
-                                            ${selectedSize === size
+                ${selectedSize === size
                                                 ? "bg-black text-white border-black"
                                                 : "bg-white text-black border-gray-300"
                                             }
-                                            ${!isAvailable
+                ${!isAvailable
                                                 ? "line-through opacity-50 cursor-not-allowed"
                                                 : "hover:border-black"
                                             }
-                                        `}
+            `}
                                     >
                                         {size}
                                     </button>
                                 );
                             })}
+
                         </div>
                     </div>
                 )}

@@ -1,18 +1,31 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import Header from '../../components/Header/Header'
-import { Outlet } from 'react-router-dom'
 import Footer from '../../components/Footer/Footer'
 
 const HomeTemplate = () => {
+  const { pathname } = useLocation()
+
+  // Ẩn header cho tất cả trang đặt hàng thành công
+  const hideHeader = pathname.startsWith()
+
+  // Footer vẫn hiện
+  const hideFooter = false
+
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth', // hoặc 'auto'
+    });
+  }, [pathname]);
+
   return (
-    <div>
-
-
-      
-    <Header/>
-      <Outlet/>
-      <Footer/> 
-    </div>
+    <>
+      {!hideHeader && <Header />}
+      <Outlet />
+      {!hideFooter && <Footer />}
+    </>
   )
 }
 

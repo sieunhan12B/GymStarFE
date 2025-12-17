@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button, Rate, Tabs, Progress, Radio, InputNumber } from 'antd';
-import { HeartOutlined, HeartFilled, ShareAltOutlined, StarFilled } from '@ant-design/icons';
-import { useParams } from 'react-router-dom';
+import { HeartOutlined, HeartFilled, ShareAltOutlined, StarFilled, ShoppingCartOutlined, CreditCardOutlined } from '@ant-design/icons';
+import { useNavigate, useParams } from 'react-router-dom';
 import { productService } from '@/services/product.service';
 import { formatPrice } from '@/utils/utils';
 import { useDispatch, useSelector } from "react-redux";
@@ -10,6 +10,7 @@ import { cartService } from "@/services/cart.service";
 import { NotificationContext } from "@/App";
 import { setCart } from '@/redux/cartSlice';
 import AddedToCartToast from '../../../components/AddedToCartToast/AddedToCartToast';
+import { path } from '../../../common/path';
 
 
 
@@ -20,13 +21,9 @@ const Product = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const user = useSelector((state) => state.userSlice.user?.user);
-  console.log(user)
+  const user = useSelector((state) => state.userSlice.user);
   const dispatch = useDispatch();
-
-
-  console.log(user);
+  const navigate = useNavigate();
 
   const { showNotification } = useContext(NotificationContext);
 
@@ -112,9 +109,9 @@ const Product = () => {
     try {
 
       const res = await cartService.addToCart(data);
- 
+
       const cartRes = await cartService.getCart();
- 
+
       dispatch(setCart(cartRes.data.data));
       showNotification(<AddedToCartToast product={product} color={selectedVariant.color} size={selectedVariant.size} message={res.data.message} />, "success");
     } catch (error) {
@@ -122,6 +119,23 @@ const Product = () => {
       console.error("ADD CART ERROR:", error);
     }
   };
+  const handleBuyNow = (selectedVariant, quantity, product) => {
+    navigate("/gio-hang", {
+      state: {
+        buyNowItem: {
+          product_variant: selectedVariant,
+          quantity,
+          product_info: {
+            thumbnail: product.thumbnail,
+            name: product.name,
+            price: product.price,
+            discount: product.discount
+          }
+        }
+      }
+    });
+  };
+
 
 
 
@@ -271,22 +285,22 @@ const Product = () => {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Button
-                type="primary"
-                size="large"
-                block
-                onClick={handleAddToCart}
-                className="bg-black hover:bg-gray-800 border-0 h-12 font-bold text-base"
-              >
-                Add to Bag
-              </Button>
-
+              {/* Thêm vào giỏ hàng */}
               <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className="w-full h-12 border-2 border-black rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-gray-50 transition-colors"
+                onClick={handleAddToCart}
+                className="w-full h-12 bg-black text-white border-0 rounded-lg flex items-center justify-center gap-2 font-bold text-base hover:bg-gray-800 transition-colors"
               >
-                {isFavorite ? <HeartFilled className="text-red-500" /> : <HeartOutlined />}
-                {isFavorite ? 'Added to Wishlist' : 'Add to Wishlist'}
+                <ShoppingCartOutlined className="text-white" />
+                Thêm vào giỏ hàng
+              </button>
+
+              {/* Mua ngay */}
+              <button
+                onClick={() => handleBuyNow(selectedVariant, quantity, product)}
+                className={"w-full h-12 border-2 rounded-lg flex items-center justify-center gap-2 font-bold transition-colors hover:bg-green-100 hover:border-green-500 hover:text-green-600"}
+              >
+                <CreditCardOutlined className={"transition-colors text-black hover:text-green-600"} />
+                Mua ngay
               </button>
             </div>
 
