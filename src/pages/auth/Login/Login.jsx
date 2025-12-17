@@ -39,15 +39,15 @@ const Login = () => {
 
       // Gọi API đăng nhập
       const response = await authService.logIn(payload);
+
       console.log(response);
 
 
-      
+
       dispatch(
-        setUser({
-          user: response.data.user,
-          token: response.data.access_token,
-        })
+        setUser(
+          response.data.user,
+        )
       );
 
       showNotification("Đăng nhập thành công!", "success");
@@ -56,13 +56,13 @@ const Login = () => {
         navigate(`${AdminPath}/dashboard`);
       }
       else if (response.data.user.role_id === ROLES.PRODUCT_MANAGER) {
-        navigate(`${AdminPath}/product-manager`);
+        navigate(`${AdminPath}/${path.productManager}`);
       }
       else if (response.data.user.role_id === ROLES.ORDER_MANAGER) {
-        navigate(`${AdminPath}/order-manager`);
+        navigate(`${AdminPath}/${path.orderManager}`);
       }
       else if (response.data.user.role_id === ROLES.FEEDBACK_MANAGER) {
-        navigate(`${AdminPath}/feedback-manager`);
+        navigate(`${AdminPath}/${path.feedbackManager}`);
       }
       else {
         navigate("/");

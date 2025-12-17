@@ -12,13 +12,8 @@ import ForgotPassword from "../pages/auth/ForgotPassword/ForgotPassWord";
 import ResetPassword from "../pages/auth/ResetPassword/ResetPassword";
 
 
-// ------------------ USER ------------------
-import Home from "../pages/Home/Home";
-import Account from "../pages/user/Account/Account";
-import Product from "../pages/user/Product/Product";
-import ManagerAccount from "../layouts/ManagerAccount/ManagerAccount";
-import HomeTemplate from "../templates/HomeTemplate/HomeTemplate";
-import Category from "../pages/user/Category/Category";
+
+
 
 
 // ------------------ ADMIN ------------------
@@ -30,7 +25,22 @@ import CategoryManager from "../pages/admin/CategoryManager/CategoryManager";
 import Error from "../pages/Error/Error";
 import OrderManager from "../pages/admin/OrderManager/OrderManager";
 import ReviewManager from "../pages/admin/ReviewManager/ReviewManager";
+import FeedbackManager from "../pages/admin/FeedbackManager/FeedbackManager";
+
+
+// ------------------ USER ------------------
+import Home from "../pages/Home/Home";
+import Account from "../pages/user/Account/Account";
+import Product from "../pages/user/Product/Product";
+import ManagerAccount from "../layouts/ManagerAccount/ManagerAccount";
+import HomeTemplate from "../templates/HomeTemplate/HomeTemplate";
+import Category from "../pages/user/Category/Category";
 import Cart from "../pages/user/Cart/Cart";
+import OrderSuccess from "../pages/user/OrderSuccess/OrderSuccess";
+import OrderDetail from "../pages/user/OrderDetail/OrderDetail";
+import OrderHistory from "../pages/user/OrderHistory/OrderHistory";
+import AddressBook from "../pages/user/AddressBook/AddressBook";
+import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
 
 
 
@@ -61,6 +71,7 @@ export const AppRouter = [
         element: <VerifyEmail />,
     },
 
+
     // ------------------ USER ------------------
     {
         path: path.home,
@@ -84,18 +95,41 @@ export const AppRouter = [
                 element: <Cart />,
 
             },
-           
+            {
+                path: path.orderSuccess,
+                element: <OrderSuccess />,
+            },
+              {
+                path: path.orderDetail,
+                element: <OrderDetail />,
+            },
+
             {
                 path: path.account,
                 element: <ManagerAccount />,
                 children: [
                     {
                         element: <Account />,
-                        index: true,
+                        path:path.accountInfo,
+                   
                     },
+                    {
+                        path:path.orderHistory,
+                        element:<OrderHistory/>,
+                    },
+                    {
+                        path:path.addressBook,
+                        element:<AddressBook/>,
+                    },
+                    {
+                        path:path.reviewFeedback,
+                        element:<ReviewsFeedback/>
+                    }
 
                 ]
-            }
+            },
+          
+
 
         ],
     },
@@ -169,7 +203,7 @@ export const AppRouter = [
                 path: path.feedbackManager,
                 element: (
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FEEDBACK_MANAGER]}>
-                        <div>Feedback Manager Page</div>
+                        <FeedbackManager/>
                     </ProtectedRoute>
                 ),
             },

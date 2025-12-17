@@ -1,11 +1,11 @@
 import { useState, useEffect, useContext } from "react";
-import { Table, Tag, Button, Space, Modal } from "antd";
-import { EditOutlined } from "@ant-design/icons";
+import { Table, Tag, Button, Space, Modal, Tooltip } from "antd";
+import { EditOutlined, SyncOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import Header from "@/templates/AdminTemplate/Header";
 import { NotificationContext } from "@/App";
 import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
-import { orderService } from "../../../services/order.service";
+import { orderService } from "@/services/order.service";
 
 const OrderManager = () => {
   const [searchText, setSearchText] = useState("");
@@ -24,17 +24,20 @@ const OrderManager = () => {
 
 
   const handleUpdateStatus = async () => {
-    const data = {
-      status: newStatus
-    };
+    const data = { status: newStatus };
 
     try {
-      const res = await orderService.updateStatus(selectedOrder.order_id, data)
-      console.log(data,selectedOrder.order_id)
-      const data1 = await res.json();
+      const res = await orderService.updateStatus(
+        selectedOrder.order_id,
+        data
+      );
 
-      if (!res.ok) {
-        showNotification(data1.message || "Cập nhật thất bại!", "error");
+      // axios trả data sẵn
+      if (res.status !== 200) {
+        showNotification(
+          res.data?.message || "Cập nhật thất bại!",
+          "error"
+        );
         return;
       }
 
@@ -43,8 +46,11 @@ const OrderManager = () => {
       fetchOrders();
 
     } catch (error) {
-      console.log(error);
-      showNotification("Lỗi kết nối server!", "error");
+      console.error(error);
+      showNotification(
+        error.response?.data?.message || "Lỗi kết nối server!",
+        "error"
+      );
     }
   };
 
@@ -84,12 +90,10 @@ const OrderManager = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost:5000/QuanLyDonHang/LayDanhSachTatCaDonHang?page=1&limit=100"
-      );
-
-      const data = await res.json();
-      setOrders(data.data);
+      const res = await orderService.getAll();
+      console.log(res);
+      // const data = await res.json();
+      setOrders(res.data.data);
 
       showNotification("Tải danh sách đơn hàng thành công!", "success");
     } catch (error) {
@@ -104,7 +108,7 @@ const OrderManager = () => {
   }, []);
 
   // ================= FILTER ==================
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = orders?.filter((order) => {
     if (!searchText) return true;
 
     const keyword = removeVietnameseTones(searchText.toLowerCase());
@@ -135,6 +139,7 @@ const OrderManager = () => {
     {
       title: "Số SP",
       key: "items",
+      sorter: (a, b) => a.items.length - b.items.length,
       render: (_, record) => <span>{record.items.length} sản phẩm</span>,
     },
 
@@ -148,6 +153,13 @@ const OrderManager = () => {
     {
       title: "Thanh toán",
       key: "payment",
+      filters: [
+        { text: "Đang chờ", value: "đang chờ" },
+        { text: "Thành công", value: "thành công" },
+        { text: "Thất bại", value: "thất bại" },
+      ],
+      onFilter: (value, record) =>
+        record.payment?.status?.trim().toLowerCase() === value.toLowerCase(),
       render: (_, rec) => {
         const color = {
           "thành công": "green",
@@ -158,28 +170,39 @@ const OrderManager = () => {
         return (
           <Space direction="vertical">
             <Tag>{rec.payment.method}</Tag>
-            <Tag color={color[rec.payment.status]}>
+            <Tag color={color[rec.payment.status] || "default"}>
               {rec.payment.status}
             </Tag>
           </Space>
         );
       },
     },
-
     {
       title: "Trạng thái đơn",
       dataIndex: "status",
       key: "status",
+      filters: [
+        { text: "Chờ xác nhận", value: "chờ xác nhận" },
+        { text: "Đã xác nhận", value: "đã xác nhận" },
+        { text: "Đang xử lý", value: "đang xử lý" },
+        { text: "Đang giao", value: "đang giao" },
+        { text: "Đã giao", value: "đã giao" },
+        { text: "Giao thất bại", value: "giao thất bại" },
+        { text: "Đổi hàng", value: "đổi hàng" },
+      ],
+      onFilter: (value, record) =>
+        record.status?.trim().toLowerCase() === value.toLowerCase(),
       render: (status) => {
-        const color = {
+        const colorMap = {
           "chờ xác nhận": "orange",
-          "đang giao": "blue",
-          "đã hoàn thành": "green",
-          "đã hủy": "red",
+          "đã xác nhận": "blue",
+          "đang xử lý": "cyan",
+          "đang giao": "geekblue",
+          "giao thất bại": "red",
+          "đã giao": "green",
           "đổi hàng": "purple",
         };
-
-        return <Tag color={color[status]}>{status}</Tag>;
+        return <Tag color={colorMap[status] || "default"}>{status}</Tag>;
       },
     },
 
@@ -187,30 +210,54 @@ const OrderManager = () => {
       title: "Tổng tiền",
       dataIndex: "total",
       key: "total",
+      sorter: (a, b) => a.total - b.total,
       render: (total) => <b>{total.toLocaleString()}₫</b>,
     },
 
     {
       title: "Hành động",
       key: "action",
-      render: (_, record) => (
-        <Space>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => {
-              setSelectedOrder(record);
-              setIsDetailModalOpen(true);
-            }}
-          >
-            Xem
-          </Button>
+      align: "center",
+      render: (_, record) => {
+        const canChangeStatus =
+          allowedTransitions[record.status]?.length > 0;
 
-          <Button type="primary" onClick={() => handleOpenChangeStatus(record)}>
-            Đổi trạng thái
-          </Button>
-        </Space>
-      ),
+        return (
+          <Space size="middle">
+            {/* XEM CHI TIẾT */}
+            <Tooltip title="Xem chi tiết đơn hàng">
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => {
+                  setSelectedOrder(record);
+                  setIsDetailModalOpen(true);
+                }}
+              />
+            </Tooltip>
+
+            {/* ĐỔI TRẠNG THÁI */}
+            <Tooltip
+              title={
+                canChangeStatus
+                  ? "Cập nhật trạng thái đơn hàng"
+                  : "Đơn hàng không thể đổi trạng thái"
+              }
+            >
+              <Button
+                type="primary"
+                icon={<SyncOutlined />}
+                disabled={!canChangeStatus}
+                onClick={() => handleOpenChangeStatus(record)}
+              >
+                Đổi trạng thái
+              </Button>
+            </Tooltip>
+          </Space>
+        );
+      },
     },
+
 
   ];
 
