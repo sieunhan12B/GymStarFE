@@ -3,6 +3,9 @@ import { Modal, Input, Select, Button, message, Image } from 'antd';
 import logo from '@/assets/images/logo.svg';
 import { feedbackService } from '../../services/feedback.service';
 import { NotificationContext } from "@/App";
+import { SendOutlined } from '@ant-design/icons';
+import feebackBanner from '@/assets/Images/feedbackBanner.jpg'
+
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -102,19 +105,32 @@ const FeedbackModal = ({ visible, onClose }) => {
         >
             <div className="space-y-6">
                 {/* Header */}
-                <div className="text-center border-b pb-6">
-                    <img
-                        src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&h=300&fit=crop"
-                        className="w-full h-32 object-cover rounded-lg mb-4"
-                    />
-                    <div className="flex justify-center -mt-10 mb-4">
-                        <div className="w-20 h-20 bg-white rounded-full shadow border flex items-center justify-center">
-                            <Image src={logo} preview={false} />
-                        </div>
+                <div className="relative border-b pb-6">
+                    {/* Banner */}
+                    <div
+                        className="w-full h-48 rounded-t-lg bg-cover bg-center"
+                        style={{ backgroundImage: `url(${feebackBanner})` }}
+                    >
                     </div>
-                    <h2 className="text-2xl font-bold">GymStar lắng nghe bạn</h2>
-                    <p className="text-gray-500">Chia sẻ trải nghiệm của bạn</p>
+
+
+                    {/* Logo nổi trên banner */}
+                    <div className="absolute top-40 left-1/2 transform -translate-x-1/2 w-20 h-20 bg-white rounded-full shadow flex items-center justify-center border border-gray-200">
+                        <Image
+                            src={logo}
+                            preview={false}
+                            className="w-16 h-16 object-contain"
+                            alt="Logo"
+                        />
+                    </div>
+
+                    {/* Tiêu đề */}
+                    <div className="mt-16 text-center">
+                        <h2 className="text-2xl font-bold">GymStar lắng nghe bạn</h2>
+                        <p className="text-gray-500">Chia sẻ trải nghiệm của bạn</p>
+                    </div>
                 </div>
+
 
                 {/* Form */}
                 {step === 'form' && (
@@ -174,8 +190,9 @@ const FeedbackModal = ({ visible, onClose }) => {
                         {/* Actions */}
                         <div className="flex gap-3 pt-4">
                             <Button
+
                                 size="large"
-                                className="flex-1"
+                                className="flex-1 rounded-full border-2 text-gray-600 hover:!text-black w-full font-semibold hover:!border-black "
                                 onClick={onClose}
                                 disabled={loading}
                             >
@@ -184,9 +201,11 @@ const FeedbackModal = ({ visible, onClose }) => {
                             <Button
                                 type="primary"
                                 size="large"
-                                className="flex-1"
+                                className="flex-1 w-full bg-black  hover:!bg-gray-700 border-none rounded-full font-semibold"
                                 loading={loading}
                                 onClick={handleSubmit}
+                                icon={<SendOutlined />}
+
                             >
                                 Gửi góp ý
                             </Button>

@@ -1,67 +1,58 @@
 import React, { useEffect, useState } from "react";
-import { Checkbox, Slider, Button, Drawer, message } from "antd";
+import { Checkbox, Slider, Button, Drawer, message, Collapse } from "antd";
 import { FilterOutlined } from "@ant-design/icons";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import { useParams } from "react-router-dom";
-// import { danhMucService } from "@/services/category.service";
+import { productService } from "../../../services/product.service";
+import { formatPrice } from "../../../utils/utils";
 
 const Category = () => {
-  const { category } = useParams(); // slug category từ route
+  const { category } = useParams();
   const [filters, setFilters] = useState({
     categories: [],
     colors: [],
-    sizes: [],
-    priceRange: [0, 100],
+    priceRange: [40000, 1000000],
   });
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [products, setProducts] = useState([]);
-  console.log(1)
-  console.log("object")
+  const [searchTerm, setSearchTerm] = useState([]);
+  const [expandedCategories, setExpandedCategories] = useState([]);
 
-  // Giả lập products theo category slug
-  const allProducts = {
-    nam: [], // sẽ load từ API sau nếu có
-    nu: [],
-    "phu-kien": [],
-  };
+  // Mảng color
+  const colorOptions = [
+    { name: "Black", hex: "#000000" },
+    { name: "White", hex: "#FFFFFF" },
+    { name: "Gray", hex: "#808080" },
+    { name: "Navy", hex: "#000080" },
+    { name: "Blue", hex: "#0000FF" },
+    { name: "Red", hex: "#FF0000" },
+  ];
 
-  // === Fetch danh mục từ API ===
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const res = await danhMucService.getAll();
-  //       const data = res?.data || [];
-  //       setCategories(data);
+  // === Fetch products ===
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const res = await productService.getProductByLevel1Category(1);
+        setProducts(res.data.data || []);
+      } catch (error) {
+        console.error(error);
+        message.error("Không thể tải sản phẩm!");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //       // Tách category hiện tại
-  //       const selected = data.find(
-  //         (item) =>
-  //           item.name.toLowerCase().replace(/\s+/g, "-") === category
-  //       );
-  //       setSubCategories(
-  //         data.filter((item) => item.parent_id === selected?.category_id) || []
-  //       );
-
-  //       // Tạm thời gán products rỗng hoặc fake theo parent
-  //       setProducts(allProducts[category] || []);
-  //     } catch (error) {
-  //       message.error("Không thể tải danh mục!");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchCategories();
-  // }, [category]);
+    fetchProducts();
+  }, [category]);
 
   // === Filter handlers ===
   const handleCategoryChange = (checkedValues) =>
     setFilters({ ...filters, categories: checkedValues });
+
   const handleColorChange = (color) => {
     setFilters((prev) => ({
       ...prev,
@@ -70,106 +61,184 @@ const Category = () => {
         : [...prev.colors, color],
     }));
   };
-  const handleSizeChange = (size) => {
-    setFilters((prev) => ({
-      ...prev,
-      sizes: prev.sizes.includes(size)
-        ? prev.sizes.filter((s) => s !== size)
-        : [...prev.sizes, size],
-    }));
-  };
+
   const handlePriceChange = (value) =>
     setFilters({ ...filters, priceRange: value });
+
   const clearFilters = () =>
-    setFilters({ categories: [], colors: [], sizes: [], priceRange: [0, 100] });
+    setFilters({ categories: [], colors: [], sizes: [], priceRange: [40000, 1000000] });
+
+  const toggleExpandCategory = (id) =>
+    setExpandedCategories((prev) =>
+      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]
+    );
 
   // === Filter Sidebar ===
-  const FilterSidebar = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="font-bold text-sm mb-4 uppercase">Categories</h3>
-        <Checkbox.Group
-          className="flex flex-col space-y-2"
-          value={filters.categories}
-          onChange={handleCategoryChange}
-        >
-          {subCategories.map((cat) => (
-            <Checkbox key={cat.category_id} value={cat.name}>
-              {cat.name}
-            </Checkbox>
-          ))}
-        </Checkbox.Group>
-      </div>
+  const FilterSidebar = () => {
+    // Lọc category theo search
+    const filteredCategories = subCategories.filter((cat) =>
+      cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-      {/* Colors */}
-      <div className="pt-6 border-t border-gray-200">
-        <h3 className="font-bold text-sm mb-4 uppercase">Color</h3>
-        <div className="grid grid-cols-4 gap-3">
-          {["Black","White","Gray","Navy","Blue","Red"].map((color) => (
-            <button
-              key={color}
-              onClick={() => handleColorChange(color)}
-              className={`w-12 h-12 rounded-full border-2 ${
-                filters.colors.includes(color)
-                  ? "border-black scale-110"
-                  : "border-gray-300 hover:border-gray-400"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
+    return (
+      <div className="flex flex-col h-full">
+        {/* Tổng tiêu đề */}
+        <h2 className="font-bold text-lg mb-4 sticky top-0 bg-white z-10">
+          Lọc sản phẩm
+        </h2>
 
-      {/* Sizes */}
-      <div className="pt-6 border-t border-gray-200">
-        <h3 className="font-bold text-sm mb-4 uppercase">Size</h3>
-        <div className="grid grid-cols-4 gap-2">
-          {["XS", "S", "M", "L", "XL", "XXL", "3XL"].map((size) => (
-            <button
-              key={size}
-              onClick={() => handleSizeChange(size)}
-              className={`py-2 text-sm font-medium border rounded ${
-                filters.sizes.includes(size)
-                  ? "bg-black text-white border-black"
-                  : "bg-white text-black border-gray-300 hover:border-black"
-              }`}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Price */}
-      <div className="pt-6 border-t border-gray-200">
-        <h3 className="font-bold text-sm mb-4 uppercase">Price Range</h3>
-        <Slider
-          range
-          min={0}
-          max={100}
-          value={filters.priceRange}
-          onChange={handlePriceChange}
-          className="mb-4"
+        {/* Search box */}
+        <input
+          type="text"
+          placeholder="Tìm kiếm danh mục..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
         />
-        <div className="flex justify-between text-sm text-gray-600">
-          <span>${filters.priceRange[0]}</span>
-          <span>${filters.priceRange[1]}</span>
+
+        {/* Categories + scroll + collapse */}
+        <div className="flex-1 space-y-4">
+          <div>
+            <h3 className="font-bold text-sm mb-2 uppercase">Danh mục</h3>
+            {filteredCategories.map((cat) => (
+              <div key={cat.category_id} className="mb-1">
+                {cat.subCategories?.length ? (
+                  <>
+                    <button
+                      className="w-full text-left font-medium"
+                      onClick={() => toggleExpandCategory(cat.category_id)}
+                    >
+                      {cat.name}
+                    </button>
+                    {expandedCategories.includes(cat.category_id) && (
+                      <Checkbox.Group
+                        className="ml-4 flex flex-col space-y-1"
+                        value={filters.categories}
+                        onChange={handleCategoryChange}
+                      >
+                        {cat.subCategories.map((sub) => (
+                          <Checkbox key={sub.id} value={sub.name}>
+                            {sub.name}
+                          </Checkbox>
+                        ))}
+                      </Checkbox.Group>
+                    )}
+                  </>
+                ) : (
+                  <Checkbox
+                    value={cat.name}
+                    checked={filters.categories.includes(cat.name)}
+                    onChange={(e) =>
+                      handleCategoryChange(
+                        e.target.checked
+                          ? [...filters.categories, cat.name]
+                          : filters.categories.filter((c) => c !== cat.name)
+                      )
+                    }
+                  >
+                    {cat.name}
+                  </Checkbox>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Colors */}
+          <div>
+            <h3 className="font-bold text-sm mb-2 uppercase">Màu</h3>
+            <div className="grid grid-cols-4 gap-3">
+              {colorOptions.map((color) => (
+                <button
+                  key={color.name}
+                  onClick={() => handleColorChange(color.name)}
+                  className={`w-12 h-12 rounded-full border-2 ${filters.colors.includes(color.name)
+                    ? "border-black scale-110"
+                    : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                />
+              ))}
+            </div>
+          </div>
+
+
+          {/* Price */}
+          <div>
+            <h3 className="font-bold text-sm mb-2 uppercase">Price Range</h3>
+            <Slider
+              range
+              min={40000}
+              max={1000000}
+              value={filters.priceRange}
+              onChange={handlePriceChange}
+              className="mb-2"
+            />
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>{formatPrice(filters.priceRange[0])}</span>
+              <span>{formatPrice(filters.priceRange[1])}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Clear All sticky */}
+        <div className="mt-4 sticky bottom-0 bg-white pt-2 border-t">
+          <Button
+            onClick={clearFilters}
+            className="w-full border-black text-black hover:bg-black hover:text-white"
+          >
+            Clear All Filters
+          </Button>
         </div>
       </div>
-
-      <div className="pt-6 border-t border-gray-200">
-        <Button
-          onClick={clearFilters}
-          className="w-full border-black text-black hover:bg-black hover:text-white"
-        >
-          Clear All Filters
-        </Button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white">
+      <div
+        className="relative h-96 md:h-[600px] overflow-hidden group"
+        onClick={() => { }}
+      >
+        {/* Background Image */}
+        <img
+          src="https://www.gymshark.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fwl6q2in9o7k3%2F4uRi5vo6jElsa73kZw4yQN%2F0c173bf91a860ed052713e57bc9394d0%2FHeadless_Desktop_-_25008076.jpeg&w=1920&q=85"
+          alt="Gym Banner"
+          className="w-full h-full object-cover"
+        />
+
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-center items-center text-center text-white px-4">
+          <h2 className="text-2xl md:text-4xl font-bold mb-2">
+            Khám Phá Bộ Sưu Tập Gym
+          </h2>
+          <p className="text-sm md:text-lg mb-4">
+            Quần áo & phụ kiện dành cho tập luyện hiệu quả
+          </p>
+          <button className="bg-yellow-400 text-black font-semibold px-6 py-2 rounded hover:bg-yellow-500 transition">
+            Mua Ngay
+          </button>
+        </div>
+      </div>
       <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-4">
+          {category.charAt(0).toUpperCase() + category.slice(1)}
+        </h1>
+
+        {/* Sort by Desktop */}
+        <div className="hidden lg:flex justify-end mb-4 gap-4">
+          <span className="text-sm font-medium self-center">Sắp xếp:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="border border-gray-300 rounded px-3 py-2 text-sm"
+          >
+            <option value="featured">Tất cả</option>
+            <option value="price-low">Giá: thấp tới cao</option>
+            <option value="price-high">Giá: cao tới thấp</option>
+            <option value="newest">Mới nhât</option>
+          </select>
+        </div>
         {/* Mobile Filter */}
         <div className="lg:hidden mb-4 flex justify-between items-center">
           <Button
@@ -183,9 +252,9 @@ const Category = () => {
             onChange={(e) => setSortBy(e.target.value)}
             className="border border-gray-300 rounded px-4 py-2 text-sm"
           >
-            <option value="featured">Featured</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
+            <option value="featured">Tất cả</option>
+            <option value="price-low">Giá: Thấp tới cao</option>
+            <option value="price-high">Giá: Cao tới thấp</option>
             <option value="newest">Newest</option>
           </select>
         </div>
@@ -193,7 +262,7 @@ const Category = () => {
         <div className="flex gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-4">
+            <div className="sticky top-20">
               <FilterSidebar />
             </div>
           </aside>
@@ -211,7 +280,75 @@ const Category = () => {
 
           {/* Products Grid */}
           <div className="flex-1">
+
+            {/* Filter Chips */}
+            {(filters.categories.length ||
+              filters.colors.length ||
+
+              filters.priceRange[0] !== 40000 ||
+              filters.priceRange[1] !== 1000000) && (
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {filters.categories.map((cat) => (
+                    <span
+                      key={cat}
+                      className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-200 transition"
+                    >
+                      {cat}
+                      <button
+                        onClick={() =>
+                          setFilters({
+                            ...filters,
+                            categories: filters.categories.filter((c) => c !== cat),
+                          })
+                        }
+                        className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-blue-300 transition"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+
+                  {filters.colors.map((color) => (
+                    <span
+                      key={color}
+                      className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium hover:bg-green-200 transition"
+                    >
+                      {color}
+                      <button
+                        onClick={() =>
+                          setFilters({
+                            ...filters,
+                            colors: filters.colors.filter((c) => c !== color),
+                          })
+                        }
+                        className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-green-300 transition"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+
+
+
+                  {(filters.priceRange[0] !== 0 || filters.priceRange[1] !== 100) && (
+                    <span className="flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium hover:bg-yellow-200 transition">
+                      {formatPrice(filters.priceRange[0])} – {formatPrice(filters.priceRange[1])}
+                      <button
+                        onClick={() => setFilters({ ...filters, priceRange: [0, 100] })}
+                        className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-yellow-300 transition"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  )}
+                </div>
+
+              )}
+
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
+
+
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

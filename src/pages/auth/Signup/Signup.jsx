@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Input, Button, Form, Typography, Image } from "antd";
-import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
+import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined, UserOutlined } from "@ant-design/icons";
 import logo from "@/assets/images/logo.svg"; // đổi đường dẫn nếu khác
 import { Link, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
@@ -12,7 +12,7 @@ import { authService } from "@/services/auth.service";
 const Signup = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-  const { showNotification } = useContext(NotificationContext);
+    const { showNotification } = useContext(NotificationContext);
 
 
 
@@ -56,11 +56,10 @@ const Signup = () => {
                 {/* Title */}
                 <div className="mb-4">
                     <Title level={4} className="font-bold tracking-wide">
-                        GYMSTAR SIGNUP
+                       ĐĂNG KÍ
                     </Title>
                     <Text className="text-gray-500 text-sm">
-                        One account, across all apps, just to make things a <br />
-                        little easier.          </Text>
+                        Một tài khoản cho tất cả ứng dụng, giúp mọi thứ dễ dàng hơn.     </Text>
                 </div>
 
                 {/* Form */}
@@ -73,50 +72,57 @@ const Signup = () => {
                     <Form.Item
                         name="name"
                         rules={[
-                            { required: true, message: "Please input your name!" },
+                            { required: true, message: "Vui lòng nhập tên đăng nhập!" },
                         ]}
                     >
                         <Input
                             size="large"
-                            placeholder="Name*"
+                            placeholder="Tên đăng nhập*"
                             className="rounded-md"
+                            prefix={<UserOutlined />}
+
                         />
                     </Form.Item>
                     <Form.Item
                         name="email"
                         rules={[
-                            { required: true, message: "Please input your email!" },
-                            { type: "email", message: "Email is not valid!" },
+                            { required: true, message: "Vui lòng nhập Email!" },
+                            { type: "email", message: "Email không hợp lệ!" },
                         ]}
                     >
                         <Input
                             size="large"
-                            placeholder="Email address*"
+                            placeholder="Email *"
                             className="rounded-md"
+                            prefix={<MailOutlined />}
+
                         />
                     </Form.Item>
 
                     <Form.Item
                         name="password"
-                        rules={[{ required: true, message: "Please input your password!" }]}
+                        rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
                     >
                         <Input.Password
                             size="large"
-                            placeholder="Password*"
+                            placeholder="Mật khẩu*"
                             className="rounded-md"
                             iconRender={(visible) =>
                                 visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
                             }
+                            prefix={<LockOutlined />}
+
                         />
                     </Form.Item>
                     <Form.Item
                         name="confirm"
                         dependencies={["password"]}
                         hasFeedback
+
                         rules={[
                             {
                                 required: true,
-                                message: "Confirm password!",
+                                message: "Xác nhận mật khẩu!",
                             },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
@@ -128,7 +134,8 @@ const Signup = () => {
                             }),
                         ]}
                     >
-                        <Input.Password placeholder="Nhập lại mật khẩu" />
+                        <Input.Password placeholder="Nhập lại mật khẩu" prefix={<LockOutlined />}
+                        />
                     </Form.Item>
 
 
@@ -140,15 +147,15 @@ const Signup = () => {
                             size="large"
                             className="w-full bg-black  hover:!bg-gray-700 border-none rounded-full font-semibold"
                         >
-                            CREATE ACCOUNT
+                            TẠO TÀI KHOẢN
                         </Button>
                     </Form.Item>
                 </Form>
 
                 <Text className="text-gray-600 text-sm ">
-                    Already have an account?{" "}
+                    Đã có tài khoản ?{" "}
                     <Link to={path.logIn} className="text-black hover:underline ">
-                        Log in
+                        Đăng nhập
                     </Link>
                 </Text>
             </div>

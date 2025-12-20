@@ -8,8 +8,8 @@ import { Navigate } from "react-router-dom";
 import Login from "../pages/auth/Login/Login";
 import Signup from "../pages/auth/Signup/Signup";
 import VerifyEmail from "../pages/auth/VerifyEmail/VerifyEmail";
-import ForgotPassword from "../pages/auth/ForgotPassword/ForgotPassWord";
 import ResetPassword from "../pages/auth/ResetPassword/ResetPassword";
+import ForgotPassword from "../pages/auth/ForgotPassword/ForgotPassword";
 
 
 
@@ -41,6 +41,8 @@ import OrderDetail from "../pages/user/OrderDetail/OrderDetail";
 import OrderHistory from "../pages/user/OrderHistory/OrderHistory";
 import AddressBook from "../pages/user/AddressBook/AddressBook";
 import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
+import SearchPage from "../pages/user/SearchPage/SearchPage";
+
 
 
 
@@ -85,6 +87,10 @@ export const AppRouter = [
             {
                 path: path.category,
                 element: <Category />,
+            },
+            {
+                path:path.searchPage,
+                element:<SearchPage/>
             },
             {
                 path: path.product,

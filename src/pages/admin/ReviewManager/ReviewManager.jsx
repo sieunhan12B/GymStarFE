@@ -1,215 +1,355 @@
-import { useState, useEffect, useContext } from "react";
-import { Modal, Button, Space, Tag, Rate } from "antd";
-import { EyeOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
-import Header from "@/templates/AdminTemplate/Header";
+import { Button, Modal, Space, Tag, Image, Typography, Tooltip, Input } from "antd";
+import { EyeOutlined, LockOutlined, UnlockOutlined } from "@ant-design/icons";
 import DataTable from "@/components/DataTable/DataTable";
+import { reviewService } from "@/services/review.service";
 import dayjs from "dayjs";
+import { useEffect, useState, useContext } from "react";
 import { NotificationContext } from "@/App";
-// import { reviewService } from "@/services/review.service";
-import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
+import Header from "@/templates/AdminTemplate/Header";
+import { removeVietnameseTones } from '@/utils/removeVietnameseTones';
 
 const ReviewManager = () => {
+    // ===== STATE =====
     const [loading, setLoading] = useState(true);
-    const [reviews, setReviews] = useState([]);
-    const [searchText, setSearchText] = useState('');
-
+    const [data, setData] = useState([]);
+    const [searchText, setSearchText] = useState("");
     const [selectedReview, setSelectedReview] = useState(null);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+
+    const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
+    const [replyContent, setReplyContent] = useState("");
+
+
 
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-    const [statusAction, setStatusAction] = useState(""); // approve | reject
 
     const { showNotification } = useContext(NotificationContext);
 
-
-    // ===== MOCK DATA =====
-    const mockReviews = [
-        {
-            review_id: 1,
-            product_name: "Áo thun nam basic",
-            user_name: "Nguyễn Văn A",
-            rating: 5,
-            status: "pending",
-            comment: "Áo đẹp, chất lượng tốt. Giao hàng nhanh.",
-            createdAt: "2025-12-01T10:20:30Z",
-        },
-        {
-            review_id: 2,
-            product_name: "Giày thể thao Nike",
-            user_name: "Trần Thị B",
-            rating: 4,
-            status: "approved",
-            comment: "Giày đẹp nhưng size hơi nhỏ hơn mong đợi.",
-            createdAt: "2025-12-02T12:15:00Z",
-        },
-        {
-            review_id: 3,
-            product_name: "Túi xách nữ da thật",
-            user_name: "Lê Văn C",
-            rating: 3,
-            status: "rejected",
-            comment: "Hàng không như hình, da kém chất lượng.",
-            createdAt: "2025-12-03T09:45:12Z",
-        },
-        {
-            review_id: 4,
-            product_name: "Quần jeans nam",
-            user_name: "Phạm Thị D",
-            rating: 5,
-            status: "pending",
-            comment: "Vừa vặn, mặc rất thoải mái.",
-            createdAt: "2025-12-03T16:30:00Z",
-        },
-        {
-            review_id: 5,
-            product_name: "Đồng hồ thông minh",
-            user_name: "Ngô Văn E",
-            rating: 4,
-            status: "approved",
-            comment: "Đồng hồ xịn, pin dùng lâu.",
-            createdAt: "2025-12-04T14:50:00Z",
-        },
-    ];
-
-
-    // ==== FETCH REVIEWS ====
+    // ===== FETCH REVIEWS =====
     const fetchReviews = async () => {
         setLoading(true);
         try {
-            // Thay vì gọi API
-            setReviews(mockReviews);
-            showNotification("Tải danh sách đánh giá thành công!", "success");
+            const res = await reviewService.getAllReview();
+            setData(res.data.data);
+            showNotification(res.data.message, "success");
         } catch (error) {
-            showNotification("Không thể tải danh sách đánh giá!", "error");
+            showNotification("Tải danh sách đánh giá thất bại!", "error");
         } finally {
             setLoading(false);
         }
     };
 
-
     useEffect(() => {
         fetchReviews();
     }, []);
 
-    // ==== FILTER SEARCH ====
-    const filteredReviews = reviews.filter((item) => {
+    // ===== FILTER SEARCH =====
+    const filteredData = data.filter(item => {
         if (!searchText) return true;
-
         return (
-            removeVietnameseTones(item.user_name || "")
-                .toLowerCase()
-                .includes(searchText.toLowerCase()) ||
-            removeVietnameseTones(item.product_name || "")
-                .toLowerCase()
-                .includes(searchText.toLowerCase())
+            removeVietnameseTones(item.comment).toLowerCase().includes(searchText.toLowerCase()) ||
+            removeVietnameseTones(item.reviewer?.full_name).toLowerCase().includes(searchText.toLowerCase()) ||
+            removeVietnameseTones(item.reviewer?.email).toLowerCase().includes(searchText.toLowerCase())
         );
     });
 
-    // ==== OPEN DETAIL MODAL ====
-    const handleViewDetails = (record) => {
+    const openReplyModal = (record) => {
         setSelectedReview(record);
-        setIsViewModalOpen(true);
+        setReplyContent(record.reply?.message || "");
+        setIsReplyModalOpen(true);
     };
 
-    // ==== OPEN STATUS MODAL (APPROVE / REJECT) ====
-    const handleOpenStatusModal = (record, action) => {
-        setSelectedReview(record);
-        setStatusAction(action);
-        setIsStatusModalOpen(true);
-    };
+    const handleReplyReview = async () => {
+        if (!replyContent.trim()) {
+            showNotification("Vui lòng nhập nội dung phản hồi", "warning");
+            return;
+        }
 
-    // ==== UPDATE STATUS ====
-    const handleUpdateStatus = async () => {
         try {
-            const res = await reviewService.updateStatus(selectedReview.review_id, {
-                status: statusAction,
+            const res = await reviewService.replyReview({
+                review_id: selectedReview.review_id,
+                message: replyContent,
             });
 
             showNotification(res.data.message, "success");
-            setIsStatusModalOpen(false);
+            setIsReplyModalOpen(false);
             fetchReviews();
         } catch (error) {
             showNotification(
-                error.response?.data?.message || "Không thể cập nhật trạng thái!",
+                error.response?.data?.message || "Phản hồi thất bại",
                 "error"
             );
         }
     };
 
-    // ==== COLUMNS ====
+
+    const handleChangeStatus = async () => {
+        if (!selectedReview) return;
+
+        try {
+            const res = await reviewService.updateStatusReview(
+                selectedReview.review_id
+            );
+
+            showNotification(res.data.message, "success");
+            setIsStatusModalOpen(false);
+            fetchReviews(); // reload list
+        } catch (error) {
+            showNotification(
+                error.response?.data?.message || "Đổi trạng thái thất bại",
+                "error"
+            );
+        }
+    };
+
+
+    // ===== COLUMNS =====
     const reviewColumns = [
         {
-            title: "Sản phẩm",
-            dataIndex: "product_name",
-            key: "product_name",
-            render: (text) => <span className="font-semibold">{text}</span>,
+            title: "⭐ Đánh giá",
+            dataIndex: "rating",
+            key: "rating",
+            width: 150,
+            filters: [1, 2, 3, 4, 5].map(v => ({ text: `${v} sao`, value: v })),
+            onFilter: (value, record) => record.rating === value,
+            render: rating => (
+                <Tag color={rating >= 4 ? "green" : rating >= 2 ? "orange" : "red"}>
+                    {rating} ⭐
+                </Tag>
+            ),
         },
+        {
+            title: "Nội dung",
+            dataIndex: "comment",
+            key: "comment",
+            width: 350,
+            render: (text) => (
+                <div className="max-w-80">
+                    <Typography.Text
+                        ellipsis={{ tooltip: text }}
+                        className="cursor-pointer"
+                    >
+                        {text || "—"}
+                    </Typography.Text>
+                </div>
+            ),
+        },
+        {
+            title: "Phản hồi",
+            dataIndex: "reply",
+            key: "reply",
+            width: 320,
+
+            filters: [
+                { text: "Đã phản hồi", value: "replied" },
+                { text: "Chưa phản hồi", value: "not_replied" },
+            ],
+
+            onFilter: (value, record) => {
+                if (value === "replied") return !!record.reply;
+                if (value === "not_replied") return !record.reply;
+                return true;
+            },
+
+            render: (reply, record) => {
+                if (!reply) {
+                    return (
+                        <Button
+                            className="p-0 font-semibold text-orange-500"
+                            type="link"
+                            onClick={() => openReplyModal(record)}
+                        >
+                            Chưa phản hồi
+                        </Button>
+                    );
+                }
+
+                return (
+                    <div className="max-w-80 flex flex-col gap-1">
+                        <Typography.Text
+                            ellipsis={{ tooltip: reply.message }}
+                            className="text-green-700"
+                        >
+                            {reply.message}
+                        </Typography.Text>
+
+                        <span className="text-xs text-gray-400">
+                            Đã phản hồi
+                        </span>
+                    </div>
+                );
+            },
+        },
+
+
+
+
+
         {
             title: "Người đánh giá",
-            dataIndex: "user_name",
-            key: "user_name",
+            key: "reviewer",
+            render: (_, record) => (
+                <div className="flex flex-col">
+                    <span className="font-semibold">{record.reviewer.full_name}</span>
+                    <span className="text-gray-400 text-sm">
+                        {record.reviewer.email}
+                    </span>
+                </div>
+            ),
         },
         {
-            title: "Số sao",
-            dataIndex: "rating",
+            title: "Ảnh",
+            dataIndex: "images",
+            key: "images",
             width: 120,
-            render: (rating) => <Rate disabled defaultValue={rating} />,
-            filters: [1, 2, 3, 4, 5].map((n) => ({ text: `${n} sao`, value: n })),
-            onFilter: (value, record) => record.rating === value,
+            render: (images = []) =>
+                images.length ? (
+                    <Image.PreviewGroup>
+                        <div className="flex gap-1">
+                            {images.slice(0, 2).map((img, idx) => (
+                                <Image
+                                    key={idx}
+                                    src={img}
+                                    width={40}
+                                    height={40}
+                                    className="rounded object-cover cursor-pointer"
+                                />
+                            ))}
+                            {images.length > 2 && (
+                                <div className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded text-xs">
+                                    +{images.length - 2}
+                                </div>
+                            )}
+                        </div>
+                    </Image.PreviewGroup>
+                ) : (
+                    "—"
+                ),
         },
+
         {
             title: "Trạng thái",
-            dataIndex: "status",
+            dataIndex: "is_visible",
+            key: "is_visible",
             width: 130,
             filters: [
-                { text: "Pending", value: "pending" },
-                { text: "Approved", value: "approved" },
-                { text: "Rejected", value: "rejected" },
+                { text: "Hiển thị", value: true },
+                { text: "Ẩn", value: false },
             ],
-            onFilter: (val, record) => record.status === val,
-            render: (status) => {
-                let color = "default";
-                if (status === "pending") color = "orange";
-                if (status === "approved") color = "green";
-                if (status === "rejected") color = "red";
-
-                return <Tag color={color}>{status.toUpperCase()}</Tag>;
-            },
+            onFilter: (value, record) => record.is_visible === value,
+            render: visible => (
+                <Tag color={visible ? "green" : "red"}>
+                    {visible ? "Hiển thị" : "Đã ẩn"}
+                </Tag>
+            ),
         },
         {
             title: "Ngày tạo",
             dataIndex: "createdAt",
-            width: 130,
-            render: (date) =>
-                dayjs(date).isValid() ? dayjs(date).format("DD/MM/YYYY") : "—",
+            key: "createdAt",
+            width: 120,
+            render: date =>
+                dayjs(date, "HH:mm:ss DD/MM/YYYY").isValid()
+                    ? dayjs(date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
+                    : "—",
         },
         {
             title: "Hành động",
             key: "action",
-            render: (_, record) => (
-                <Space>
-                    <Button icon={<EyeOutlined />} onClick={() => handleViewDetails(record)} />
+            width: 140,
+            render: (_, record) => {
+                const isVisible = record.is_visible;
 
-                    {record.status === "pending" && (
-                        <>
+                return (
+                    <Space>
+                        {/* XEM CHI TIẾT */}
+                        <Tooltip title="Xem chi tiết đánh giá">
                             <Button
-                                type="primary"
-                                icon={<CheckOutlined />}
-                                onClick={() => handleOpenStatusModal(record, "approved")}
+                                type="text"
+                                icon={<EyeOutlined />}
+                                onClick={() => {
+                                    setSelectedReview(record);
+                                    setIsDetailModalOpen(true);
+                                }}
                             />
+                        </Tooltip>
+
+                        {/* ĐỔI TRẠNG THÁI */}
+                        <Tooltip
+                            title={
+                                isVisible
+                                    ? "Ẩn đánh giá"
+                                    : "Hiển thị đánh giá"
+                            }
+                        >
                             <Button
-                                danger
-                                icon={<CloseOutlined />}
-                                onClick={() => handleOpenStatusModal(record, "rejected")}
+                                type="text"
+                                danger={isVisible}
+                                className={
+                                    isVisible
+                                        ? "font-bold text-red-600"
+                                        : "font-bold text-green-600"
+                                }
+                                icon={
+                                    isVisible ? (
+                                        <LockOutlined />
+                                    ) : (
+                                        <UnlockOutlined />
+                                    )
+                                }
+                                onClick={() => {
+                                    setSelectedReview(record);
+                                    setIsStatusModalOpen(true);
+                                }}
                             />
-                        </>
-                    )}
-                </Space>
-            ),
+                        </Tooltip>
+                    </Space>
+                );
+            },
         },
+
     ];
 
-    // ==== HEADER ====
+    const renderModalChangeStatus = () => {
+        return (
+            <Modal
+                open={isStatusModalOpen}
+                title="Xác nhận thay đổi trạng thái"
+                onCancel={() => setIsStatusModalOpen(false)}
+                onOk={handleChangeStatus}
+                okText="Xác nhận"
+                cancelText="Hủy"
+                centered
+                okButtonProps={{
+                    className:
+                        "bg-black text-white hover:!bg-white hover:!text-black border-2 border-black",
+                }}
+                cancelButtonProps={{
+                    className:
+                        "bg-white text-black hover:!bg-black hover:!text-white border-2 border-black",
+                }}
+            >
+                <p>
+                    Bạn có chắc muốn{" "}
+                    <b
+                        className={
+                            selectedReview?.is_visible
+                                ? "text-red-600"
+                                : "text-green-600"
+                        }
+                    >
+                        {selectedReview?.is_visible
+                            ? "Ẩn"
+                            : "Hiển thị"}
+                    </b>{" "}
+                    đánh giá này không?
+                </p>
+            </Modal>
+        )
+    }
+
+    // ===== HEADER =====
     const renderHeader = () => (
         <Header
             searchText={searchText}
@@ -220,58 +360,107 @@ const ReviewManager = () => {
         />
     );
 
-    // ==== DETAILS MODAL ====
-    const renderDetailsModal = () => (
+
+    const renderReplyModal = () => (
         <Modal
-            open={isViewModalOpen}
-            title="Chi tiết đánh giá"
-            onCancel={() => setIsViewModalOpen(false)}
-            footer={false}
+            open={isReplyModalOpen}
+            title="Phản hồi đánh giá"
+            onCancel={() => setIsReplyModalOpen(false)}
+            onOk={handleReplyReview}
+            okText="Gửi phản hồi"
+            cancelText="Hủy"
             centered
+            width={600}
+            okButtonProps={{
+                className:
+                    "bg-black text-white hover:!bg-white hover:!text-black border-2 border-black",
+            }}
+            cancelButtonProps={{
+                className:
+                    "bg-white text-black hover:!bg-black hover:!text-white border-2 border-black",
+            }}
+        >
+            <div className="space-y-3">
+                <div className="text-sm text-gray-500">
+                    <b>Người đánh giá:</b> {selectedReview?.reviewer?.full_name}
+                </div>
+
+                <div className="p-3 bg-gray-50 rounded text-sm">
+                    {selectedReview?.comment}
+                </div>
+
+                <Input.TextArea
+                    rows={5}
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    placeholder="Nhập phản hồi của admin..."
+                />
+            </div>
+        </Modal>
+
+    );
+
+    // ===== DETAIL MODAL =====
+    const renderDetailModal = () => (
+
+        <Modal
+            open={isDetailModalOpen}
+            title="Chi tiết đánh giá"
+            onCancel={() => setIsDetailModalOpen(false)}
+            footer={null}
+            centered
+            width={700}
         >
             {selectedReview && (
-                <div className="space-y-3">
-                    <p><b>Sản phẩm:</b> {selectedReview.product_name}</p>
-                    <p><b>Người đánh giá:</b> {selectedReview.user_name}</p>
-                    <p><b>Số sao:</b> <Rate disabled defaultValue={selectedReview.rating} /></p>
-                    <p><b>Nội dung:</b></p>
-                    <p className="p-3 bg-gray-100 rounded-lg">{selectedReview.comment}</p>
+                <div className="space-y-4">
+                    <div className="flex justify-between">
+                        <Tag color="green">{selectedReview.rating} ⭐</Tag>
+                        <span className="text-gray-400">
+                            {selectedReview.createdAt}
+                        </span>
+                    </div>
+
+                    <p className="text-gray-700">{selectedReview.comment}</p>
+
+                    {selectedReview.images?.length > 0 && (
+                        <div className="flex gap-2 flex-wrap">
+                            {selectedReview.images.map((img, idx) => (
+                                <Image
+                                    key={idx}
+                                    src={img}
+                                    width={100}
+                                    height={100}
+                                    className="rounded"
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="border-t pt-3 text-sm text-gray-500">
+                        <div>
+                            <b>Người đánh giá:</b>{" "}
+                            {selectedReview.reviewer.full_name}
+                        </div>
+                        <div>{selectedReview.reviewer.email}</div>
+                    </div>
                 </div>
             )}
         </Modal>
-    );
 
-    // ==== STATUS CONFIRM MODAL ====
-    const renderStatusModal = () => (
-        <Modal
-            open={isStatusModalOpen}
-            onCancel={() => setIsStatusModalOpen(false)}
-            onOk={handleUpdateStatus}
-            okText="Xác nhận"
-            cancelText="Hủy"
-            centered
-        >
-            <p>
-                Bạn có chắc muốn
-                <b className="text-red-600"> {statusAction === "approved" ? " DUYỆT " : " TỪ CHỐI "} </b>
-                đánh giá của <b>{selectedReview?.user_name}</b>?
-            </p>
-        </Modal>
     );
 
     return (
         <div className="bg-white rounded-lg shadow-sm">
             {renderHeader()}
-
             <DataTable
                 columns={reviewColumns}
-                dataSource={filteredReviews}
+                dataSource={filteredData}
                 loading={loading}
                 totalText="đánh giá"
             />
-
-            {renderDetailsModal()}
-            {renderStatusModal()}
+            {renderDetailModal()}
+            {renderReplyModal()}
+            {renderModalChangeStatus()}
         </div>
     );
 };

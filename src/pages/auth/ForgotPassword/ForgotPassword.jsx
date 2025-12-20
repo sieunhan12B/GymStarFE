@@ -27,7 +27,6 @@ const ForgotPassword = () => {
 
       // Gọi API đăng ký
       const response = await authService.forgotPassword(payload);
-      console.log(response);
 
       showNotification(response.data.message, "success");
       // Nếu API trả về thành công
@@ -60,9 +59,8 @@ const ForgotPassword = () => {
             NHẬP EMAIL CỦA BẠN?
           </Title>
           <Text className="text-gray-500 text-sm">
-            No problem. Enter your account email address and
-            we’ll send you instructions so you can reset your
-            password.
+            Không sao cả. Hãy nhập địa chỉ email của bạn,
+            chúng tôi sẽ gửi hướng dẫn để bạn có thể đặt lại mật khẩu
 
           </Text>
         </div>
@@ -77,13 +75,13 @@ const ForgotPassword = () => {
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: "Email is not valid!" },
+              { required: true, message: "Vui lòng nhập email!" },
+              { type: "email", message: "Email không hợp lệ!" },
             ]}
           >
             <Input
               size="large"
-              placeholder="Email address*"
+              placeholder="Email *"
               className="rounded-md"
             />
           </Form.Item>
@@ -96,14 +94,14 @@ const ForgotPassword = () => {
               size="large"
               className="w-full bg-black  hover:!bg-gray-700 border-none rounded-full font-semibold"
             >
-              XÁC THỰC EMAIL
+             GỬI YÊU CẦU
             </Button>
           </Form.Item>
         </Form>
 
 
         <Link to={path.logIn} className=" font-semibold text-sm underline mt-3   text-black hover:underline ">
-          Back To Login
+          Quay lại đăng nhập
         </Link>
 
       </div>

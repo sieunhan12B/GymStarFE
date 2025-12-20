@@ -68,21 +68,22 @@ const Cart = () => {
         setCartItems(items);
     }, [cartItemsFromRedux]);
 
-    const subtotal = cartItems.reduce(
+    const subtotalAfterDiscount = cartItems.reduce(
         (sum, item) =>
             sum + (Number(item.product_variant?.product?.final_price) || 0) * (item.quantity || 0),
         0
     );
-    const discount = cartItems.reduce(
+
+    const subtotalBeforeDiscount = cartItems.reduce(
         (sum, item) =>
-            sum +
-            ((item.product_variant?.product?.price || 0) -
-                (Number(item.product_variant?.product?.final_price) || 0)) *
-            (item.quantity || 0),
+            sum + (Number(item.product_variant?.product?.price) || 0) * (item.quantity || 0),
         0
     );
+
+    const discountTotal = subtotalBeforeDiscount - subtotalAfterDiscount;
+
     const shipping = 0;
-    const total = subtotal + shipping;
+    const total = subtotalAfterDiscount + shipping;
 
     const parseAddressDetail = (address = "") => {
         const parts = address.split(",").map(p => p.trim());
@@ -97,15 +98,28 @@ const Cart = () => {
     const fetchCart = async () => {
         try {
             const res = await cartService.getCart();
-            console.log(res);
-            // Giả sử API trả về: res.data.data.cart_items
             const cartData = res.data.data || [];
-            // Cập nhật Redux
-            dispatch(setCart(cartData));
+
+            const updatedCart = cartData
+                .filter(item => item.product_variant?.stock > 0) // chỉ giữ sản phẩm còn hàng
+                .map(item => ({
+                    ...item,
+                    quantity: Math.min(item.quantity, item.product_variant.stock),
+                    originalQuantity: item.quantity,
+                }));
+
+            dispatch(setCart(updatedCart));
+            setCartItems(updatedCart);
+
+            // Thông báo nếu có sản phẩm bị loại
+            if (cartData.length !== updatedCart.length) {
+                showNotification("Một số sản phẩm đã hết hàng và bị loại khỏi giỏ", "warning");
+            }
         } catch (error) {
             console.log("Lỗi fetch cart:", error);
         }
     };
+
 
 
     //==============API ADDRESS===================//
@@ -185,27 +199,48 @@ const Cart = () => {
     }, [debouncedCartItems]);
 
     //==============HANDLE + / -==================//
-    const handleQuantityChange = (cart_detail_id, newQuantity) => {
-        setCartItems(prev =>
-            prev.map(item => {
-                if (item.cart_detail_id === cart_detail_id) {
+    const handleQuantityChange = async (cart_detail_id, newQuantity) => {
+        try {
+            // Lấy item hiện tại
+            const item = cartItems.find(i => i.cart_detail_id === cart_detail_id);
+            if (!item) return;
 
-                    // ⭐ Kiểm tra min / max trước khi cập nhật
-                    if (newQuantity < 1) {
-                        showNotification("Số lượng tối thiểu là 1", "warning");
-                        return item; // giữ nguyên
-                    }
-                    if (newQuantity > item.product_variant.stock) {
-                        showNotification(`Tối đa ${item.product_variant.stock} sản phẩm`, "warning");
-                        return item; // giữ nguyên
-                    }
+            // Gọi API để lấy stock mới nhất của product_variant
+            const res = await cartService.getCart(); // hoặc riêng API getProductVariant
+            const latestItem = res.data.data.find(i => i.cart_detail_id === cart_detail_id);
 
-                    return { ...item, quantity: newQuantity };
-                }
-                return item;
-            })
-        );
+            if (!latestItem) return;
+
+            const stock = latestItem.product_variant.stock;
+
+            // Kiểm tra min/max
+            if (newQuantity < 1) {
+                showNotification("Số lượng tối thiểu là 1", "warning");
+                return;
+            }
+            if (newQuantity > 10) {
+                showNotification("Mỗi sản phẩm chỉ được thêm tối đa 10 cái", "warning");
+                return;
+            }
+            if (newQuantity > stock) {
+                showNotification(`Chỉ còn ${stock} sản phẩm có sẵn`, "warning");
+                newQuantity = stock; // tự động giới hạn quantity theo stock
+            }
+
+            // Cập nhật local state
+            setCartItems(prev =>
+                prev.map(i =>
+                    i.cart_detail_id === cart_detail_id ? { ...i, quantity: newQuantity } : i
+                )
+            );
+
+        } catch (error) {
+            console.error(error);
+            showNotification("Không thể cập nhật số lượng sản phẩm", "error");
+        }
     };
+
+
 
 
     //==============DELETE ITEM==================//
@@ -243,45 +278,61 @@ const Cart = () => {
 
 
     //==============XỬ LÝ ĐẶT HÀNG ==================//
-    const handleCheckout = async (buyNowItem = null) => {
+    const handleCheckout = async () => {
         if (!selectedAddressId) {
             showNotification("Vui lòng chọn địa chỉ", "error");
             return;
         }
+
         setIsSubmitting(true);
 
         try {
+            // ===== Check stock trước =====
+            const outOfStockItems = cartItems.filter(item => item.quantity > item.product_variant.stock);
+            if (outOfStockItems.length > 0) {
+                // Xoá các sản phẩm không đủ stock khỏi state
+                const updatedCart = cartItems.filter(item => item.quantity <= item.product_variant.stock);
+                setCartItems(updatedCart);
+                dispatch(setCart(updatedCart));
+
+                // Xoá sản phẩm khỏi server
+                for (let item of outOfStockItems) {
+                    await cartService.deleteCartItem({ cart_detail_id: item.cart_detail_id });
+                }
+
+                const names = outOfStockItems.map(i => i.product_variant.product.name).join(", ");
+                showNotification(
+                    `Sản phẩm sau đã hết hàng và được loại khỏi giỏ hàng: ${names}`,
+                    "warning"
+                );
+
+                setIsSubmitting(false);
+                return; // Dừng checkout
+            }
+
             let res;
 
             if (buyNowItem) {
                 // ===== Buy Now =====
-                const { product_variant, quantity } = buyNowItem;
-
                 const payload = {
-                    product_variant_id: product_variant.product_variant_id,
-                    quantity,
+                    product_variant_id: buyNowItem.product_variant.product_variant_id,
+                    quantity: buyNowQuantity,
+                    note: orderNote || "",
                     address_id: selectedAddressId,
                     method: paymentMethod.toUpperCase(),
-                    note: orderNote || "",
                 };
-
                 res = await orderService.orderNow(payload);
-
             } else {
-                // ===== Cart thông thường =====
-                // 1. Cập nhật số lượng nếu thay đổi
-                for (let item of cartItems) {
-                    if (item.quantity !== item.originalQuantity) {
-                        await cartService.updateCart({
-                            product_variant_id: item.product_variant.product_variant_id,
-                            quantity: item.quantity,
-                        });
-                    }
+                // ===== Buy from Cart =====
+                if (selectedCartItems.length === 0) {
+                    showNotification("Vui lòng chọn sản phẩm để đặt hàng", "error");
+                    setIsSubmitting(false);
+                    return;
                 }
 
                 const payload = {
                     cart_detail_ids: selectedCartItems,
-                    note: orderNote,
+                    note: orderNote || "",
                     address_id: selectedAddressId,
                     method: paymentMethod.toUpperCase(),
                 };
@@ -292,12 +343,10 @@ const Cart = () => {
             showNotification(res.data.message, "success");
 
             if (paymentMethod === "momo" && res.data.payUrl) {
-                // Nếu Momo → redirect sang payUrl
                 setLocalStorage("tempUser", user);
                 setLocalStorage("tempCart", buyNowItem ? [buyNowItem] : cartItems);
                 window.location.href = res.data.payUrl;
             } else {
-                // COD → chuyển sang trang đặt hàng thành công
                 fetchCart();
                 navigate(`/dat-hang-thanh-cong/${res.data.order_id}`);
             }
@@ -311,13 +360,15 @@ const Cart = () => {
     };
 
 
+
     //==============RENDER BUY NOW ITEM==================//
 
     const renderBuyNowItem = () => {
         if (!buyNowItem) return null;
 
-        const { product_variant, product_info } = buyNowItem;
-        const { thumbnail, name, price, discount } = product_info;
+        const { product_variant } = buyNowItem;
+        const { thumbnail, name, price, discount } = buyNowItem.product_info;
+        const stock = buyNowItem.product_variant.stock;
 
         const finalPrice = discount ? price * (1 - discount / 100) : price;
         const subtotal = finalPrice * buyNowQuantity;
@@ -329,10 +380,17 @@ const Cart = () => {
                 showNotification("Số lượng tối thiểu là 1", "warning");
                 return;
             }
+
             if (newQuantity > buyNowItem.product_variant.stock) {
-                showNotification(`Tối đa ${buyNowItem.product_variant.stock} sản phẩm`, "warning");
+                showNotification(`Tối đa ${buyNowItem.product_variant.stock} sản phẩm có sẵn`, "warning");
                 return;
             }
+
+            if (newQuantity > 10) {
+                showNotification("Mỗi sản phẩm chỉ được thêm tối đa 10 cái", "warning");
+                return;
+            }
+
             setBuyNowQuantity(newQuantity);
         };
 
@@ -357,8 +415,6 @@ const Cart = () => {
 
                             <div className="text-right">
                                 <div className="font-bold">{formatPrice(finalPrice * buyNowQuantity)}</div>
-
-                                {/* Hiển thị giá gốc line-through chỉ khi thực sự giảm */}
                                 {price * buyNowQuantity > finalPrice * buyNowQuantity && (
                                     <div className="text-xs text-gray-400 line-through">
                                         {formatPrice(price * buyNowQuantity)}
@@ -384,20 +440,12 @@ const Cart = () => {
                         <span>Thành tiền</span>
                         <span>{formatPrice(total)}</span>
                     </div>
-
-                    {/* Thông báo giảm giá */}
-                    {discount > 0 && (price * buyNowQuantity - finalPrice * buyNowQuantity) > 0 && (
-                        <div className="text-xs text-orange-600">
-                            Đã giảm {formatPrice(price * buyNowQuantity - finalPrice * buyNowQuantity)} so với giá gốc
-                        </div>
-                    )}
-
                 </div>
 
                 {/* Nút ĐẶT HÀNG */}
                 <button
                     className="w-full bg-black text-white py-4 rounded-lg font-bold text-lg hover:bg-gray-800 flex items-center justify-center gap-2"
-                    onClick={() => handleCheckout(buyNowItem)}
+                    onClick={handleCheckout}
                     disabled={isSubmitting}
                 >
                     {isSubmitting && <LoadingOutlined />}
@@ -406,6 +454,7 @@ const Cart = () => {
             </div>
         );
     };
+
 
 
 
@@ -474,14 +523,28 @@ const Cart = () => {
                                         <button className="px-2 py-1 hover:bg-gray-100" onClick={() => handleQuantityChange(item.cart_detail_id, item.quantity - 1)}>-</button>
                                         <span className="px-3">{item.quantity}</span>
                                         <button className="px-2 py-1 hover:bg-gray-100" onClick={() => handleQuantityChange(item.cart_detail_id, item.quantity + 1)}>+</button>
-                                    </div>
 
-                                    <div className="text-right">
-                                        <div className="font-bold">{formatPrice(Number(item.product_variant?.product?.final_price) * item.quantity)}</div>
-                                        {item.product_variant?.product?.price && item.product_variant?.product?.discount && (
-                                            <div className="text-xs text-gray-400 line-through">{formatPrice(item.product_variant.product.price)}</div>
+                                    </div>
+                                    <div className="text-right flex flex-col items-end">
+                                        {item.product_variant?.product?.discount > 0 ? (
+                                            <>
+                                                <div className="text-xs text-gray-400 line-through">
+                                                    {formatPrice(item.product_variant.product.price * item.quantity)}
+                                                </div>
+                                                <div className="font-bold text-black">
+                                                    {formatPrice(Number(item.product_variant?.product?.final_price) * item.quantity)}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="font-bold text-black">
+                                                {formatPrice(Number(item.product_variant?.product?.final_price) * item.quantity)}
+                                            </div>
                                         )}
                                     </div>
+
+
+
+
                                 </div>
 
                                 <button className="text-xs text-gray-500 mt-2 flex items-center gap-1" onClick={() => handleDeleteItem(item.cart_detail_id)}>
@@ -496,7 +559,7 @@ const Cart = () => {
                 <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-sm">
                         <span>Tạm tính</span>
-                        <span>{formatPrice(subtotal)}</span>
+                        <span>{formatPrice(subtotalAfterDiscount)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span>Phí giao hàng</span>
@@ -504,12 +567,18 @@ const Cart = () => {
                     </div>
                     <div className="flex justify-between text-lg font-bold pt-3 border-t">
                         <span>Thành tiền</span>
-                        <span>{formatPrice(total)}</span>
+                        <div className="text-right">
+                            <div>{formatPrice(subtotalAfterDiscount)}</div>
+                            {discountTotal > 0 && (
+                                <div className="text-xs text-orange-600">
+                                    Đã giảm {formatPrice(discountTotal)} so với giá gốc
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div className="text-xs text-orange-600">
-                        Đã giảm {formatPrice(discount)} tiền giá gốc
-                    </div>
+
                 </div>
+
 
                 {/* ===== Nút đặt hàng ===== */}
                 <button className="w-full bg-black text-white py-4 rounded-lg font-bold text-lg hover:bg-gray-800 flex items-center justify-center gap-2"

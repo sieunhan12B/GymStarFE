@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Input, Badge, Dropdown, Image } from 'antd';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { Input, Badge, Image } from 'antd';
 import { SearchOutlined, HeartOutlined, UserOutlined, ShoppingOutlined, CloseOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { path } from '@/common/path';
@@ -12,15 +12,16 @@ import { logout } from '@/redux/userSlice';
 import { NotificationContext } from '@/App';
 import { cartService } from '../../services/cart.service';
 import { clearCart, setCart } from '../../redux/cartSlice';
-import './header.css'
 import Cookies from "js-cookie";
-
-
+import { productService } from '../../services/product.service';
+import './header.css';
 
 const Header = () => {
   const [activeMenu, setActiveMenu] = useState(null);
+  console.log(activeMenu)
   const [categories, setCategories] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isUserOpen, setIsUserOpen] = useState(false);
   const { showNotification } = useContext(NotificationContext);
 
   const dispatch = useDispatch();
@@ -29,10 +30,44 @@ const Header = () => {
   const cartCount = useSelector((state) => state.cartSlice.count);
   const user = useSelector((state) => state.userSlice.user);
 
-  const [isUserOpen, setIsUserOpen] = useState(false);
+  // --- SEARCH ---
+  const [keyword, setKeyword] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [isFocused, setIsFocused] = useState(false);
+  const debounceRef = useRef(null);
+
+  const fetchProducts = async (kw) => {
+    if (!kw) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const res = await productService.getAllForUserWithKeyWord(`keyword=${kw}&page=0&limit=4`);
+      console.log(suggestions)
+      setSuggestions(res.data.data || []);
+    } catch (error) {
+      console.error('Lỗi tìm kiếm sản phẩm:', error);
+      setSuggestions([]);
+    }
+  };
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchProducts(keyword), 400);
+    return () => clearTimeout(debounceRef.current);
+  }, [keyword]);
+
+  const handleSearch = () => {
+    const trimmed = keyword.trim();
+    if (trimmed) {
+      // Chuyển đến URL dạng /tim-kiem/keyword
+      navigate(`/tim-kiem/${encodeURIComponent(trimmed)}`);
+      setIsFocused(false);
+    }
+  };
 
 
-  // LẤY CATEGORY TỪ API
+  // --- CATEGORIES ---
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -45,10 +80,9 @@ const Header = () => {
     fetchCategories();
   }, []);
 
-  // LẤY GIỎ HÀNG SAU KHI LOGIN
+  // --- CART ---
   useEffect(() => {
     if (!user?.user_id) return;
-
     const fetchCart = async () => {
       try {
         const res = await cartService.getCart();
@@ -57,11 +91,20 @@ const Header = () => {
         console.error("Lỗi lấy giỏ hàng:", error);
       }
     };
-
     fetchCart();
   }, [user]);
 
-  // HANDLE LOGOUT
+  const handleDeleteCartItem = async (cart_detail_id) => {
+    try {
+      await cartService.deleteCartItem({ cart_detail_id });
+      const updatedItems = cartItems.filter(item => item.cart_detail_id !== cart_detail_id);
+      dispatch(setCart(updatedItems));
+      showNotification("Xóa sản phẩm thành công!", "success");
+    } catch (error) {
+      showNotification("Xóa sản phẩm thất bại!", "error");
+    }
+  };
+
   const handleLogout = () => {
     Cookies.remove("access_token");
     dispatch(clearCart());
@@ -77,16 +120,12 @@ const Header = () => {
     }).format(price);
   };
 
-  // Tính tổng tiền
-
-
   return (
     <>
       <Announcement />
 
       <header className="w-full bg-white shadow-sm z-50 sticky top-0">
         <div className="relative">
-          {/* HEADER MAIN */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
 
@@ -103,7 +142,7 @@ const Header = () => {
                   {categories.map((parent) => (
                     <Link
                       key={parent.category_id}
-                      to={`/danh-muc/${parent.name}`}
+                      to={`danh-muc/${generateSlug(parent.name).toLowerCase()}`}
                       onMouseEnter={() => setActiveMenu(parent)}
                       className="relative text-sm cursor-pointer font-semibold group inline-block"
                     >
@@ -123,23 +162,61 @@ const Header = () => {
 
               {/* RIGHT SIDE */}
               <div className="flex items-center space-x-6 w-1/3 justify-end">
-                <div className="hidden md:block">
+
+                {/* SEARCH */}
+                <div className="relative hidden md:block w-64">
                   <Input
                     placeholder="Bạn đang tìm gì hôm nay..."
                     prefix={<SearchOutlined className="text-gray-400" />}
-                    className="w-64 rounded-full border-gray-300 focus:border-gray-400"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+                    onPressEnter={handleSearch}
+                    className="rounded-full border-gray-300 focus:border-gray-400"
                   />
+
+                  {/* Dropdown container luôn tồn tại */}
+                  <div
+                    className={`absolute  right-0 top-12  w-full bg-white border border-gray-200 shadow-lg mt-1 z-50 rounded-lg
+      transition-all duration-200 ease-out transform origin-top
+      ${isFocused && suggestions.length > 0
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 -translate-y-2 pointer-events-none"
+                      }`}
+                  >
+                    {suggestions.map((product) => (
+                      <Link
+                        to={`danh-muc/${generateSlug(product.category_name)}/${product.product_id}`}
+                        key={product.product_id}
+                        className="flex items-center p-2 hover:bg-gray-100"
+                        onMouseDown={(e) => e.preventDefault()}
+                      >
+                        <Image
+                          src={product.thumbnail}
+                          width={50}
+                          height={50}
+                          preview={false}
+                          className="rounded-md mr-3"
+                        />
+                        <span className="text-sm text-gray-800">{product.name}</span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
+
 
                 <button className="text-gray-600 hover:text-gray-900 md:hidden">
                   <SearchOutlined className="text-xl" />
                 </button>
 
+                {/* HEART */}
                 <button className="text-gray-600 hover:text-gray-900">
                   <HeartOutlined className="text-xl" />
                 </button>
 
-                <div className="relative">
+                {/* USER DROPDOWN */}
+                <div className='relative'>
                   <button
                     onClick={() => setIsUserOpen(!isUserOpen)}
                     className="text-gray-600 hover:text-gray-900"
@@ -150,18 +227,11 @@ const Header = () => {
                   {isUserOpen && (
                     <>
                       {/* Overlay */}
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsUserOpen(false)}
-                      />
+                      <div className="fixed inset-0 z-40" onClick={() => setIsUserOpen(false)} />
 
                       {/* Dropdown content */}
                       <div
-                        className="
-    absolute right-0 top-12 z-50
-    transition-all duration-200 ease-out
-    opacity-0 translate-y-2
-  "
+                        className="absolute right-0 top-12 z-50 transition-all duration-200 ease-out opacity-0 translate-y-2"
                         style={{ animation: "fadeSlideDown 0.2s forwards ease-out" }}
                       >
                         <div className="w-48 bg-white shadow-lg rounded-lg border border-gray-100 py-2">
@@ -181,9 +251,7 @@ const Header = () => {
                               >
                                 Đơn hàng
                               </Link>
-
                               <div className="border-t my-1"></div>
-
                               <span
                                 onClick={() => {
                                   handleLogout();
@@ -210,7 +278,7 @@ const Header = () => {
                 </div>
 
 
-                {/* CART BUTTON VỚI DROPDOWN */}
+                {/* CART DROPDOWN */}
                 <div className="relative">
                   <Badge count={cartCount} size="small" offset={[-2, 2]}>
                     <button
@@ -221,26 +289,17 @@ const Header = () => {
                     </button>
                   </Badge>
 
-                  {/* CART DROPDOWN */}
                   {isCartOpen && (
                     <>
                       {/* Overlay */}
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsCartOpen(false)}
-                      />
+                      <div className="fixed inset-0 z-40" onClick={() => setIsCartOpen(false)} />
 
                       {/* Dropdown Content */}
                       <div
-                        className="
-    absolute right-0 top-12 z-50
-    transition-all duration-200 ease-out
-    opacity-0 translate-y-2
-  "
+                        className="absolute right-0 top-12 z-50 transition-all duration-200 ease-out opacity-0 translate-y-2"
                         style={{ animation: "fadeSlideDown 0.2s forwards ease-out" }}
                       >
                         <div className="w-80 bg-white rounded-lg shadow-2xl border border-gray-100 max-h-[500px] flex flex-col">
-
                           {/* Header */}
                           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
                             <div className="flex items-center gap-2">
@@ -257,7 +316,7 @@ const Header = () => {
                             </button>
                           </div>
 
-                          {/* Cart Items hoặc Empty State */}
+                          {/* Cart Items or Empty State */}
                           {cartItems.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 px-6">
                               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
@@ -275,12 +334,13 @@ const Header = () => {
                                 {cartItems.map((item, index) => (
                                   <div
                                     key={item.cart_id}
-                                    className={`flex gap-3 py-3 ${index !== cartItems.length - 1 ? 'border-b border-gray-100' : ''}`}
+                                    className={`flex gap-3 py-3 ${index !== cartItems.length - 1 ? "border-b border-gray-100" : ""
+                                      }`}
                                   >
-                                    {/* Product Image Placeholder */}
+                                    {/* Product Image */}
                                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
                                       <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                        <ShoppingOutlined className="text-xl" />
+                                        <Image src={item.product_variant.product.thumbnail} />
                                       </div>
                                     </div>
 
@@ -289,21 +349,13 @@ const Header = () => {
                                       <h4 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
                                         {item.product_variant.product.name}
                                       </h4>
-
                                       <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs text-gray-500">
-                                          {item.product_variant.color}
-                                        </span>
+                                        <span className="text-xs text-gray-500">{item.product_variant.color}</span>
                                         <span className="text-gray-300">•</span>
-                                        <span className="text-xs text-gray-500">
-                                          {item.product_variant.size}
-                                        </span>
+                                        <span className="text-xs text-gray-500">{item.product_variant.size}</span>
                                         <span className="text-gray-300">•</span>
-                                        <span className="text-xs text-gray-500">
-                                          SL: {item.quantity}
-                                        </span>
+                                        <span className="text-xs text-gray-500">SL: {item.quantity}</span>
                                       </div>
-
                                       <div className="flex items-center gap-2">
                                         <p className="text-sm font-bold text-gray-900">
                                           {formatPrice(item.product_variant.product.final_price)}
@@ -315,15 +367,20 @@ const Header = () => {
                                         )}
                                       </div>
                                     </div>
+
+                                    {/* Delete Button */}
+                                    <button
+                                      onClick={() => handleDeleteCartItem(item.cart_detail_id)}
+                                      className="text-red-500 hover:text-red-700 ml-2"
+                                    >
+                                      Xóa
+                                    </button>
                                   </div>
                                 ))}
                               </div>
 
                               {/* Footer */}
                               <div className="border-t border-gray-100 px-5 py-4 space-y-3 flex-shrink-0">
-
-
-                                {/* View Cart Button */}
                                 <button
                                   onClick={() => {
                                     setIsCartOpen(false);
@@ -341,6 +398,7 @@ const Header = () => {
                     </>
                   )}
                 </div>
+
               </div>
             </div>
           </div>
@@ -350,6 +408,9 @@ const Header = () => {
             <Input
               placeholder="Bạn đang tìm gì hôm nay..."
               prefix={<SearchOutlined className="text-gray-400" />}
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onPressEnter={handleSearch}
               className="w-full rounded-full border-gray-300"
             />
           </div>
@@ -357,9 +418,7 @@ const Header = () => {
           {/* MEGA MENU */}
           {activeMenu && (
             <div
-              className=" mega-menu-wrapper absolute left-0 w-full bg-white shadow-lg border-t z-50
-      transition-all duration-200 ease-out
-      opacity-100 translate-y-0"
+              className="mega-menu-wrapper absolute left-0 w-full bg-white shadow-lg border-t z-50 transition-all duration-200 ease-out opacity-100 translate-y-0"
               style={{ animation: "fadeSlideDown 0.2s forwards ease-out" }}
               onMouseLeave={() => setActiveMenu(null)}
             >
@@ -370,7 +429,7 @@ const Header = () => {
                       {activeMenu.children?.map((child) => (
                         <div key={child.category_id}>
                           <Link
-                            to={`category/${generateSlug(activeMenu.name)}/${generateSlug(child.name)}`}
+                            to={`danh-muc/${generateSlug(activeMenu.name)}/${generateSlug(child.name)}`}
                             className="hover:text-black block font-bold text-xl text-gray-900"
                           >
                             {child.name}
@@ -380,7 +439,7 @@ const Header = () => {
                               {child.children.map((sub) => (
                                 <Link
                                   key={sub.category_id}
-                                  to={`/${generateSlug(activeMenu.name)}/${generateSlug(child.name)}/${generateSlug(sub.name)}`}
+                                  to={`danh-muc/${generateSlug(activeMenu.name)}/${generateSlug(child.name)}/${generateSlug(sub.name)}`}
                                   className="text-gray-600 hover:text-black text-sm font-semibold block"
                                 >
                                   {sub.name}
@@ -403,7 +462,7 @@ const Header = () => {
                         {activeMenu.children?.map((child) => (
                           <div key={child.category_id} className="mt-2 space-y-1">
                             <Link
-                              to={`category/phu-kien/${generateSlug(child.name)}`}
+                              to={`phu-kien/${generateSlug(child.name)}`}
                               className="text-gray-600 hover:text-black text-sm font-semibold block"
                             >
                               {child.name}
@@ -431,4 +490,5 @@ const Header = () => {
   );
 };
 
+// Bạn có thể tách MegaMenu, UserDropdown, CartDropdown thành component riêng cho dễ quản lý
 export default Header;

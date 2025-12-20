@@ -1,31 +1,30 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Input, Badge, Dropdown, Card, Row, Col, Button, Image } from 'antd';
-import { SearchOutlined, HeartOutlined, UserOutlined, ShoppingOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons';
-import ProductCard from '../../components/ProductCard/ProductCard';
+import React, { useEffect, useState } from 'react';
+import { Row, Col, Button } from 'antd';
+import { RightOutlined, LeftOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import useEmblaCarousel from 'embla-carousel-react';
+
+import ProductCard from '../../components/ProductCard/ProductCard';
 import { generateSlug } from '../../utils/generateSlug ';
 import { productService } from '../../services/product.service';
-import ProductSection from '../../components/ProductSection/ProductSection';
 
 const Home = () => {
-
   const categoryIds = {
     nam: 1,
     nu: 2,
     phukien: 3,
   };
 
-  const [menProducts, setMenProducts] = useState([]);
   const [womenProducts, setWomenProducts] = useState([]);
+  const [menProducts, setMenProducts] = useState([]);
   const [accessories, setAccessories] = useState([]);
 
+  // ===== EMBLA INSTANCES =====
+  const [womenRef, womenEmbla] = useEmblaCarousel({ dragFree: true });
+  const [menRef, menEmbla] = useEmblaCarousel({ dragFree: true });
+  const [accessoriesRef, accessoriesEmbla] = useEmblaCarousel({ dragFree: true });
 
-  const menRef = useRef(null);
-  const womenRef = useRef(null);
-  const accessoriesRef = useRef(null);
-
-
-
+  // ===== FETCH DATA =====
   useEffect(() => {
     Promise.all([
       productService.getProductsByCategoryId(categoryIds.nu),
@@ -37,32 +36,127 @@ const Home = () => {
         setMenProducts(namRes.data.data);
         setAccessories(pkRes.data.data);
       })
-      .catch((err) => console.error("Lỗi khi load sản phẩm:", err));
+      .catch(console.error);
   }, []);
 
+  // ===== WOMEN =====
+  const renderWomenProducts = () => (
+    <section className="max-w-7xl mx-auto px-4 py-16">
+      <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end gap-4">
+          <h2 className="text-2xl font-bold">NỮ</h2>
+          <Link to="/nu" className="text-sm hover:underline flex items-center">
+            Xem Tất Cả <RightOutlined className="ml-1 text-xs" />
+          </Link>
+        </div>
 
+        <div className="flex gap-2">
+          <Button
+            icon={<LeftOutlined />}
+            onClick={() => womenEmbla?.scrollPrev()}
+          />
+          <Button
+            type="primary"
+            icon={<RightOutlined />}
+            onClick={() => womenEmbla?.scrollNext()}
+          />
+        </div>
+      </div>
 
+      <div ref={womenRef} className="overflow-hidden">
+        <div className="flex gap-4">
+          {(womenProducts.length ? womenProducts : Array(5).fill(null)).map(
+            (item, idx) => (
+              <div key={idx} className="w-72 flex-shrink-0">
+                <ProductCard product={item} />
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    </section>
+  );
 
-  const scrollProducts = (ref, direction) => {
-    if (!ref.current) return;
+  // ===== MEN =====
+  const renderMenProducts = () => (
+    <section className="max-w-7xl mx-auto px-4 py-16">
+      <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end gap-4">
+          <h2 className="text-2xl font-bold">NAM</h2>
+          <Link to="/nam" className="text-sm hover:underline flex items-center">
+            Xem Tất Cả <RightOutlined className="ml-1 text-xs" />
+          </Link>
+        </div>
 
-    const scrollAmount = 300; // số px muốn trượt
+        <div className="flex gap-2">
+          <Button
+            icon={<LeftOutlined />}
+            onClick={() => menEmbla?.scrollPrev()}
+          />
+          <Button
+            type="primary"
+            icon={<RightOutlined />}
+            onClick={() => menEmbla?.scrollNext()}
+          />
+        </div>
+      </div>
 
-    if (direction === 'left') {
-      ref.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-    } else {
-      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
+      <div ref={menRef} className="overflow-hidden">
+        <div className="flex gap-4">
+          {(menProducts.length ? menProducts : Array(5).fill(null)).map(
+            (item, idx) => (
+              <div key={idx} className="w-72 flex-shrink-0">
+                <ProductCard product={item} />
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    </section>
+  );
 
+  // ===== ACCESSORIES =====
+  const renderAccessoriesProducts = () => (
+    <section className="max-w-7xl mx-auto px-4 py-16">
+      <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end gap-4">
+          <h2 className="text-2xl font-bold">PHỤ KIỆN</h2>
+          <Link to="/phu-kien" className="text-sm hover:underline flex items-center">
+            Xem Tất Cả <RightOutlined className="ml-1 text-xs" />
+          </Link>
+        </div>
 
- 
+        <div className="flex gap-2">
+          <Button
+            icon={<LeftOutlined />}
+            onClick={() => accessoriesEmbla?.scrollPrev()}
+          />
+          <Button
+            type="primary"
+            icon={<RightOutlined />}
+            onClick={() => accessoriesEmbla?.scrollNext()}
+          />
+        </div>
+      </div>
+
+      <div ref={accessoriesRef} className="overflow-hidden">
+        <div className="flex gap-4">
+          {(accessories.length ? accessories : Array(5).fill(null)).map(
+            (item, idx) => (
+              <div key={idx} className="w-72 flex-shrink-0">
+                <ProductCard product={item} />
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    </section>
+  );
 
   return (
     <div className="min-h-screen bg-white">
-
       {/* Banner 1 */}
-      <section className="relative">
+      {/* <section className="relative">
         <div className="grid grid-cols-1 md:grid-cols-3">
           <div className="relative h-96 md:h-[600px] overflow-hidden group">
             <img
@@ -95,17 +189,35 @@ const Home = () => {
             />
           </div>
         </div>
+      </section> */}
+      <section className="relative h-[500px] overflow-hidden">
+        <img
+          src="https://www.gymshark.com/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fwl6q2in9o7k3%2F1iQMycVHZ7R39B83cOpofM%2F3a8eeeaee2e338a3067892dc6c1f842d%2FHeadless_Desktop_-_25171493.jpeg&w=1920&q=85"
+          alt="Gym Banner"
+          className="w-full h-full object-cover"
+        />
+
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/30" />
+
+        {/* Content bottom-left */}
+        <div className="absolute bottom-10 left-10 text-white max-w-md">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">
+            PHONG CÁCH GYM NĂNG ĐỘNG
+          </h2>
+          <p className="text-sm md:text-base mb-4 text-gray-200">
+            Quần áo & phụ kiện thể thao dành cho người tập luyện nghiêm túc
+          </p>
+          <Button
+            size="middle"
+            className="bg-white text-black border-0 hover:bg-gray-100 px-6"
+          >
+            MUA NGAY
+          </Button>
+        </div>
       </section>
 
-      {/* Women */}
-      <ProductSection
-        title="NỮ"
-        link="nu"
-        data={womenProducts}
-        scrollRef={womenRef}
-        scrollProducts={scrollProducts}
-      />
-
+      {renderWomenProducts()}
       {/* Banner 2 */}
       <section className="relative h-[500px] overflow-hidden">
         <img
@@ -122,54 +234,30 @@ const Home = () => {
           </div>
         </div>
       </section>
+      {renderMenProducts()}
+      {renderAccessoriesProducts()}
 
-      {/* Men */}
-      <ProductSection
-        title="NAM"
-        link="nam"
-        data={menProducts}
-        scrollRef={menRef}
-        scrollProducts={scrollProducts}
-      />
-
-      {/* Accessories */}
-      <ProductSection
-        title="PHỤ KIỆN"
-        link="phu-kien"
-        data={accessories}
-        scrollRef={accessoriesRef}
-        scrollProducts={scrollProducts}
-      />
-
-      {/* Category Grid */}
+      {/* CATEGORY GRID */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <Row gutter={[16, 16]}>
-          {[
-            { title: "WOMENS", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800" },
-            { title: "MENS", image: "https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800" },
-            { title: "ACCESSORIES", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800" },
-          ].map((item, i) => (
-            <Col key={i} xs={24} sm={24} md={8}>
-              <div className="relative h-96 overflow-hidden group cursor-pointer">
-                <img
-                  src={item.image}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute bottom-6 left-6">
-                  <h3 className="text-white text-xl font-bold mb-2">{item.title}</h3>
-                  <Link
-                    to={`/${generateSlug(item.title)}`}
-                    className="bg-white text-black px-4 py-2 rounded hover:bg-gray-100 inline-block"
-                  >
-                    SHOP NOW
-                  </Link>
+          {['WOMENS', 'MENS', 'ACCESSORIES'].map((title, i) => (
+            <Col key={i} xs={24} md={8}>
+              <Link to={`/${generateSlug(title)}`}>
+                <div className="relative h-96 overflow-hidden group cursor-pointer">
+                  <img
+                    src="https://source.unsplash.com/800x800/?fashion"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    alt=""
+                  />
+                  <div className="absolute bottom-6 left-6 text-white text-xl font-bold">
+                    {title}
+                  </div>
                 </div>
-              </div>
+              </Link>
             </Col>
           ))}
         </Row>
       </section>
-
     </div>
   );
 };

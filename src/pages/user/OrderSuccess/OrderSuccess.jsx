@@ -63,9 +63,15 @@ const OrderSuccess = () => {
                 </div>
 
                 <h1 className="text-4xl font-bold mb-3">Đặt hàng thành công</h1>
-                <p className="text-gray-300 mb-6">
-                    Đơn hàng của bạn đã được ghi nhận và đang chờ xử lý.
-                </p>
+                <div className="mt-6 text-center mb-3">
+                    <p className="text-2xl font-bold text-white">
+                        ❤️ Cảm ơn bạn rất nhiều!
+                    </p>
+                    <p className="text-gray-300 mt-2">
+                        Sự ủng hộ của bạn là động lực lớn nhất để chúng tôi phục vụ tốt hơn mỗi ngày.
+                    </p>
+                </div>
+
 
                 <div className="inline-block bg-white/10 rounded-lg px-6 py-4">
                     <p className="text-sm text-gray-300">Mã đơn hàng</p>

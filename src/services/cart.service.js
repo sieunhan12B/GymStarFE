@@ -19,7 +19,7 @@ export const cartService = {
     // Thêm vào giỏ hàng
     addToCart: async (data) => {
         try {
-            return await http.post("/QuanLyGioHang/ThemSanPhamVaoGioHang/", data);
+            return await http.post("/QuanLyGioHang/ThemSanPhamVaoGioHang", data);
         } catch (error) {
             console.error("Lỗi trong cartService:", error);
             throw error;

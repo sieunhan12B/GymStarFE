@@ -1,9 +1,10 @@
 import { useEffect, useState, useContext } from "react";
-import { Table, Tag, Button, Modal, Input, Tooltip, message } from "antd";
-import { EditOutlined } from "@ant-design/icons";
+import { Table, Tag, Button, Modal, Input, Tooltip, message, Popconfirm, Space } from "antd";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { feedbackService } from "@/services/feedback.service";
 import { NotificationContext } from "@/App";
 import Header from "../../../templates/AdminTemplate/Header";
+import dayjs from "dayjs";
 
 const { TextArea } = Input;
 
@@ -48,6 +49,25 @@ const FeedbackManager = () => {
         setReplyModalVisible(true);
     };
 
+    const handleDeleteFeedback = async (feedback_id) => {
+        try {
+            const res = await feedbackService.deleteFeedback(feedback_id);
+
+            showNotification(res.data.message || "Xóa góp ý thành công", "success");
+
+            // Cập nhật lại data local
+            setData(prev =>
+                prev.filter(item => item.feedback.feedback_id !== feedback_id)
+            );
+        } catch (err) {
+            showNotification(
+                err?.response?.data?.message || "Xóa góp ý thất bại",
+                "error"
+            );
+        }
+    };
+
+
     const handleReply = async () => {
         if (!replyMessage.trim()) {
             message.error("Vui lòng nhập nội dung phản hồi!");
@@ -58,7 +78,7 @@ const FeedbackManager = () => {
             const res = await feedbackService.reply(payload, selectedFeedback.feedback.feedback_id);
 
             showNotification(res.data.message || "Trả lời góp ý thành công", "success");
-
+            fetchFeedback();
             // Cập nhật data local
             setData(prev =>
                 prev.map(item =>
@@ -108,63 +128,96 @@ const FeedbackManager = () => {
 
         {
             title: "Phản hồi",
-            key: "replyContent",
+            key: "reply",
+            width: 360,
             filters: [
                 { text: "Đã phản hồi", value: "replied" },
                 { text: "Chưa phản hồi", value: "not_replied" },
-
             ],
             onFilter: (value, record) =>
                 value === "replied" ? !!record.reply : !record.reply,
+
             render: (_, record) => {
-                const replyText = record.reply?.message;
-                return replyText ? (
-                    <Tooltip title={replyText}>
-                        <Tag color="blue">Đã phản hồi</Tag>
-                        <div className="text-gray-600 mt-1">
-                            {replyText.length > 50 ? replyText.slice(0, 50) + "..." : replyText}
+                const reply = record.reply;
+
+                // CHƯA PHẢN HỒI
+                if (!reply) {
+                    return (
+                        <Button
+                            type="link"
+                            className="p-0 font-medium"
+                            onClick={() => openReplyModal(record)}
+                        >
+                            Trả lời
+                        </Button>
+                    );
+                }
+
+                // ĐÃ PHẢN HỒI
+                return (
+                    <div className="max-w-[320px]">
+                        <Tooltip title={reply.message}>
+                            <div className="text-green-700 text-sm">
+                                {reply.message.length > 60
+                                    ? reply.message.slice(0, 60) + "..."
+                                    : reply.message}
+                            </div>
+                        </Tooltip>
+                        <div className="text-xs text-gray-400 mt-1">
+                            {reply.replied_at}
                         </div>
-                    </Tooltip>
-                ) : (
-                    <Tag color="orange">Chưa phản hồi</Tag>
+                    </div>
                 );
             },
         },
+
         {
             title: "Ngày gửi",
             dataIndex: ["feedback", "created_at"],
             key: "created_at",
-            sorter: (a, b) =>
-                new Date(a.feedback.created_at.split(" ").slice(1).join(" ")) -
-                new Date(b.feedback.created_at.split(" ").slice(1).join(" ")),
-            render: (date) => date,
+
+            render: date =>
+                dayjs(date, "HH:mm:ss DD/MM/YYYY").isValid()
+                    ? dayjs(date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
+                    : "—",
         },
         {
             title: "Ngày phản hồi",
             key: "reply_date",
-            sorter: (a, b) => {
-                const dateA = a.reply?.replied_at ? new Date(a.reply.replied_at.split(" ").slice(1).join(" ")) : 0;
-                const dateB = b.reply?.replied_at ? new Date(b.reply.replied_at.split(" ").slice(1).join(" ")) : 0;
-                return dateA - dateB;
-            },
+
             render: (_, record) =>
-                record.reply?.replied_at ? record.reply.replied_at : "—",
+                record.reply?.replied_at ? dayjs(record.reply.replied_at, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY") : "—",
         },
         {
             title: "Thao tác",
             key: "action",
-            render: (_, record) => (
-                !record.reply && (
-                    <Button
-                        type="primary"
-                        icon={<EditOutlined />}
-                        onClick={() => openReplyModal(record)}
-                    >
-                        Phản hồi
-                    </Button>
-                )
-            ),
+            width: 160,
+            render: (_, record) => {
+                const feedbackId = record.feedback.feedback_id;
+
+                return (
+                    <Space>
+                        {/* XÓA – luôn cho phép */}
+                        <Popconfirm
+                            title="Xóa góp ý này?"
+                            description="Hành động này không thể hoàn tác."
+                            okText="Xóa"
+                            cancelText="Hủy"
+                            onConfirm={() => handleDeleteFeedback(feedbackId)}
+                        >
+                            <Tooltip title="Xóa góp ý">
+                                <Button
+                                    danger
+                                    type="primary"
+                                    icon={<DeleteOutlined />}
+                                />
+                            </Tooltip>
+                        </Popconfirm>
+                    </Space>
+                );
+            },
         },
+
     ];
 
 
@@ -212,7 +265,7 @@ const FeedbackManager = () => {
     );
 
     return (
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className=" bg-white rounded-lg shadow-sm">
             {renderHeader()}
             {renderTable()}
             {renderModalReply()}

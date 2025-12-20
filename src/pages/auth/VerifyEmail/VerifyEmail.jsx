@@ -33,10 +33,10 @@ const VerifyOtp = () => {
           const response = await authService.verifyOtp(payload);
           console.log(response);
     
-          showNotification("Xác thực thành công!", "success");
+          showNotification(response.data.message, "success");
           // Nếu API trả về thành công
           navigate(path.resetPassword,{
-                  state: { reset_token: response.data.data.reset_token }
+                  state: { reset_token: response.data.reset_token }
                 });
         } catch (error) {
           // Xử lý lỗi trả về từ API
@@ -62,7 +62,7 @@ const VerifyOtp = () => {
             NHẬP MÃ OTP
           </Title>
           <Text className="text-gray-500 text-sm">
-            Chúng tôi đã gửi mã xác thực đến email của bạn. Vui lòng nhập mã để tiếp tục.
+            Chúng tôi đã gửi mã otp đến email của bạn. Vui lòng nhập mã để tiếp tục.
           </Text>
         </div>
 
@@ -92,7 +92,7 @@ const VerifyOtp = () => {
               size="large"
               className="w-full bg-black hover:!bg-gray-700 border-none rounded-full font-semibold"
             >
-              XÁC THỰC
+             XÁC NHẬN
             </Button>
           </Form.Item>
         </Form>

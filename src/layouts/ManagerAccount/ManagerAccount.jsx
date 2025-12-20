@@ -54,7 +54,7 @@ const ManagerAccount = () => {
       key: '5',
       icon: <HistoryOutlined />,
       label: 'Chính sách & Câu hỏi thường gặp',
-      path: path.addressBook,
+      path: "/chi",
 
     },
     {

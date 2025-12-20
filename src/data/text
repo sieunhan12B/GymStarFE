@@ -1,266 +1,388 @@
-// import { useEffect, useState } from "react";
-// import {
-//     ShoppingCartOutlined,
-//     ClockCircleOutlined,
-//     CheckCircleOutlined,
-//     TruckOutlined,
-//     CloseCircleOutlined,
-//     SyncOutlined
-// } from "@ant-design/icons";
-// import { Pagination } from "antd";
-// import { orderService } from "@/services/order.service";
+// import React, { useContext, useEffect, useState } from 'react';
+// import { Button, Rate, Tabs, Progress, InputNumber, Skeleton } from 'antd';
+// import { HeartOutlined, ShoppingCartOutlined, CreditCardOutlined } from '@ant-design/icons';
+// import { useNavigate, useParams } from 'react-router-dom';
+// import { useDispatch, useSelector } from 'react-redux';
+// import dayjs from 'dayjs';
+// import relativeTime from 'dayjs/plugin/relativeTime';
 
-// const OrderHistory = () => {
-//     const [orders, setOrders] = useState([]);
-//     const [loading, setLoading] = useState(false);
-//     const [currentPage, setCurrentPage] = useState(1);
-//     const pageSize = 5;
-//     const [activeTab, setActiveTab] = useState("all");
+// import { productService } from '@/services/product.service';
+// import { cartService } from '@/services/cart.service';
+// import { reviewService } from '@/services/review.service';
+// import { formatPrice } from '@/utils/utils';
+// import { setCart } from '@/redux/cartSlice';
+// import AddedToCartToast from '@/components/AddedToCartToast/AddedToCartToast';
+// import { NotificationContext } from '@/App';
+// import { path } from '@/common/path';
 
-//     /* ================== STATUS CONFIG (THEO BACKEND) ================== */
-//     const orderStatuses = [
-//         { key: "all", label: "Tất cả" },
-//         { key: "chờ xác nhận", label: "Chờ xác nhận" },
-//         { key: "đang xử lý", label: "Đang xử lý" },
-//         { key: "đang giao", label: "Đang giao" },
-//         { key: "đã giao", label: "Đã giao" },
-//         { key: "giao thất bại", label: "Giao thất bại" },
-//         { key: "đã hủy", label: "Đã hủy" },
-//         { key: "đổi hàng", label: "Đổi hàng" }
-//     ];
+// dayjs.extend(relativeTime);
 
-//     /* ================== CALL API ================== */
-//     useEffect(() => {
-//         const fetchOrders = async () => {
-//             try {
-//                 setLoading(true);
-//                 const res = await orderService.getOrderByUser();
-//                 setOrders(res.data.data || []);
-//             } catch (error) {
-//                 console.error("Lỗi lấy đơn hàng:", error);
-//             } finally {
-//                 setLoading(false);
-//             }
+// const Product = () => {
+//     const { productId } = useParams();
+//     const [product, setProduct] = useState(null);
+//     const [selectedImage, setSelectedImage] = useState(0);
+//     const [selectedColor, setSelectedColor] = useState('');
+//     const [selectedSize, setSelectedSize] = useState('');
+//     const [quantity, setQuantity] = useState(1);
+//     const [visibleCount, setVisibleCount] = useState(4);
+//     const [loadingMore, setLoadingMore] = useState(false);
+
+//     const user = useSelector(state => state.userSlice.user);
+//     const dispatch = useDispatch();
+//     const navigate = useNavigate();
+//     const { showNotification } = useContext(NotificationContext);
+
+//     const handleLoadMore = () => {
+//         setLoadingMore(true);
+//         setTimeout(() => {
+//             setVisibleCount(prev => Math.min(prev + 4, reviews.length));
+//             setLoadingMore(false);
+//         }, 500);
+//     };
+
+//     const handleAddToCart = async () => {
+//         if (!user?.user_id) return showNotification('Bạn cần đăng nhập trước!', 'error');
+//         if (!selectedColor || !selectedSize) return showNotification('Vui lòng chọn màu và kích thước!', 'warning');
+//         if (!selectedVariant) return showNotification('Không tìm thấy biến thể sản phẩm!', 'error');
+
+//         const data = {
+//             product_variant_id: selectedVariant.product_variant_id,
+//             quantity
 //         };
 
-//         fetchOrders();
-//     }, []);
-
-//     /* ================== HELPERS ================== */
-//     const getStatusIcon = (status) => {
-//         switch (status) {
-//             case "chờ xác nhận":
-//                 return <ClockCircleOutlined />;
-//             case "đang xử lý":
-//                 return <SyncOutlined />;
-//             case "đang giao":
-//                 return <TruckOutlined />;
-//             case "đã giao":
-//                 return <CheckCircleOutlined />;
-//             case "giao thất bại":
-//             case "đã hủy":
-//                 return <CloseCircleOutlined />;
-//             default:
-//                 return <ShoppingCartOutlined />;
+//         try {
+//             const res = await cartService.addToCart(data);
+//             const cartRes = await cartService.getCart();
+//             dispatch(setCart(cartRes.data.data));
+//             showNotification(<AddedToCartToast product={product} color={selectedVariant.color} size={selectedVariant.size} message={res.data.message} />, 'success');
+//         } catch (error) {
+//             showNotification(error.response.data.message, 'error');
+//             console.error('ADD CART ERROR:', error);
 //         }
 //     };
 
-//     const getStatusColor = (status) => {
-//         switch (status) {
-//             case "chờ xác nhận":
-//                 return "bg-yellow-100 text-yellow-700";
-//             case "đang xử lý":
-//                 return "bg-purple-100 text-purple-700";
-//             case "đang giao":
-//                 return "bg-orange-100 text-orange-700";
-//             case "đã giao":
-//                 return "bg-green-100 text-green-700";
-//             case "giao thất bại":
-//                 return "bg-red-100 text-red-700";
-//             case "đã hủy":
-//                 return "bg-gray-100 text-gray-700";
-//             default:
-//                 return "bg-gray-100 text-gray-700";
-//         }
+//     const handleBuyNow = (selectedVariant, quantity, product) => {
+//         navigate('/gio-hang', {
+//             state: {
+//                 buyNowItem: {
+//                     product_variant: selectedVariant,
+//                     quantity,
+//                     product_info: {
+//                         thumbnail: product.thumbnail,
+//                         name: product.name,
+//                         price: product.price,
+//                         discount: product.discount
+//                     }
+//                 }
+//             }
+//         });
 //     };
 
-//     const formatPrice = (price) =>
-//         new Intl.NumberFormat("vi-VN", {
-//             style: "currency",
-//             currency: "VND"
-//         }).format(price);
+//     useEffect(() => {
+//         const fetchProduct = async () => {
+//             try {
+//                 const res = await productService.getProductById(productId);
+//                 const data = res.data.data;
+//                 setProduct(data);
+//                 if (data.colors?.length > 0) setSelectedColor(data.colors[0].color);
+//                 if (data.product_variants?.length > 0) setSelectedSize(data.product_variants[0].size);
+//             } catch (error) {
+//                 console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+//             }
+//         };
+//         fetchProduct();
+//     }, [productId]);
 
-//     /* ================== FILTER ================== */
-//     const filteredOrders =
-//         activeTab === "all"
-//             ? orders
-//             : orders.filter((order) => order.status === activeTab);
+//     if (!product) return <div className="text-center py-20">Đang tải sản phẩm...</div>;
 
-//     /* ================== PAGINATION ================== */
-//     const paginatedOrders = filteredOrders.slice(
-//         (currentPage - 1) * pageSize,
-//         currentPage * pageSize
-//     );
+//     const selectedVariant = product.product_variants.find(v => v.color === selectedColor && v.size === selectedSize);
+//     const sku = selectedVariant ? selectedVariant.sku : 'Chưa chọn';
+//     const colorImages = product.colors.find(c => c.color === selectedColor)?.images || [];
 
-//     /* ================== RENDER ================== */
+//     // Dummy data
+//     const relatedProducts = [
+//         { id: 1, name: 'Training Short - White', price: 24.5, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
+//         { id: 2, name: 'Training Short - Navy', price: 24.5, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
+//         { id: 3, name: 'Training Short - Black', price: 24.5, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
+//         { id: 4, name: 'Long Sleeve Tee - Navy', price: 28.5, image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=300' },
+//     ];
+
+//     const youMightLike = [
+//         { id: 5, name: 'Performance Shorts', price: 32, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
+//         { id: 6, name: 'Crew Neck Sweater', price: 45, image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=300' },
+//         { id: 7, name: 'Casual Shirt', price: 38, image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300' },
+//         { id: 8, name: 'Basic Tee White', price: 22, image: 'https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=300' },
+//     ];
+
+//     const reviews = [
+//         { id: 1, author: 'johndoe123', date: '2 months ago', rating: 5, title: 'Comfortable and good quality, love it!', content: 'This shirt exceeded my expectations...', helpful: 24, verified: true },
+//         { id: 2, author: 'fitnessguru', date: '1 month ago', rating: 4, title: 'Feeling great', content: 'Very comfortable...', helpful: 12, verified: true },
+//         { id: 3, author: 'stylequeen', date: '3 weeks ago', rating: 5, title: 'Perfect for summer', content: 'Lightweight and breathable...', helpful: 18, verified: false },
+//         { id: 4, author: 'athlete89', date: '1 week ago', rating: 3, title: 'Decent but could be better', content: 'The fit is okay...', helpful: 5, verified: true },
+//         { id: 5, author: 'casualfan', date: '2 days ago', rating: 4, title: 'Nice shirt for everyday use', content: 'Comfortable and easy to wear...', helpful: 8, verified: false },
+//         { id: 6, author: 'sneakerhead', date: '5 days ago', rating: 5, title: 'Amazing quality!', content: 'The material feels premium...', helpful: 10, verified: true },
+//         { id: 7, author: 'jogger01', date: '1 day ago', rating: 4, title: 'Good for workouts', content: 'Fits nicely...', helpful: 6, verified: true },
+//         { id: 8, author: 'fashionista', date: '3 days ago', rating: 5, title: 'Love the colors!', content: 'The colors are exactly...', helpful: 14, verified: false },
+//         { id: 9, author: 'gymrat', date: '6 hours ago', rating: 4, title: 'Great fit', content: 'Fits well...', helpful: 4, verified: true },
+//     ];
+
+//     const reviewStats = {
+//         average: 4.3,
+//         total: 127,
+//         distribution: [
+//             { stars: 5, count: 85, percentage: 67 },
+//             { stars: 4, count: 30, percentage: 24 },
+//             { stars: 3, count: 8, percentage: 6 },
+//             { stars: 2, count: 3, percentage: 2 },
+//             { stars: 1, count: 1, percentage: 1 },
+//         ]
+//     };
+
 //     return (
-//         <div className="bg-white rounded-lg shadow-sm">
-//             {/* Header */}
-//             <div className="p-6 border-b">
-//                 <h2 className="text-2xl font-bold">Lịch sử đơn hàng</h2>
-//                 <p className="text-sm text-gray-500 mt-1">
-//                     Theo dõi và quản lý các đơn hàng của bạn
-//                 </p>
-//             </div>
-
-//             {/* Tabs */}
-//             <div className="border-b overflow-x-auto">
-//                 <div className="flex gap-2 p-4 min-w-max">
-//                     {orderStatuses.map((status) => (
-//                         <button
-//                             key={status.key}
-//                             onClick={() => {
-//                                 setActiveTab(status.key);
-//                                 setCurrentPage(1);
-//                             }}
-//                             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap
-//                                 ${activeTab === status.key
-//                                     ? "bg-black text-white"
-//                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-//                                 }`}
-//                         >
-//                             {status.label}
-//                         </button>
-//                     ))}
-//                 </div>
-//             </div>
-
-//             {/* Orders */}
-//             <div className="p-6 space-y-4">
-//                 {loading ? (
-//                     <div className="text-center py-10 text-gray-500">
-//                         Đang tải đơn hàng...
+//         <div className="min-h-screen bg-white">
+//             <div className="max-w-7xl mx-auto px-4 py-8">
+//                 {/* Product Main Section */}
+//                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+//                     {/* Left - Images */}
+//                     <div className="space-y-4">
+//                         <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+//                             <img src={colorImages[selectedImage] || product.thumbnail} alt={product.name} className="w-full h-full object-cover" />
+//                         </div>
+//                         <div className="grid grid-cols-4 gap-4">
+//                             {colorImages.map((img, idx) => (
+//                                 <button key={idx} onClick={() => setSelectedImage(idx)} className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx ? 'border-black' : 'border-gray-200 hover:border-gray-400'}`}>
+//                                     <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+//                                 </button>
+//                             ))}
+//                         </div>
 //                     </div>
-//                 ) : paginatedOrders.length === 0 ? (
-//                     <div className="text-center py-16">
-//                         <ShoppingCartOutlined className="text-6xl text-gray-300 mb-4" />
-//                         <p className="text-gray-500 text-lg mb-4">
-//                             Bạn chưa có đơn hàng nào
-//                         </p>
-//                     </div>
-//                 ) : (
-//                     paginatedOrders.map((order) => {
-//                         const firstItem = order.items[0];
-//                         const extraCount = order.items.length - 1;
 
-//                         return (
-//                             <div
-//                                 key={order.order_id}
-//                                 className="border rounded-lg overflow-hidden hover:shadow-md transition"
-//                             >
-//                                 {/* Order Header */}
-//                                 <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
-//                                     <div>
-//                                         <p className="font-semibold">
-//                                             Mã đơn: {order.order_id}
-//                                         </p>
-//                                         <p className="text-sm text-gray-500">
-//                                             Ngày đặt: {order.order_date}
-//                                         </p>
-//                                     </div>
-
-//                                     <div
-//                                         className={`px-4 py-2 rounded-full flex items-center gap-2 text-sm ${getStatusColor(
-//                                             order.status
-//                                         )}`}
-//                                     >
-//                                         {getStatusIcon(order.status)}
-//                                         {order.status}
-//                                     </div>
-//                                 </div>
-
-//                                 {/* Item */}
-//                                 <div className="p-6 flex gap-4">
-//                                     <img
-//                                         src={firstItem.thumbnail}
-//                                         alt={firstItem.name}
-//                                         className="w-20 h-20 object-cover rounded-lg border"
-//                                     />
-
-//                                     <div className="flex-1">
-//                                         <h4 className="font-medium">
-//                                             {firstItem.name}
-//                                         </h4>
-//                                         <p className="text-sm text-gray-500">
-//                                             SL: {firstItem.quantity} | Size:{" "}
-//                                             {firstItem.size} | Màu:{" "}
-//                                             {firstItem.color}
-//                                         </p>
-
-//                                         {extraCount > 0 && (
-//                                             <p className="text-sm text-gray-500">
-//                                                 + {extraCount} sản phẩm khác
-//                                             </p>
-//                                         )}
-//                                     </div>
-
-//                                     <div className="text-right">
-//                                         <p className="font-semibold">
-//                                             {formatPrice(
-//                                                 firstItem.final_price
-//                                             )}
-//                                         </p>
-//                                     </div>
-//                                 </div>
-
-//                                 {/* Footer */}
-//                                 <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
-//                                     <div className="flex items-center gap-3">
-//                                         <button className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100">
-//                                             Chi tiết
-//                                         </button>
-
-//                                         {order.status === "đã giao" && (
-//                                             <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800">
-//                                                 Mua lại
-//                                             </button>
-//                                         )}
-
-//                                         {order.status === "chờ xác nhận" && (
-//                                             <button className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-//                                                 Hủy đơn
-//                                             </button>
-//                                         )}
-//                                     </div>
-
-//                                     <div className="text-right">
-//                                         <p className="text-sm text-gray-500">Tổng tiền</p>
-//                                         <p className="text-xl font-bold">
-//                                             {formatPrice(order.total)}
-//                                         </p>
-//                                     </div>
-//                                 </div>
-
+//                     {/* Right - Product Info */}
+//                     <div className="space-y-6">
+//                         {/* Name, Category, Price, Description */}
+//                         <div>
+//                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">{product.category_name}</p>
+//                             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+//                             <div className="flex items-baseline gap-2">
+//                                 <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
+//                                 {product.discount && (
+//                                     <span className="text-xl text-gray-400 line-through">{formatPrice(parseFloat(product.price) / (1 - parseFloat(product.discount) / 100))}</span>
+//                                 )}
 //                             </div>
-//                         );
-//                     })
-//                 )}
-//             </div>
+//                             <p className="text-sm text-gray-600 mt-2">{product.description}</p>
+//                         </div>
 
-//             {/* Pagination */}
-//             {filteredOrders.length > pageSize && (
-//                 <div className="flex justify-center pb-6">
-//                     <Pagination
-//                         current={currentPage}
-//                         pageSize={pageSize}
-//                         total={filteredOrders.length}
-//                         onChange={(page) => setCurrentPage(page)}
-//                         showSizeChanger={false}
-//                     />
+//                         {/* Color Selection */}
+//                         <div>
+//                             <div className="flex items-center justify-between mb-3">
+//                                 <label className="text-sm font-bold uppercase">Color</label>
+//                                 <span className="text-sm text-gray-600">{selectedColor}</span>
+//                             </div>
+//                             <div className="flex gap-3">
+//                                 {product.colors.map(color => (
+//                                     <button key={color.color} onClick={() => { setSelectedColor(color.color); setSelectedImage(0); const defaultVariant = product.product_variants.find(v => v.color === color.color); if (defaultVariant) setSelectedSize(defaultVariant.size); }} className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedColor === color.color ? 'border-black scale-105' : 'border-gray-200 hover:border-gray-400'}`}>
+//                                         <img src={color.images[0]} alt={color.color} className="w-full h-full object-cover" />
+//                                     </button>
+//                                 ))}
+//                             </div>
+//                         </div>
+
+//                         {/* Size Selection */}
+//                         <div>
+//                             <div className="flex items-center justify-between mb-3">
+//                                 <label className="text-sm font-bold uppercase">Size</label>
+//                             </div>
+//                             <div className="grid grid-cols-6 gap-2">
+//                                 {product.product_variants.filter(v => v.color === selectedColor && v.stock > 1).map(variant => (
+//                                     <button key={variant.product_variant_id} onClick={() => setSelectedSize(variant.size)} className={`py-3 text-sm font-medium border rounded-lg transition-all ${selectedSize === variant.size ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-300 hover:border-black'}`}>{variant.size}</button>
+//                                 ))}
+//                             </div>
+//                         </div>
+
+//                         {/* Quantity */}
+//                         <div>
+//                             <label className="text-sm font-bold uppercase mb-3 block">Quantity</label>
+//                             <InputNumber min={1} max={10} value={quantity} onChange={setQuantity} className="w-32" />
+//                         </div>
+
+//                         {/* Action Buttons */}
+//                         <div className="space-y-3">
+//                             <button onClick={handleAddToCart} className="w-full h-12 bg-black text-white border-0 rounded-lg flex items-center justify-center gap-2 font-bold text-base hover:bg-gray-800 transition-colors"><ShoppingCartOutlined />Thêm vào giỏ hàng</button>
+//                             <button onClick={() => handleBuyNow(selectedVariant, quantity, product)} className="w-full h-12 border-2 rounded-lg flex items-center justify-center gap-2 font-bold transition-colors hover:bg-green-100 hover:border-green-500 hover:text-green-600"><CreditCardOutlined className="transition-colors text-black hover:text-green-600" />Mua ngay</button>
+//                         </div>
+
+//                         {/* Product Details & Specifications */}
+//                         <section className="mb-16 pt-8">
+//                             <Tabs defaultActiveKey="1" size="large" items={[{
+//                                 key: '1', label: <span className="font-bold text-base text-black">CHI TIẾT SẢN PHẨM</span>, children: (
+//                                     <div className="py-6 max-w-4xl">
+//                                         <div className="prose max-w-none">
+//                                             <p className="text-gray-700 leading-relaxed mb-6 text-base">{product.description}</p>
+//                                             <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+//                                                 <h3 className="text-lg font-bold mb-4 text-black">Thông số kỹ thuật</h3>
+//                                                 <div className="space-y-3">
+//                                                     <div className="flex border-b border-gray-200 pb-3"><span className="font-semibold text-gray-900 min-w-[180px]">SKU:</span><span className="text-gray-700 flex-1">{sku}</span></div>
+//                                                     {product.spec?.map((spec, index) => (<div key={index} className="flex border-b border-gray-200 pb-3 last:border-0"><span className="font-semibold text-gray-900 min-w-[180px]">{spec.label}:</span><span className="text-gray-700 flex-1">{spec.value}</span></div>))}
+//                                                 </div>
+//                                             </div>
+//                                         </div>
+//                                     </div>
+//                                 )
+//                             }]} />
+//                         </section>
+//                     </div>
 //                 </div>
-//             )}
+//                 {/* Get The Look Section */}
+//                 <section className="mb-16">
+//                     <div className="flex items-center justify-between mb-6">
+//                         <h2 className="text-2xl font-bold">GET THE LOOK</h2>
+//                         <button className="text-sm font-medium hover:underline">View All →</button>
+//                     </div>
+//                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//                         {relatedProducts.map((item) => (
+//                             <div key={item.id} className="group cursor-pointer">
+//                                 <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
+//                                     <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+//                                     <button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+//                                         <HeartOutlined />
+//                                     </button>
+//                                 </div>
+//                                 <h3 className="text-sm font-medium mb-1">{item.name}</h3>
+//                                 <p className="text-sm font-bold">${item.price}</p>
+//                             </div>
+//                         ))}
+//                     </div>
+//                 </section>
+//                 {/* You Might Like Section */}
+//                 <section className="mb-16">
+//                     <div className="flex items-center justify-between mb-6">
+//                         <h2 className="text-2xl font-bold">YOU MIGHT LIKE</h2>
+//                         <button className="text-sm font-medium hover:underline">View All →</button>
+//                     </div>
+//                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//                         {youMightLike.map((item) => (
+//                             <div key={item.id} className="group cursor-pointer">
+//                                 <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
+//                                     <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+//                                     <button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+//                                         <HeartOutlined />
+//                                     </button>
+//                                 </div>
+//                                 <h3 className="text-sm font-medium mb-1">{item.name}</h3>
+//                                 <p className="text-sm font-bold">${item.price}</p>
+//                             </div>
+//                         ))}
+//                     </div>
+//                 </section>
+
+//                 {/* Reviews Section */}
+//                 <section className="mb-16">
+//                     <h2 className="text-2xl font-bold mb-8">REVIEWS</h2>
+
+//                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+//                         {/* Review Summary */}
+//                         <div className="lg:col-span-1">
+//                             <div className="text-center mb-6">
+//                                 <div className="text-5xl font-bold mb-2">{reviewStats.average}</div>
+//                                 <Rate disabled defaultValue={reviewStats.average} allowHalf className="mb-2" style={{ color: '#facc15' }} />
+//                                 <p className="text-sm text-gray-600">{reviewStats.total} reviews</p>
+//                             </div>
+
+//                             {/* Rating Distribution */}
+//                             <div className="space-y-2">
+//                                 {reviewStats.distribution.map((dist) => (
+//                                     <div key={dist.stars} className="flex items-center gap-3">
+//                                         <span className="text-sm w-8">{dist.stars} ★</span>
+//                                         <Progress
+//                                             percent={dist.percentage}
+//                                             showInfo={false}
+//                                             strokeColor="#facc15"
+//                                             className="flex-1"
+//                                         />
+//                                         <span className="text-sm text-gray-600 w-12">{dist.count}</span>
+//                                     </div>
+//                                 ))}
+//                             </div>
+
+//                             <Button block className="mt-6 border-black text-black hover:bg-black hover:text-white h-10">
+//                                 Write a Review
+//                             </Button>
+//                         </div>
+
+//                         {/* Review List */}
+//                         <div className="lg:col-span-2 space-y-6">
+//                             {reviews.slice(0, visibleCount).map((review) => (
+//                                 <div key={review.id} className="border-b border-gray-200 pb-6">
+//                                     <div className="flex items-start justify-between mb-2">
+//                                         <div>
+//                                             <div className="flex items-center gap-2 mb-1">
+//                                                 <span className="font-medium text-sm">{review.author}</span>
+//                                                 {review.verified && (
+//                                                     <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+//                                                         Verified
+//                                                     </span>
+//                                                 )}
+//                                             </div>
+//                                             <Rate disabled defaultValue={review.rating} className="text-sm" style={{ color: '#facc15' }} />
+//                                         </div>
+//                                         <span className="text-sm text-gray-500">{review.date}</span>
+//                                     </div>
+//                                     <h4 className="font-medium mb-2">{review.title}</h4>
+//                                     <p className="text-sm text-gray-700 mb-3">
+//                                         {review.content.length > 150 ? (
+//                                             <>
+//                                                 {review.content.slice(0, 150)}...
+//                                                 <button
+//                                                     className="text-blue-600 ml-1 underline hover:text-blue-800"
+//                                                     onClick={() => alert(review.content)}
+//                                                 >
+//                                                     Read more
+//                                                 </button>
+//                                             </>
+//                                         ) : (
+//                                             review.content
+//                                         )}
+//                                     </p>
+//                                     <button className="text-sm text-gray-600 hover:text-black">
+//                                         👍 Helpful ({review.helpful})
+//                                     </button>
+//                                 </div>
+//                             ))}
+
+//                             {loadingMore && (
+//                                 <div className="space-y-4">
+//                                     <Skeleton active paragraph={{ rows: 3 }} />
+//                                     <Skeleton active paragraph={{ rows: 3 }} />
+//                                 </div>
+//                             )}
+
+//                             {visibleCount < reviews.length && !loadingMore && (
+//                                 <Button block className="border-black text-black hover:bg-black hover:text-white h-10" onClick={handleLoadMore}>
+//                                     Load More Reviews
+//                                 </Button>
+//                             )}
+//                         </div>
+//                     </div>
+//                 </section>
+
+//                 {/* Recently Viewed */}
+//                 <section>
+//                     <h2 className="text-2xl font-bold mb-6">RECENTLY VIEWED</h2>
+//                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+//                         {[...relatedProducts, ...youMightLike.slice(0, 3)].map((item) => (
+//                             <div key={item.id} className="group cursor-pointer">
+//                                 <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2">
+//                                     <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+//                                 </div>
+//                                 <p className="text-xs font-bold">${item.price}</p>
+//                             </div>
+//                         ))}
+//                     </div>
+//                 </section>
+
+//             </div>
 //         </div>
 //     );
 // };
 
-// export default OrderHistory;
+// export default Product;

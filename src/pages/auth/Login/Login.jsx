@@ -93,11 +93,10 @@ const Login = () => {
         {/* Title */}
         <div className="mb-4">
           <Title level={4} className="font-bold tracking-wide">
-            GYMSTAR ADMIN LOGIN
+            ĐĂNG NHẬP
           </Title>
           <Text className="text-gray-500 text-sm">
-            Shop your styles, save top picks to your wishlist,<br />
-            track those orders & train with us.
+            Mua sắm phong cách, theo dõi đơn hàng và rèn luyện cùng chúng tôi
           </Text>
         </div>
 
@@ -111,24 +110,24 @@ const Login = () => {
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: "Email is not valid!" },
+              { required: true, message: "Vui lòng nhập Email!" },
+              { type: "email", message: "Email không hợp lệ!" },
             ]}
           >
             <Input
               size="large"
-              placeholder="Email address*"
+              placeholder="Email *"
               className="rounded-md"
             />
           </Form.Item>
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
           >
             <Input.Password
               size="large"
-              placeholder="Password*"
+              placeholder="Mật khẩu*"
               className="rounded-md"
               iconRender={(visible) =>
                 visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
@@ -138,7 +137,7 @@ const Login = () => {
 
           <div className="text-right">
             <Link to={path.forgotPassword} className="text-sm text-black hover:underline hover:text-gray-700 ">
-              Forgot Password?
+              Quên mật khẩu?
             </Link>
 
           </div>
@@ -151,15 +150,15 @@ const Login = () => {
               size="large"
               className="w-full bg-black  hover:!bg-gray-700 border-none rounded-full font-semibold"
             >
-              LOG IN
+              ĐĂNG NHẬP
             </Button>
           </Form.Item>
         </Form>
 
         <Text className="text-gray-600 text-sm ">
-          Don’t have an account?{" "}
+          Không có tài khoản?{" "}
           <Link to={path.signUp} className="text-black hover:underline ">
-            Sign up
+            Đăng kí
           </Link>
         </Text>
       </div>

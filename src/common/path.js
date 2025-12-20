@@ -6,8 +6,8 @@ export const path = {
 
   home: "/",
   // category:":category",
-  category: "/danh-muc/:categoryId",
-  product: ":category/:subcategory/:productId",
+  category: "danh-muc/:category/:subcategory1?/:subcategory2?",
+  product: "san-pham/:subcategory/:productId",
   cart:"gio-hang",
   checkout:"checkout",
   orderSuccess:"dat-hang-thanh-cong/:orderId",
@@ -27,6 +27,7 @@ export const path = {
   addressBook:"so-dia-chi",
   accountInfo:"thong-tin-tai-khoan",
   reviewFeedback:"dong-gop-y-kien-va-danh-gia",
+  searchPage:"tim-kiem/:keyword",
 
 
 

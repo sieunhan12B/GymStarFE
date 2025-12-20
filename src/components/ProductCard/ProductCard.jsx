@@ -12,7 +12,6 @@ const ProductCard = ({ product, hoverSize = true }) => {
     const [selectedSize, setSelectedSize] = useState("");
     const { showNotification } = useContext(NotificationContext);
     const dispatch = useDispatch();
-
     const user = useSelector((state) => state.userSlice.user);
     const userId = user?.user_id;
 
@@ -23,24 +22,39 @@ const ProductCard = ({ product, hoverSize = true }) => {
     }
 
     // ===============================
-    // ẢNH HIỂN THỊ
+    // CHỌN MÀU CÓ NHIỀU SIZE NHẤT
     // ===============================
-    const firstColor = product.colors?.[0] || {};
+    const colorSizeCount = product.colors.map((color) => {
+        const count = product.product_variants.filter(
+            (v) => v.color === color.color && v.stock > 0
+        ).length;
+        return { ...color, sizeCount: count };
+    });
+    console.log(colorSizeCount)
+
+    // Lấy màu có nhiều size nhất
+    const maxColor = colorSizeCount.reduce((prev, curr) => 
+        curr.sizeCount > prev.sizeCount ? curr : prev,
+        colorSizeCount[0]
+    );
+    console.log(maxColor)
+
     const images = [
-        firstColor.images?.[0] || product.thumbnail,
-        firstColor.images?.[1] || firstColor.images?.[0] || product.thumbnail,
+        maxColor.images?.[0] || product.thumbnail,
+        maxColor.images?.[1] || maxColor.images?.[0] || product.thumbnail,
     ];
 
     // ===============================
     // SIZE
     // ===============================
     const allSizes = ["S", "M", "L", "XL", "XXL"];
-    // Lọc size còn hàng
-    const availableVariants = product.product_variants || [];
-    const availableSizes = availableVariants
-        .filter(v => v.stock > 0)
-        .map(v => v.size);
+    const variantsOfMaxColor = product.product_variants?.filter(
+        (v) => v.color === maxColor.color && v.stock > 0
+    ) || [];
+    console.log(variantsOfMaxColor)
 
+    const availableSizes = variantsOfMaxColor.map((v) => v.size);
+    console.log(availableSizes);
 
     // ===============================
     // HANDLE ADD TO CART
@@ -55,7 +69,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
             return;
         }
 
-        const variant = product.product_variants.find((v) => v.size === size);
+        const variant = variantsOfMaxColor.find((v) => v.size === size);
         if (!variant) return;
 
         try {
@@ -68,30 +82,25 @@ const ProductCard = ({ product, hoverSize = true }) => {
             dispatch(setCart(cartRes.data.data));
 
             showNotification(
-                <AddedToCartToast product={product} size={size} color={firstColor.color} message={res.data.message} />,
+                <AddedToCartToast product={product} size={size} color={maxColor.color} message={res.data.message} />,
                 "success"
             );
 
-
         } catch (err) {
             console.error("Lỗi khi thêm giỏ hàng:", err);
-            showNotification("Thêm sản phẩm vào giỏ thất bại!", "error");
+            showNotification(err.response.data.message, "error");
         }
     };
 
-    const productLink = `/${generateSlug(
-        product.parent_category_name || product.category_name
-    )}/${generateSlug(product.category_name)}/${product.product_id}`;
+    const productLink = `san-pham/${generateSlug(product.category_name)}/${product.product_id}`;
 
     return (
         <div
-            className="relative group cursor-pointer "
+            className="relative group cursor-pointer"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* ===============================
-                ẢNH SẢN PHẨM (Link)
-            =============================== */}
+            {/* ẢNH SẢN PHẨM */}
             <Link
                 to={productLink}
                 className="relative overflow-hidden bg-gray-100 h-80 sm:h-96 block rounded-lg"
@@ -109,9 +118,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
                     style={{ opacity: isHovered ? 1 : 0 }}
                 />
 
-                {/* ===============================
-                    HOVER CHỌN SIZE (BÊN TRONG LINK)
-                =============================== */}
+                {/* HOVER CHỌN SIZE */}
                 {hoverSize && (
                     <div
                         className={`absolute inset-x-0 bottom-0 bg-white bg-opacity-95 p-4 transition-all duration-300 ${isHovered
@@ -134,37 +141,30 @@ const ProductCard = ({ product, hoverSize = true }) => {
                                             handleSelectSize(size);
                                         }}
                                         className={`py-2 text-xs font-medium border transition-all
-                ${selectedSize === size
+                                            ${selectedSize === size
                                                 ? "bg-black text-white border-black"
                                                 : "bg-white text-black border-gray-300"
                                             }
-                ${!isAvailable
+                                            ${!isAvailable
                                                 ? "line-through opacity-50 cursor-not-allowed"
                                                 : "hover:border-black"
                                             }
-            `}
+                                        `}
                                     >
                                         {size}
                                     </button>
                                 );
                             })}
-
                         </div>
                     </div>
                 )}
             </Link>
 
-            {/* ===============================
-                THÔNG TIN SẢN PHẨM (Link)
-            =============================== */}
+            {/* THÔNG TIN SẢN PHẨM */}
             <Link to={productLink}>
                 <div className="pt-3 pb-2">
-                    <h3 className="text-sm font-medium mb-1 text-gray-900">
-                        {product.name}
-                    </h3>
-                    <p className="text-xs text-gray-600 mb-1">
-                        {firstColor.color_name || ""}
-                    </p>
+                    <h3 className="text-sm font-medium mb-1 text-gray-900">{product.name}</h3>
+                    <p className="text-xs text-gray-600 mb-1">{maxColor.color_name || maxColor.color}</p>
                     <p className="text-sm font-semibold text-gray-900">
                         {Number(product.price).toLocaleString("vi-VN", {
                             style: "currency",

@@ -10,6 +10,28 @@ export const productService = {
             throw error;
         }
     },
+    // Lấy tất cả sản phẩm cho user
+    getAllForUser: async () => {
+        try {
+            return await http.get("/QuanLySanPham/LayTatCaSanPhamUser?page=1&limit=9999");
+        } catch (error) {
+            console.error("Lỗi trong productService:", error);
+            throw error;
+        }
+    },
+
+    // Lấy tất cả sản phẩm cho user
+    getAllForUserWithKeyWord: async (keyword) => {
+        try {
+            return await http.get(
+                `/QuanLySanPham/LayDanhSachSanPhamTheoTuKhoaUser?keyword=${encodeURIComponent(keyword)}&page=1&limit=9999`
+            );
+        } catch (error) {
+            console.error("Lỗi trong productService:", error);
+            throw error;
+        }
+    },
+
 
     // Cập nhật thông tin sản phẩm theo product_id
     updateInfo: async (product_id, data) => {
@@ -61,7 +83,7 @@ export const productService = {
     },
 
 
-        // ------------------ USER ------------------
+    // ------------------ USER ------------------
 
     // Lấy tất cả sản phẩm theo id danh mục
     getProductsByCategoryId: async (category_id) => {
@@ -73,7 +95,7 @@ export const productService = {
         }
     },
 
-    getProductById:async (product_id) => {
+    getProductById: async (product_id) => {
         try {
             return await http.get(`/QuanLySanPham/LayChiTietSanPham/${product_id}`);
         } catch (error) {
@@ -81,7 +103,25 @@ export const productService = {
             throw error;
         }
     },
-   
+    getProductByLevel1Category: async (category_id) => {
+        try {
+            return await http.get(`/QuanLySanPham/LaySanPhamTheoDanhMucCap1/${category_id}?page=1&limit=100`);
+        } catch (error) {
+            console.error("Lỗi lấy danh sách sản phẩm theo danh mục:", error);
+            throw error;
+        }
+    },
+
+      getProductByLevel3Category: async (category_id) => {
+        try {
+            return await http.get(`/QuanLySanPham/LaySanPhamTheoDanhMucCap3/${category_id}?page=1&limit=100`);
+        } catch (error) {
+            console.error("Lỗi lấy danh sách sản phẩm theo danh mục:", error);
+            throw error;
+        }
+    },
+
+
 };
 
 

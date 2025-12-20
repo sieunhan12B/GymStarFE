@@ -36,6 +36,16 @@ export const feedbackService = {
             throw error;
         }
     },
+    deleteFeedback:async (feedback_id) => {
+        try {
+            return await http.delete(
+                `/QuanLyGopY/XoaGopY/${feedback_id}`
+            );
+        } catch (error) {
+            console.error("Lỗi trong feedbackService:", error);
+            throw error;
+        }
+    },
 
 
 

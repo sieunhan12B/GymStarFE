@@ -367,7 +367,7 @@ const OrderManager = () => {
 
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
+    <div className="bg-white rounded-lg shadow-sm ">
       <Header
         setSearchText={setSearchText}
         itemName="đơn hàng"
