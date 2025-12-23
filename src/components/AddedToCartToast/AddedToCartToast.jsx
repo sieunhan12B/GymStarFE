@@ -5,7 +5,7 @@ import { formatPrice } from "../../utils/utils";
 const AddedToCartToast = ({ product, size, color, message }) => {
     return (
         <div className="w-full max-w-sm bg-white ">
-            
+
             {/* ======= TIÊU ĐỀ ======= */}
             <p className="text-base font-bold text-black  pb-2">
                 {message}
@@ -30,8 +30,8 @@ const AddedToCartToast = ({ product, size, color, message }) => {
                     </p>
 
                     <p className="text-xs text-gray-600 mt-1">
-                        Màu: <span className="font-medium">{color}</span>  
-                        &nbsp;/&nbsp; Size: <span className="font-medium">{size}</span>
+                        Màu: <span className="font-medium">{color}</span>
+                        {size && <>&nbsp;/&nbsp;Size: <span className="font-medium">{size}</span></>}
                     </p>
 
                     <p className="text-sm font-bold text-black mt-1">

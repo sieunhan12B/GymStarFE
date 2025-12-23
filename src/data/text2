@@ -1,0 +1,204 @@
+<!-- import React, { useState } from 'react';
+import { Rate, Input, Checkbox, Button, Tag, Avatar, Progress } from 'antd';
+import { SearchOutlined, UserOutlined } from '@ant-design/icons';
+
+const ProductReviewSystem = () => {
+  const [selectedFilters, setSelectedFilters] = useState({
+    ratings: [],
+    verified: true,
+    withImage: false
+  });
+
+  const reviews = [
+    {
+      id: 1,
+      name: "Loc nguyen",
+      date: "15/12/2025",
+      rating: 4.5,
+      size: "XL",
+      color: "Nâu Iron",
+      comment: ""
+    },
+    {
+      id: 2,
+      name: "Thành Ngô Xuân",
+      date: "08/12/2025",
+      rating: 5,
+      size: "XL",
+      color: "Màu 2",
+      comment: "Rất hài lòng"
+    },
+    {
+      id: 3,
+      name: "LÊ TUẤN TÚ",
+      date: "08/12/2025",
+      rating: 5,
+      size: "XL",
+      color: "Đen",
+      comment: ""
+    }
+  ];
+
+
+  const ratingStats = {
+    average: 4.9,
+    total: 129,
+    breakdown: [
+      { stars: 5, count: 129, percentage: 100 },
+      { stars: 4, count: 0, percentage: 0 },
+      { stars: 3, count: 0, percentage: 0 },
+      { stars: 2, count: 0, percentage: 0 },
+      { stars: 1, count: 0, percentage: 0 }
+    ]
+  };
+
+  const fitStats = [
+    { label: "Chật", percentage: 0 },
+    { label: "Đúng kích thước", percentage: 100 },
+    { label: "Rộng", percentage: 0 }
+  ];
+
+  const handleRatingFilter = (rating) => {
+    setSelectedFilters(prev => ({
+      ...prev,
+      ratings: prev.ratings.includes(rating)
+        ? prev.ratings.filter(r => r !== rating)
+        : [...prev.ratings, rating]
+    }));
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sidebar - Filters */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg p-6 shadow-sm">
+            <h2 className="text-2xl font-bold mb-6">ĐÁNH GIÁ SẢN PHẨM</h2>
+
+            {/* Search */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold mb-3">Lọc đánh giá</h3>
+              <Input
+                prefix={<SearchOutlined className="text-gray-400" />}
+                placeholder="Tìm kiếm đánh giá"
+                className="rounded-lg"
+              />
+            </div>
+
+            {/* Rating Filter */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold mb-3">Phân loại xếp hạng</h3>
+              <div className="space-y-2">
+                {[5, 4, 3, 2, 1].map(rating => (
+                  <div key={rating} className="flex items-center">
+                    <Checkbox
+                      checked={selectedFilters.ratings.includes(rating)}
+                      onChange={() => handleRatingFilter(rating)}
+                    >
+                      <span className="flex items-center">
+                        <span className="mr-1">{rating}</span>
+                        <Rate disabled defaultValue={rating} count={5} className="text-sm" />
+                      </span>
+                    </Checkbox>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Other Filters */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold mb-3">Lọc phản hồi</h3>
+              <p>
+                Các review đều đến từ khách hàng đã thực sự mua hàng trên Cookmate
+              </p>
+              <div className="space-y-2 flex flex-col">
+
+                <Checkbox
+                  checked={selectedFilters.withImage}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, withImage: e.target.checked }))}
+                >
+                  Đã phản hồi
+                </Checkbox>
+                <Checkbox>Có hình ảnh</Checkbox>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content - Reviews */}
+        <div className="lg:col-span-2">
+          {/* Rating Summary */}
+          <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Overall Rating */}
+              <div className="text-center md:text-left flex gap-3 items-center justify-center ">
+                <div className="text-6xl font-bold mb-2">{ratingStats.average}</div>
+                <div className="">
+                  <Rate disabled defaultValue={ratingStats.average} allowHalf className="text-2xl mb-2" />
+                  <p className="text-gray-600">Dựa trên {ratingStats.total} đánh giá đến từ khách hàng</p>
+
+                </div>
+
+              </div>
+
+
+            </div>
+          </div>
+
+          {/* Review Header */}
+          <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700">Hiện thị đánh giá 1-10</span>
+              <Button className="border-gray-300">
+                Sắp xếp ▼
+              </Button>
+            </div>
+          </div>
+
+          {/* Reviews List */}
+          <div className="space-y-4">
+            {reviews.map(review => (
+              <div key={review.id} className="bg-white rounded-lg p-6 shadow-sm">
+                {/* Reviewer Info */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar size={48} icon={<UserOutlined />} />
+                    <div>
+                      <h4 className="font-semibold">{review.name}</h4>
+                      <p className="text-sm text-gray-500">{review.date}</p>
+                    </div>
+                  </div>
+                  <Rate disabled defaultValue={review.rating} allowHalf />
+                </div>
+
+                {/* Product Details */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Kích thước: </span>
+                    <span className="font-medium">{review.size}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Màu sắc: </span>
+                    <span className="font-medium">{review.color}</span>
+                  </div>
+
+                </div>
+
+
+
+                {/* Comment */}
+                {review.comment && (
+                  <p className="mb-4 text-gray-800">{review.comment}</p>
+                )}
+
+
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProductReviewSystem; -->

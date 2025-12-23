@@ -6,13 +6,14 @@ export const path = {
 
   home: "/",
   // category:":category",
-  category: "danh-muc/:category/:subcategory1?/:subcategory2?",
+  category: "danh-muc/*",
   product: "san-pham/:subcategory/:productId",
   cart:"gio-hang",
   checkout:"checkout",
   orderSuccess:"dat-hang-thanh-cong/:orderId",
   orderDetail:"chi-tiet-don-hang/:orderId",
   orderHistory:"lich-su-don-hang",
+  checkout:"dat-hang",
 
 
 

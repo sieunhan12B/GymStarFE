@@ -261,7 +261,7 @@ const OrderDetail = () => {
     return (
         <div className="max-w-7xl min-h-screen mx-auto bg-gray-50">
             {/* Header */}
-            <div className="bg-black text-white p-6">
+            <div className="bg-[#4455D5] text-white p-6">
                 <h1 className="text-2xl font-bold">Chi tiết đơn hàng</h1>
                 <p>Mã đơn: {orderData.order_id}</p>
                 <p className="mt-1">

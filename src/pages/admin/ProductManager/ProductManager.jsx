@@ -77,7 +77,7 @@ const ProductManager = () => {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const response = await productService.getAll();
+            const response = await productService.getAllForAdmin();
             // Optionally show notification on load — you had it previously, keep if desired
             // showNotification(response.data.message, "success");
             setData(response.data.data);

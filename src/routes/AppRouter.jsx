@@ -41,7 +41,7 @@ import OrderDetail from "../pages/user/OrderDetail/OrderDetail";
 import OrderHistory from "../pages/user/OrderHistory/OrderHistory";
 import AddressBook from "../pages/user/AddressBook/AddressBook";
 import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
-import SearchPage from "../pages/user/SearchPage/SearchPage";
+import Checkout from "../pages/user/Checkout/Checkout";
 
 
 
@@ -90,7 +90,7 @@ export const AppRouter = [
             },
             {
                 path:path.searchPage,
-                element:<SearchPage/>
+                element:<Category/>
             },
             {
                 path: path.product,
@@ -100,6 +100,10 @@ export const AppRouter = [
                 path: path.cart,
                 element: <Cart />,
 
+            },
+            {
+                path:path.checkout,
+                element:<Checkout/>
             },
             {
                 path: path.orderSuccess,

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button, Rate, Tabs, Progress, InputNumber, Skeleton, Select, Pagination, Image, Input, Upload, message } from 'antd';
-import { HeartOutlined, ShoppingCartOutlined, CreditCardOutlined, CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router-dom';
+import { HeartOutlined, ShoppingCartOutlined, CreditCardOutlined, CheckCircleOutlined, PlusOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -12,71 +12,48 @@ import { formatPrice } from '@/utils/utils';
 import { setCart } from '@/redux/cartSlice';
 import AddedToCartToast from '@/components/AddedToCartToast/AddedToCartToast';
 import { NotificationContext } from '@/App';
-import { path } from '@/common/path';
 import { cartService } from '../../../services/cart.service';
-import ProductSection from '../../../components/ProductSection/ProductSection';
+import useEmblaCarousel from 'embla-carousel-react';
+import ProductCard from '../../../components/ProductCard/ProductCard';
+import { generateSlug } from '../../../utils/generateSlug';
+import ProductReview from './ProductReview';
 
 dayjs.extend(relativeTime);
 
 const Product = () => {
   const { productId } = useParams();
   const [product, setProduct] = useState(null);
-  const [relativeProducts, setRelativeProducts] = useState(null);
+  const [relativeProducts, setRelativeProducts] = useState([]);
 
+  const [relativeRef, relativeEmbla] = useEmblaCarousel({ dragFree: true });
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [visibleCount, setVisibleCount] = useState(4);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [expandedReviews, setExpandedReviews] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(3); // số review mỗi trang
-  const [filterStar, setFilterStar] = useState(0); // 0 = all
   const [newReview, setNewReview] = useState({
     rating: 0,
     content: '',
     images: []
   });
-
-
-  const relativeRef = useRef(null);
-
-  // Upload props
-  const uploadProps = {
-    beforeUpload: file => {
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('Bạn chỉ có thể tải lên file hình ảnh!');
-      }
-      return isImage || Upload.LIST_IGNORE;
-    },
-    onChange: info => {
-      const files = info.fileList.map(file => file.originFileObj || file);
-      setNewReview(prev => ({ ...prev, images: files }));
-    },
-    listType: 'picture-card',
-    multiple: true,
-  };
-
-
-
-
+  const [reviews, setReviews] = useState([]);
 
 
 
   const user = useSelector(state => state.userSlice.user);
-  console.log(user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { showNotification } = useContext(NotificationContext);
+  const hasSize = product?.product_variants?.some(v => v.size != null);
+  console.log(hasSize)
+
 
 
   //=================XỬ LÝ THÊM SẢN PHẨM VÀO GIỎ HÀNG======================
   const handleAddToCart = async () => {
     if (!user?.user_id) return showNotification('Bạn cần đăng nhập trước!', 'error');
-    if (!selectedColor || !selectedSize) return showNotification('Vui lòng chọn màu và kích thước!', 'warning');
+    if (!selectedColor) return showNotification('Vui lòng chọn màu!', 'warning');
+    if (hasSize && !selectedSize) return showNotification('Vui lòng chọn kích thước!', 'warning');
     if (!selectedVariant) return showNotification('Không tìm thấy biến thể sản phẩm!', 'error');
 
     const data = {
@@ -113,17 +90,6 @@ const Product = () => {
       }
     });
   };
-  const scrollProducts = (ref, direction) => {
-    if (!ref.current) return;
-
-    const scrollAmount = 300; // số px muốn trượt
-
-    if (direction === 'left') {
-      ref.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-    } else {
-      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
 
 
   // Submit handler
@@ -145,25 +111,13 @@ const Product = () => {
       showNotification('Có lỗi xảy ra khi gửi đánh giá', 'error');
     }
   };
-    useEffect(() => {
-    const fetchRelativeProducts = async () => {
-      try {
-        const res = await productService.getProductByLevel3Category(17);
-        console.log(res)
-        const data = res.data.data;
-        setRelativeProducts(data);
-   
-      } catch (error) {
-        console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
-      }
-    };
-    fetchRelativeProducts();
-  }, [productId]);
+
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const res = await productService.getProductById(productId);
+        console.log(res)
         const data = res.data.data;
         setProduct(data);
         if (data.colors?.length > 0) setSelectedColor(data.colors[0].color);
@@ -176,142 +130,64 @@ const Product = () => {
   }, [productId]);
 
 
+  useEffect(() => {
+    const fetchRelativeProducts = async () => {
+      try {
+        const res = await productService.getProductByCategoryId(product?.category_id);
+        console.log(res);
+        const data = res.data.data;
+
+        // Lọc bỏ sản phẩm hiện tại
+        const filteredData = data.filter(p => p.product_id != productId);
+        console.log(productId, data, filteredData)
+
+        setRelativeProducts(filteredData);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách sản phẩm liên quan:', error);
+      }
+    };
+
+    if (product)
+      fetchRelativeProducts();
+  }, [product]);
+
+  const selectedVariant = product
+    ? hasSize
+      ? product.product_variants.find(v => v.color === selectedColor && v.size === selectedSize)
+      : product.product_variants.find(v => v.color === selectedColor) // chỉ cần màu
+    : null;
+
+
 
 
   useEffect(() => {
     const fetchReview = async () => {
+      if (!selectedVariant) return;
+
+
       try {
-        const res = await reviewService.getReviewVariant(2);
-        console.log(res);
+        const res = await reviewService.getReviewByProductId(productId);
+
+        setReviews(res.data.data);
+
+        // Tính thống kê
 
       } catch (error) {
-        console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+        console.error('Lỗi khi lấy review:', error);
       }
     };
+
     fetchReview();
-  }, []);
+  }, [selectedVariant]);
+
+
 
   if (!product) return <div className="text-center py-20">Đang tải sản phẩm...</div>;
 
 
-  const selectedVariant = product
-    ? product.product_variants.find(v => v.color === selectedColor && v.size === selectedSize)
-    : null;
-  console.log(selectedVariant);
-
 
   const sku = selectedVariant ? selectedVariant.sku : 'Chưa chọn';
   const colorImages = product.colors.find(c => c.color === selectedColor)?.images || [];
-  const toggleExpand = (id) => {
-    setExpandedReviews(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  // Dummy data
-  const relatedProducts = [
-    { id: 1, name: 'Training Short - White', price: 24.5, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
-    { id: 2, name: 'Training Short - Navy', price: 24.5, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
-    { id: 3, name: 'Training Short - Black', price: 24.5, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
-    { id: 4, name: 'Long Sleeve Tee - Navy', price: 28.5, image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=300' },
-  ];
-
-  const youMightLike = [
-    { id: 5, name: 'Performance Shorts', price: 32, image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300' },
-    { id: 6, name: 'Crew Neck Sweater', price: 45, image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=300' },
-    { id: 7, name: 'Casual Shirt', price: 38, image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300' },
-    { id: 8, name: 'Basic Tee White', price: 22, image: 'https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=300' },
-  ];
-
-  // Dummy reviews với phản hồi từ shop
-  // Dummy reviews với phản hồi từ shop và ảnh từ user
-  const reviews = [
-    {
-      id: 1,
-      author: 'johndoe123',
-      date: '2 tháng trước',
-      rating: 5,
-      title: 'Rất thoải mái và chất lượng tốt!',
-      content: 'Chiếc áo này vượt quá mong đợi của tôi, chất liệu mềm mại và thoáng khí. Màu sắc giữ được lâu, đường may chắc chắn, mặc cực kỳ thoải mái. Tôi hoàn toàn hài lòng với sản phẩm này và chắc chắn sẽ mua thêm cho gia đình',
-      verified: true,
-      images: ['https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=100'], // ảnh từ user
-      shop_response: {
-        text: 'Cảm ơn bạn đã đánh giá! Chúng tôi rất vui khi bạn hài lòng với sản phẩm.'
-      }
-    },
-    {
-      id: 2,
-      author: 'fitnessguru',
-      date: '1 tháng trước',
-      rating: 4,
-      title: 'Cảm giác rất tuyệt',
-      content: 'Rất thoải mái khi tập luyện, màu sắc giữ được lâu...',
-      verified: true,
-      images: [],
-      shop_response: null
-    },
-    {
-      id: 3,
-      author: 'stylequeen',
-      date: '3 tuần trước',
-      rating: 5,
-      title: 'Hoàn hảo cho mùa hè',
-      content: 'Nhẹ nhàng, thoáng mát và rất dễ chịu...',
-      verified: false,
-      images: ['https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=100'], // ảnh từ user
-      shop_response: {
-        text: 'Cảm ơn bạn đã mua hàng! Hãy ghé lại cửa hàng chúng tôi để nhận ưu đãi nhé.'
-      }
-    },
-    {
-      id: 4,
-      author: 'fitnessguru',
-      date: '1 tháng trước',
-      rating: 4,
-      title: 'Cảm giác rất tuyệt',
-      content: 'Rất thoải mái khi tập luyện, màu sắc giữ được lâu...',
-      verified: true,
-      images: [],
-      shop_response: null
-    },
-    {
-      id: 5,
-      author: 'stylequeen',
-      date: '3 tuần trước',
-      rating: 5,
-      title: 'Hoàn hảo cho mùa hè',
-      content: 'Nhẹ nhàng, thoáng mát và rất dễ chịu...',
-      verified: false,
-      images: ['https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=100'], // ảnh từ user
-      shop_response: {
-        text: 'Cảm ơn bạn đã mua hàng! Hãy ghé lại cửa hàng chúng tôi để nhận ưu đãi nhé.'
-      }
-    },
-
-  ];
-
-  const reviewStats = {
-    average: 4.3,
-    total: 127,
-    distribution: [
-      { stars: 5, count: 85, percentage: 67 },
-      { stars: 4, count: 30, percentage: 24 },
-      { stars: 3, count: 8, percentage: 6 },
-      { stars: 2, count: 3, percentage: 2 },
-      { stars: 1, count: 1, percentage: 1 },
-    ]
-  };
-
-
-  const filteredReviews = filterStar > 0
-    ? reviews.filter(r => Math.floor(r.rating) === filterStar)
-    : reviews;
-
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedReviews = filteredReviews.slice(startIndex, startIndex + pageSize);
-
-  const handleFilter = (star) => {
-    setFilterStar(star);
-    setCurrentPage(1); // Reset page khi filter thay đổi
-  };
 
 
   const renderProductDetail = () => (
@@ -361,16 +237,18 @@ const Product = () => {
         </div>
 
         {/* Size Selection */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-bold uppercase">Size</label>
+        {hasSize && (
+          <div>
+            <label className="text-sm font-bold uppercase mb-3 block">Size</label>
+            <div className="grid grid-cols-6 gap-2">
+              {product.product_variants.filter(v => v.color === selectedColor && v.stock > 0).map(variant => (
+                <button key={variant.product_variant_id} onClick={() => setSelectedSize(variant.size)} className={`py-3 text-sm font-medium border rounded-lg transition-all ${selectedSize === variant.size ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-300 hover:border-black'}`}>{variant.size}</button>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-6 gap-2">
-            {product.product_variants.filter(v => v.color === selectedColor && v.stock > 0).map(variant => (
-              <button key={variant.product_variant_id} onClick={() => setSelectedSize(variant.size)} className={`py-3 text-sm font-medium border rounded-lg transition-all ${selectedSize === variant.size ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-300 hover:border-black'}`}>{variant.size}</button>
-            ))}
-          </div>
-        </div>
+        )}
+
+
 
         {/* Quantity */}
         <div>
@@ -407,174 +285,54 @@ const Product = () => {
     </div>
   )
 
-  const renderRelatedProducts = () => (
-    <ProductSection
-      title="Sản phẩm liên quan"
-      link="nu"
-      data={relativeProducts}
-      scrollRef={relativeRef}
-      scrollProducts={scrollProducts}
-    />
-  );
-  const renderReview = () => (
-    <section className="mb-16">
-      <h2 className="text-2xl font-bold mb-4">ĐÁNH GIÁ SẢN PHẨM</h2>
+  const renderRelatedProducts = () => {
+    console.log(relativeProducts)
+    return (
+      relativeProducts.length != 0 ? (
+        <section className="max-w-7xl mx-auto px-4 py-16">
+          <div className="flex items-end justify-between mb-8">
+            <div className="flex items-end gap-4">
+              <h2 className="text-2xl font-bold">Sản phẩm liên quan</h2>
+              <Link to={`/danh-muc/${product.category_id}-${generateSlug(product.category_name)}`} className="text-sm hover:underline flex items-center">
+                Xem Tất Cả <RightOutlined className="ml-1 text-xs" />
+              </Link>
+            </div>
 
-      {/* Summary */}
-      <div className="text-center mb-6">
-        <div className="text-5xl font-bold mb-2">{reviewStats.average}</div>
-        <Rate disabled value={reviewStats.average} allowHalf style={{ color: '#facc15' }} />
-        <p className="text-sm text-gray-600">{reviewStats.total} đánh giá</p>
-      </div>
-
-      {/* Distribution */}
-      <div className="space-y-2 mb-6">
-        {reviewStats.distribution.map(dist => (
-          <div key={dist.stars} className="flex items-center gap-3">
-            <span className="text-sm w-8">{dist.stars} ★</span>
-            <Progress
-              percent={dist.percentage}
-              showInfo
-              strokeColor="#facc15"
-              className="flex-1"
-            />
-            <span className="text-sm text-gray-600 w-12">{dist.count}</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => relativeEmbla?.scrollPrev()}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+              >
+                <LeftOutlined />
+              </button>
+              <button
+                onClick={() => relativeEmbla?.scrollNext()}
+                className="w-10 h-10 rounded-full bg-black hover:bg-gray-800 text-white flex items-center justify-center"
+              >
+                <RightOutlined />
+              </button>
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Filter sao */}
-      <div className="flex items-center mb-6 gap-2 flex-wrap">
-        <button
-          onClick={() => handleFilter(0)}
-          className={`px-3 py-1 rounded-md border ${filterStar === 0 ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'} transition-colors duration-300`}
-        >
-          Tất cả
-        </button>
-        {[5, 4, 3, 2, 1].map(star => (
-          <button
-            key={star}
-            onClick={() => handleFilter(star)}
-            className={`px-3 py-1 rounded-md border transition-all duration-300
-    ${filterStar === star
-                ? 'bg-black/90 text-white border-yellow-400 shadow-md'
-                : 'bg-white text-black border-gray-300 hover:bg-black hover:text-white hover:border-yellow-400'
-              }`}
-
-          >
-            {star} ★
-          </button>
-        ))}
-      </div>
-
-      {/* Write a Review */}
-      <div className="border border-gray-200 rounded-lg p-4 mb-8 space-y-3">
-        <Rate
-          value={newReview.rating}
-          onChange={value => setNewReview(prev => ({ ...prev, rating: value }))}
-          style={{ color: '#facc15' }}
-        />
-        <textarea
-          placeholder="Viết đánh giá của bạn..."
-          rows={4}
-          value={newReview.content}
-          onChange={e => setNewReview(prev => ({ ...prev, content: e.target.value }))}
-          className="w-full border border-gray-300 rounded-md p-2"
-        />
-        <Upload {...uploadProps}>
-          {newReview.images.length >= 5 ? null : (
-            <div className="flex flex-col items-center justify-center cursor-pointer borderrounded-md p-3 hover:bg-gray-100">
-              <PlusOutlined />
-              <span className="mt-1 text-xs">Upload</span>
-            </div>
-          )}
-        </Upload>
-        <button
-          onClick={handleSubmitReview}
-          className="px-4 py-2 border border-black bg-white text-black rounded-md hover:bg-black hover:text-white transition-colors duration-300"
-        >
-          Gửi đánh giá
-        </button>
-      </div>
-
-      {/* Reviews list */}
-      <div className="space-y-6">
-        {paginatedReviews.map(review => {
-          const isExpanded = expandedReviews[review.id];
-          return (
-            <div key={review.id} className="border-b border-gray-200 pb-6 mb-6">
-
-              <div className="flex items-start justify-between mb-1">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm">{review.author}</span>
-                    {review.verified && (
-                      <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-                        <CheckCircleOutlined />
-                        Verified
-                      </span>
-                    )}
-                  </div>
-                  <Rate disabled defaultValue={review.rating} className="text-sm" style={{ color: '#facc15' }} />
-                </div>
-                <span className="text-sm text-gray-500">{review.date}</span>
-              </div>
-
-              {review.title && <h4 className="font-medium mb-1">{review.title}</h4>}
-
-              <p className="text-sm text-gray-700 mb-2">
-                {review.content.length > 200 ? (
-                  <>
-                    {isExpanded ? review.content : review.content.slice(0, 200) + '...'}
-                    <button
-                      className="ml-1 text-blue-600 underline hover:text-blue-800"
-                      onClick={() => toggleExpand(review.id)}
-                    >
-                      {isExpanded ? 'Thu gọn' : 'Xem thêm'}
-                    </button>
-                  </>
-                ) : review.content}
-              </p>
-
-              {/* Images */}
-              {review.images?.length > 0 && (
-                <div className="flex gap-2 mt-2">
-                  {review.images.map((img, idx) => (
-                    <Image
-                      key={idx}
-                      src={img}
-                      alt={`user upload ${idx}`}
-                      width={80}
-                      height={80}
-                      style={{ objectFit: 'cover', borderRadius: 4 }}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Shop response */}
-              {review.shop_response && (
-                <div className="ml-4 border-l-2 border-gray-300 pl-4 mt-2 bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm font-semibold text-gray-800">Phản hồi từ cửa hàng:</p>
-                  <p className="text-sm text-gray-700">{review.shop_response.text}</p>
-                </div>
+          <div ref={relativeRef} className="overflow-hidden">
+            <div className="flex gap-4">
+              {(relativeProducts?.length ? relativeProducts : Array(5).fill(null)).map(
+                (item, idx) => {
+                  console.log(item)
+                  return (
+                    <div key={idx} className="w-72 flex-shrink-0">
+                      <ProductCard product={item} hoverSize={item?.product_variants[0].size == null ? false : true} />
+                    </div>
+                  );
+                }
               )}
             </div>
-          );
-        })}
-      </div>
+          </div>
+        </section>
+      ) : ("")
+    );
+  };
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-6">
-        <Pagination
-          current={currentPage}
-          pageSize={pageSize}
-          total={filteredReviews.length}
-          onChange={setCurrentPage}
-        />
-      </div>
-    </section>
-  );
 
 
   return (
@@ -586,8 +344,7 @@ const Product = () => {
         {/* You Might Like Section */}
         {renderRelatedProducts()}
 
-        {/* Reviews Section */}
-        {renderReview()}
+        <ProductReview productId={productId} />
 
 
       </div>

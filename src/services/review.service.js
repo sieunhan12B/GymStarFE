@@ -38,9 +38,9 @@ export const reviewService = {
         }
     },
 
-    getReviewVariant: async (variant_id) => {
+    getReviewByProductId: async (product_id) => {
         try {
-            return await http.get(`/QuanLyDanhGia/LayDanhSachDanhGiaCua1BienThe/${variant_id}`);
+            return await http.get(`/QuanLyDanhGia/LayDanhSachDanhGiaCuaSanPham/${product_id}`);
         } catch (error) {
             console.error("Lỗi Review Services:", error);
             throw error;

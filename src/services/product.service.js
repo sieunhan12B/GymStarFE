@@ -2,7 +2,7 @@ import { http } from "./config";
 
 export const productService = {
     // Lấy tất cả sản phẩm
-    getAll: async () => {
+    getAllForAdmin: async () => {
         try {
             return await http.get("/QuanLySanPham/LayTatCaSanPhamAdmin?page=1&limit=9999");
         } catch (error) {
@@ -10,27 +10,9 @@ export const productService = {
             throw error;
         }
     },
-    // Lấy tất cả sản phẩm cho user
-    getAllForUser: async () => {
-        try {
-            return await http.get("/QuanLySanPham/LayTatCaSanPhamUser?page=1&limit=9999");
-        } catch (error) {
-            console.error("Lỗi trong productService:", error);
-            throw error;
-        }
-    },
 
-    // Lấy tất cả sản phẩm cho user
-    getAllForUserWithKeyWord: async (keyword) => {
-        try {
-            return await http.get(
-                `/QuanLySanPham/LayDanhSachSanPhamTheoTuKhoaUser?keyword=${encodeURIComponent(keyword)}&page=1&limit=9999`
-            );
-        } catch (error) {
-            console.error("Lỗi trong productService:", error);
-            throw error;
-        }
-    },
+
+   
 
 
     // Cập nhật thông tin sản phẩm theo product_id
@@ -85,16 +67,17 @@ export const productService = {
 
     // ------------------ USER ------------------
 
-    // Lấy tất cả sản phẩm theo id danh mục
-    getProductsByCategoryId: async (category_id) => {
+    // Lấy tất cả sản phẩm cho user
+    getAllForUser: async () => {
         try {
-            return await http.get(`/QuanLySanPham/LaySanPhamTheoDanhMucCap1/${category_id}?page=1&limit=100`);
+            return await http.get("/QuanLySanPham/LayTatCaSanPhamUser?page=1&limit=9999");
         } catch (error) {
-            console.error("Lỗi lấy danh sách sản phẩm theo danh mục:", error);
+            console.error("Lỗi trong productService:", error);
             throw error;
         }
     },
 
+    // Lấy chi tiết sản phẩm theo id sản phẩm
     getProductById: async (product_id) => {
         try {
             return await http.get(`/QuanLySanPham/LayChiTietSanPham/${product_id}`);
@@ -103,20 +86,62 @@ export const productService = {
             throw error;
         }
     },
-    getProductByLevel1Category: async (category_id) => {
+
+    // Lấy tất cả sản phẩm theo id danh mục  cấp 1
+    getProductByLevel1Category: async (category_id, page, limit) => {
         try {
-            return await http.get(`/QuanLySanPham/LaySanPhamTheoDanhMucCap1/${category_id}?page=1&limit=100`);
+            return await http.get(`/QuanLySanPham/LaySanPhamTheoDanhMucCap1/${category_id}?page=${page}&limit=${limit}`);
         } catch (error) {
             console.error("Lỗi lấy danh sách sản phẩm theo danh mục:", error);
             throw error;
         }
     },
 
-      getProductByLevel3Category: async (category_id) => {
+    // Lấy tất cả sản phẩm theo id danh mục  cấp 3
+    getProductByLevel3Category: async (category_id, page = 1, limit = 999) => {
         try {
-            return await http.get(`/QuanLySanPham/LaySanPhamTheoDanhMucCap3/${category_id}?page=1&limit=100`);
+            return await http.get(
+                `/QuanLySanPham/LaySanPhamTheoDanhMucCap3/${category_id}?page=${page}&limit=${limit}`
+            );
         } catch (error) {
             console.error("Lỗi lấy danh sách sản phẩm theo danh mục:", error);
+            throw error;
+        }
+    },
+
+    getProductByCategoryId:async (category_id, page = 1, limit = 999) => {
+        try {
+            return await http.get(
+                `/QuanLySanPham/LaySanPhamTheoDanhMuc/${category_id}?page=${page}&limit=${limit}`
+            );
+        } catch (error) {
+            console.error("Lỗi lấy danh sách sản phẩm theo danh mục:", error);
+            throw error;
+        }
+    },
+
+    // Lấy danh sách sản phẩm mới nhất (2 ngày gần đây)
+    getNewestProducts: async (page = 1, limit = 999) => {
+        try {
+            return await http.get(
+                `/QuanLySanPham/LayTatCaSanPhamMoiTao2Ngay?page=${page}&limit=${limit}`
+            );
+        } catch (error) {
+            console.error("Lỗi lấy danh sách sản phẩm mới nhất:", error);
+            throw error;
+        }
+    },
+
+    
+
+     // Lấy tất cả sản phẩm cho user
+    getAllForUserWithKeyWord: async (keyword,page=1,limit=9999) => {
+        try {
+            return await http.get(
+                `/QuanLySanPham/LayDanhSachSanPhamTheoTuKhoaUser?keyword=${encodeURIComponent(keyword)}&page=${page}&limit=${limit}`
+            );
+        } catch (error) {
+            console.error("Lỗi trong productService:", error);
             throw error;
         }
     },

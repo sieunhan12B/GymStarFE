@@ -1,0 +1,16 @@
+/* Tất cả sao màu đen */
+.rate-black .ant-rate-star-full .ant-rate-star-second,
+.rate-black .ant-rate-star-half .ant-rate-star-first {
+  color: #000 !important;
+}
+
+/* Sao chưa chọn cũng đen nhạt */
+.rate-black .ant-rate-star-zero .ant-rate-star-second {
+  color: #e5e7eb; /* gray-300 */
+}
+
+/* Giữ nguyên overall rating (AntD default vàng) */
+.overall-rating .ant-rate-star-full .ant-rate-star-second,
+.overall-rating .ant-rate-star-half .ant-rate-star-first {
+  color: #faad14 !important;
+}

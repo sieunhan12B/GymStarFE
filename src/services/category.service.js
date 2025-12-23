@@ -13,7 +13,15 @@ export const danhMucService = {
     }
   },
 
-  getCategoryLvl1: async () => {
+  getCategoryByParentCategory: async (category_id) => {
+  try {
+    return await http.get(`/QuanLyDanhMuc/LayDanhMucCap3LocCap1/${category_id}`);
+  } catch (error) {
+    console.error("Lỗi lấy danh mục :", error);
+    throw error;
+  }
+},
+getCategoryByParent:async () => {
   try {
     return await http.get("/QuanLyDanhMuc/LayDanhMucCap1");
   } catch (error) {

@@ -6,7 +6,7 @@ import { path } from '@/common/path';
 import logo from '@/assets/images/logo.svg';
 import Announcement from '../Announcement/Announcement';
 import { danhMucService } from '@/services/category.service';
-import { generateSlug } from '@/utils/generateSlug ';
+import { generateSlug } from '@/utils/generateSlug';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '@/redux/userSlice';
 import { NotificationContext } from '@/App';
@@ -15,10 +15,11 @@ import { clearCart, setCart } from '../../redux/cartSlice';
 import Cookies from "js-cookie";
 import { productService } from '../../services/product.service';
 import './header.css';
+import ProductCard from '../ProductCard/ProductCard';
+import { buildCategoryUrl } from '../../utils/generateSlug';
 
 const Header = () => {
   const [activeMenu, setActiveMenu] = useState(null);
-  console.log(activeMenu)
   const [categories, setCategories] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isUserOpen, setIsUserOpen] = useState(false);
@@ -42,9 +43,9 @@ const Header = () => {
       return;
     }
     try {
-      const res = await productService.getAllForUserWithKeyWord(`keyword=${kw}&page=0&limit=4`);
-      console.log(suggestions)
+      const res = await productService.getAllForUserWithKeyWord(kw);
       setSuggestions(res.data.data || []);
+
     } catch (error) {
       console.error('Lỗi tìm kiếm sản phẩm:', error);
       setSuggestions([]);
@@ -120,6 +121,8 @@ const Header = () => {
     }).format(price);
   };
 
+
+
   return (
     <>
       <Announcement />
@@ -142,7 +145,8 @@ const Header = () => {
                   {categories.map((parent) => (
                     <Link
                       key={parent.category_id}
-                      to={`danh-muc/${generateSlug(parent.name).toLowerCase()}`}
+                      to={buildCategoryUrl(parent)}
+
                       onMouseEnter={() => setActiveMenu(parent)}
                       className="relative text-sm cursor-pointer font-semibold group inline-block"
                     >
@@ -164,7 +168,7 @@ const Header = () => {
               <div className="flex items-center space-x-6 w-1/3 justify-end">
 
                 {/* SEARCH */}
-                <div className="relative hidden md:block w-64">
+                <div className=" hidden md:block w-64">
                   <Input
                     placeholder="Bạn đang tìm gì hôm nay..."
                     prefix={<SearchOutlined className="text-gray-400" />}
@@ -178,31 +182,28 @@ const Header = () => {
 
                   {/* Dropdown container luôn tồn tại */}
                   <div
-                    className={`absolute  right-0 top-12  w-full bg-white border border-gray-200 shadow-lg mt-1 z-50 rounded-lg
-      transition-all duration-200 ease-out transform origin-top
-      ${isFocused && suggestions.length > 0
+                    className={`absolute  left-0 top-16 w-screen min-h-[30vh]  bg-white shadow-lg border-t z-50 transition-all duration-200 ease-out
+    ${isFocused && suggestions.length > 0
                         ? "opacity-100 translate-y-0"
                         : "opacity-0 -translate-y-2 pointer-events-none"
                       }`}
                   >
-                    {suggestions.map((product) => (
-                      <Link
-                        to={`danh-muc/${generateSlug(product.category_name)}/${product.product_id}`}
-                        key={product.product_id}
-                        className="flex items-center p-2 hover:bg-gray-100"
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        <Image
-                          src={product.thumbnail}
-                          width={50}
-                          height={50}
-                          preview={false}
-                          className="rounded-md mr-3"
-                        />
-                        <span className="text-sm text-gray-800">{product.name}</span>
-                      </Link>
-                    ))}
+                    <div className="max-w-7xl mx-auto px-6 py-5">
+                      <div className="grid grid-cols-4 gap-6">
+                        {suggestions.slice(0, 4).map((product) => {
+                          const hoverStatus = product?.product_variants[0]?.size;
+                          return (
+                            <ProductCard product={product} hoverSize={hoverStatus == null ? false : true} />
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
+
+
+
+
+
                 </div>
 
 
@@ -422,60 +423,39 @@ const Header = () => {
               style={{ animation: "fadeSlideDown 0.2s forwards ease-out" }}
               onMouseLeave={() => setActiveMenu(null)}
             >
-              <div className="max-w-7xl mx-auto px-6 py-5">
+              <div className="max-w-7xl min-h-[30vh] mx-auto px-6 py-5">
                 <div className="grid grid-cols-4 gap-6">
-                  {activeMenu.category_id !== 28 ? (
-                    <>
-                      {activeMenu.children?.map((child) => (
-                        <div key={child.category_id}>
-                          <Link
-                            to={`danh-muc/${generateSlug(activeMenu.name)}/${generateSlug(child.name)}`}
-                            className="hover:text-black block font-bold text-xl text-gray-900"
-                          >
-                            {child.name}
-                          </Link>
-                          {child.children?.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              {child.children.map((sub) => (
-                                <Link
-                                  key={sub.category_id}
-                                  to={`danh-muc/${generateSlug(activeMenu.name)}/${generateSlug(child.name)}/${generateSlug(sub.name)}`}
-                                  className="text-gray-600 hover:text-black text-sm font-semibold block"
-                                >
-                                  {sub.name}
-                                </Link>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    <>
-                      <div key={activeMenu.category_id}>
-                        <Link
-                          to={`category/${generateSlug(activeMenu.name)}`}
-                          className="hover:text-black block font-bold text-xl text-gray-900"
-                        >
-                          {activeMenu.name}
-                        </Link>
-                        {activeMenu.children?.map((child) => (
-                          <div key={child.category_id} className="mt-2 space-y-1">
+                  {activeMenu.children?.map((child) => (
+                    <div key={child.category_id}>
+                      <Link
+                        to={buildCategoryUrl(child, [activeMenu])}
+
+                        className="hover:text-black block font-bold text-xl text-gray-900"
+                      >
+                        {child.name}
+                      </Link>
+
+                      {child.children?.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {child.children.map((sub) => (
                             <Link
-                              to={`phu-kien/${generateSlug(child.name)}`}
+                              key={sub.category_id}
+                             to={buildCategoryUrl(sub, [activeMenu, child])}
+
                               className="text-gray-600 hover:text-black text-sm font-semibold block"
                             >
-                              {child.name}
+                              {sub.name}
                             </Link>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           )}
+
         </div>
       </header>
 
@@ -490,5 +470,4 @@ const Header = () => {
   );
 };
 
-// Bạn có thể tách MegaMenu, UserDropdown, CartDropdown thành component riêng cho dễ quản lý
 export default Header;
