@@ -47,6 +47,17 @@ export const feedbackService = {
         }
     },
 
+    getFeedbackUser:async () => {
+        try {
+            return await http.get(
+                "/QuanLyGopY/LayDanhSachGopYUser?page=1&limit=9999"
+            );
+        } catch (error) {
+            console.error("Lỗi trong feedbackService:", error);
+            throw error;
+        }
+    },
+
 
 
 

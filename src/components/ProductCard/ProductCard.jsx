@@ -15,6 +15,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
     const user = useSelector((state) => state.userSlice.user);
     const userId = user?.user_id;
 
+
     // ===============================
     // LOADING SKELETON
     // ===============================
@@ -44,12 +45,29 @@ const ProductCard = ({ product, hoverSize = true }) => {
         c => c.color === firstVariant.color
     );
 
+
+    const isVideo = (url = "") => {
+        return /\.(mp4|webm|ogg)$/i.test(url);
+    };
+
+    const colorImages = selectedColor?.images || [];
+
+    // chỉ lấy ảnh (không lấy video)
+    const validImages = colorImages.filter(img => !isVideo(img));
+
+    // lấy 2 ảnh đầu tiên hợp lệ
     const images = [
-        selectedColor?.images?.[0] || product.thumbnail,
-        selectedColor?.images?.[1] ||
-            selectedColor?.images?.[0] ||
-            product.thumbnail,
+        validImages[0],
+        validImages[1] || validImages[0],
     ];
+
+
+    // const images = [
+    //     selectedColor?.images?.[0] || product.thumbnail,
+    //     selectedColor?.images?.[1] ||
+    //     selectedColor?.images?.[0] ||
+    //     product.thumbnail,
+    // ];
 
     // ===============================
     // SIZE THEO MÀU CỦA VARIANT ĐẦU TIÊN
@@ -134,11 +152,10 @@ const ProductCard = ({ product, hoverSize = true }) => {
                 {/* HOVER CHỌN SIZE */}
                 {hoverSize && (
                     <div
-                        className={`absolute inset-x-0 bottom-0 bg-white bg-opacity-95 p-4 transition-all duration-300 ${
-                            isHovered
-                                ? "opacity-100 translate-y-0"
-                                : "opacity-0 translate-y-5 pointer-events-none"
-                        }`}
+                        className={`absolute inset-x-0 bottom-0 bg-white bg-opacity-95 p-4 transition-all duration-300 ${isHovered
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-5 pointer-events-none"
+                            }`}
                     >
                         <div className="grid grid-cols-5 gap-2">
                             {allSizes.map(size => {
@@ -156,15 +173,13 @@ const ProductCard = ({ product, hoverSize = true }) => {
                                             handleSelectSize(size);
                                         }}
                                         className={`py-2 text-xs font-medium border transition-all
-                                            ${
-                                                selectedSize === size
-                                                    ? "bg-black text-white border-black"
-                                                    : "bg-white text-black border-gray-300"
+                                            ${selectedSize === size
+                                                ? "bg-black text-white border-black"
+                                                : "bg-white text-black border-gray-300"
                                             }
-                                            ${
-                                                !isAvailable
-                                                    ? "line-through opacity-50 cursor-not-allowed"
-                                                    : "hover:border-black"
+                                            ${!isAvailable
+                                                ? "line-through opacity-50 cursor-not-allowed"
+                                                : "hover:border-black"
                                             }
                                         `}
                                     >

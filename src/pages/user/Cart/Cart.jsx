@@ -4,11 +4,11 @@ import { Checkbox, Button, Tooltip } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { cartService } from '@/services/cart.service';
 import { NotificationContext } from "@/App";
-import { setCart } from '../../../redux/cartSlice';
+import { setCart, updateItemQuantity } from '../../../redux/cartSlice';
 import { useNavigate } from 'react-router-dom';
 import { path } from '../../../common/path';
 import { formatPrice } from '../../../utils/utils';
-
+import useDebounce from '../../../hooks/useDebounce';
 const Cart = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -18,6 +18,7 @@ const Cart = () => {
     const [cartItems, setCartItems] = useState([]);
     const [selectedCartItems, setSelectedCartItems] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const debouncedCartItems = useDebounce(cartItems, 500);
 
     // Load cart từ redux
     useEffect(() => {
@@ -25,11 +26,6 @@ const Cart = () => {
         setCartItems(items);
     }, [cartItemsFromRedux]);
 
-    // Lấy tổng tiền
-    const subtotal = cartItems.reduce(
-        (sum, item) => sum + (item.product_variant?.product?.final_price || 0) * (item.quantity || 0),
-        0
-    );
 
     // Xóa 1 sản phẩm
     const handleDeleteItem = async (cart_detail_id) => {
@@ -43,42 +39,61 @@ const Cart = () => {
         }
     };
 
+
     // ========= Hàm tăng giảm số lượng =========
-    const handleQuantityChange = async (cart_detail_id, newQuantity) => {
-        const item = cartItems.find(i => i.cart_detail_id === cart_detail_id);
-        if (!item) return;
-
-        if (newQuantity < 1) { showNotification("Số lượng tối thiểu là 1", "warning"); return; }
-        if (newQuantity > 10) { showNotification("Mỗi sản phẩm chỉ được thêm tối đa 10 cái", "warning"); return; }
-
-        // Kiểm tra stock
-        try {
-            const res = await cartService.getCart();
-            const latestItem = res.data.data.find(i => i.cart_detail_id === cart_detail_id);
-            if (!latestItem) return;
-            if (newQuantity > latestItem.product_variant.stock) {
-                showNotification(`Chỉ còn ${latestItem.product_variant.stock} sản phẩm có sẵn`, "warning");
-                newQuantity = latestItem.product_variant.stock;
-            }
-        } catch (error) { console.log(error); }
-
-        setCartItems(prev => prev.map(i => i.cart_detail_id === cart_detail_id ? { ...i, quantity: newQuantity } : i));
+    // Hàm tăng giảm số lượng - cập nhật UI ngay lập tức
+    const handleQuantityChange = (cart_detail_id, newQuantity) => {
+        setCartItems(prev =>
+            prev.map(item => {
+                if (item.cart_detail_id === cart_detail_id) {
+                    if (newQuantity < 1) {
+                        showNotification("Số lượng tối thiểu là 1", "warning");
+                        return item;
+                    }
+                    if (newQuantity > 10) {
+                        showNotification("Mỗi sản phẩm chỉ được thêm tối đa 10 cái", "warning");
+                        return item;
+                    }
+                    // Cập nhật UI ngay
+                    dispatch(updateItemQuantity({ cart_detail_id, quantity: newQuantity }));
+                 
+                    return { ...item, quantity: newQuantity };
+                }
+                
+                return item;
+            })
+        );
     };
 
+
     // Xóa các sản phẩm đã chọn
+    // Hàm xóa tất cả sản phẩm đã chọn
     const handleDeleteSelectedItems = async () => {
         if (selectedCartItems.length === 0) return;
+
         try {
-            for (let cart_detail_id of selectedCartItems) {
-                await cartService.deleteCartItem({ cart_detail_id });
-            }
-            setCartItems(prev => prev.filter(item => !selectedCartItems.includes(item.cart_detail_id)));
+            // Gọi API xóa nhiều sản phẩm 1 lần
+            await cartService.deleteCartItems({ cart_detail_ids: selectedCartItems });
+
+            // Cập nhật state local
+            setCartItems(prev => {
+                const newCartItems = prev.filter(item => !selectedCartItems.includes(item.cart_detail_id));
+
+                // Cập nhật Redux ngay trong callback để tránh async issue
+                dispatch(setCart(newCartItems));
+
+                return newCartItems;
+            });
+
+            // Reset lựa chọn
             setSelectedCartItems([]);
-            showNotification("Xóa các sản phẩm đã chọn thành công", "success");
+
+            showNotification("Đã xóa các sản phẩm đã chọn", "success");
         } catch (error) {
             showNotification(error?.response?.data?.message || "Có lỗi khi xóa sản phẩm", "error");
         }
     };
+
 
     // Chuyển sang CheckoutPage
     const handleCheckout = () => {
@@ -86,9 +101,40 @@ const Cart = () => {
             showNotification("Vui lòng chọn sản phẩm để đặt hàng", "error");
             return;
         }
+        console.log(cartItems);
         const itemsToCheckout = cartItems.filter(item => selectedCartItems.includes(item.cart_detail_id));
         navigate('/dat-hang', { state: { selectedCartItems: itemsToCheckout } });
     };
+
+    // ========= Update Cart API khi quantity thay đổi =========
+
+
+    useEffect(() => {
+        const updateCartApi = async () => {
+            try {
+                for (let item of debouncedCartItems) {
+                    if (item.quantity !== item.originalQuantity) {
+                        await cartService.updateCart({
+                            product_variant_id: item.product_variant.product_variant_id,
+                            quantity: item.quantity,
+                        });
+                    }
+                }
+                // Sau khi update API, cập nhật lại originalQuantity để lần sau so sánh
+                setCartItems(prev =>
+                    prev.map(item => ({ ...item, originalQuantity: item.quantity }))
+                );
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        if (debouncedCartItems.some(item => item.quantity !== item.originalQuantity)) {
+            updateCartApi();
+        }
+    }, [debouncedCartItems]);
+
+
 
     return (
         <div className="min-h-screen max-w-7xl mx-auto bg-gray-50 p-6">
@@ -238,24 +284,12 @@ const Cart = () => {
                             </Checkbox>
                             <button
                                 className="text-red-600 text-sm font-medium hover:underline"
-                                onClick={async () => {
-                                    if (cartItems.length === 0) return;
-                                    try {
-                                        for (let item of cartItems) {
-                                            await cartService.deleteCartItem({ cart_detail_id: item.cart_detail_id });
-                                        }
-                                        setCartItems([]);
-                                        setSelectedCartItems([]);
-                                        dispatch(setCart([])); // cập nhật redux
-                                        showNotification("Đã xóa tất cả sản phẩm trong giỏ hàng", "success");
-                                    } catch (error) {
-                                        showNotification(error?.response?.data?.message || "Có lỗi khi xóa sản phẩm", "error");
-                                    }
-                                }}
-                                disabled={cartItems.length === 0}
+                                onClick={handleDeleteSelectedItems}
+                                disabled={selectedCartItems.length === 0}
                             >
                                 Xóa tất cả
                             </button>
+
                         </div>
 
                         {/* Tổng số lượng + thành tiền */}
@@ -273,7 +307,7 @@ const Cart = () => {
                             <button
                                 className="bg-black text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-gray-800 flex items-center gap-2"
                                 onClick={handleCheckout}
-                                disabled={isSubmitting || selectedCartItems.length === 0}
+                                disabled={isSubmitting}
                             >
                                 {isSubmitting && <LoadingOutlined />}
                                 Mua hàng

@@ -14,8 +14,9 @@ import {
   TagOutlined,
   StarOutlined,
   FormOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
-import { Button, Image, Layout, Menu } from 'antd';
+import { Avatar, Button, Image, Layout, Menu } from 'antd';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { path } from '@/common/path';
 import { useSelector } from "react-redux";
@@ -45,6 +46,8 @@ const AdminTemplate = () => {
       { key: path.orderManager, icon: <ShopOutlined />, label: 'Đơn hàng', roles: [ROLES.ADMIN, ROLES.ORDER_MANAGER] },
       { key: path.feedbackManager, icon: <FormOutlined />, label: 'Góp ý', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
       { key: path.reviewManager, icon: <StarOutlined />, label: 'Đánh giá', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
+      { key: path.paymentManager, icon: <DollarOutlined />, label: 'Thanh toán', roles: [ROLES.ADMIN] },
+      { key: path.roleManager, icon: <AppstoreOutlined />, label: 'Loại người dùng', roles: [ROLES.ADMIN] },
     ];
 
     return allItems.filter(item => item.roles.includes(role_id));
@@ -71,30 +74,48 @@ const AdminTemplate = () => {
 
       </Sider>
       <Layout>
-        <Header className="px-6 bg-white border-b border-gray-200 flex items-center shadow-sm sticky top-0 z-10">
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              fontSize: '16px',
-              width: 64,
-              height: 64,
-            }}
-          />
-          <div className="w-30 h-10 bg-transparent rounded-md flex items-center justify-center font-bold text-lg text-white tracking-widest">
-            <Link to={path.home}>
-              <Image src={logo} preview={false} width={100} />
+        <Header className="px-6 bg-white border-b border-gray-200 flex items-center justify-between shadow-sm sticky top-0 z-10">
 
-            </Link>
-
+          {/* BÊN TRÁI */}
+          <div className="flex items-center">
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                fontSize: '16px',
+                width: 64,
+                height: 64,
+              }}
+            />
+            <div className="w-30 h-10 bg-transparent rounded-md flex items-center justify-center font-bold text-lg text-white tracking-widest">
+              <Link to={path.home}>
+                <Image src={logo} preview={false} width={100} />
+              </Link>
+            </div>
           </div>
+
+          {/* BÊN PHẢI - USER INFO */}
+          <div className="flex items-center gap-3 cursor-pointer">
+            <Avatar icon={<UserOutlined />} />
+
+            <div className="flex flex-col leading-tight">
+              <span className="font-semibold text-sm text-gray-800">
+                {user?.full_name}
+              </span>
+              <span className="text-xs text-gray-500">
+                {user?.email}
+              </span>
+            </div>
+          </div>
+
         </Header>
+
         <Content className="my-6 mx-4 overflow-auto">
           <Outlet />
         </Content>
         <Footer className="text-center bg-white text-gray-600 border-t border-gray-200">
-          Ant Design ©{new Date().getFullYear()} Created by Ant UED
+          GymStar Admin ©{new Date().getFullYear()} Created by Hoang Anh | Gia Bao
         </Footer>
       </Layout>
     </Layout>

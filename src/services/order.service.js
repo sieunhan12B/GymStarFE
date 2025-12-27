@@ -4,23 +4,23 @@ export const orderService = {
 
     getAll: async () => {
         try {
-            return await http.get("/QuanLyDonHang/LayDanhSachTatCaDonHang?page=1&limit=100");
+            return await http.get("/QuanLyDonHang/LayDanhSachTatCaDonHang?page=1&limit=999");
         } catch (error) {
             console.error("Lỗi Order Services:", error);
             throw error;
         }
     },
 
-    updateStatus: async (order_id,data) => {
+    updateStatus: async (order_id, data) => {
         try {
-            return await http.put(`/QuanLyDonHang/CapNhatTrangThaiDonHang/${order_id}`,data);
+            return await http.put(`/QuanLyDonHang/CapNhatTrangThaiDonHang/${order_id}`, data);
         } catch (error) {
             console.error("Lỗi Order Services:", error);
             throw error;
         }
     },
 
-    
+
     createOrder: async (data) => {
         try {
             return await http.post("/QuanLyDonHang/DatHangTuGioHang", data);
@@ -30,7 +30,7 @@ export const orderService = {
         }
     },
 
-    orderNow:async (data) => {
+    orderNow: async (data) => {
         try {
             return await http.post("/QuanLyDonHang/DatHangNgay", data);
         } catch (error) {
@@ -48,22 +48,31 @@ export const orderService = {
         }
     },
 
-    deleteOrder:async (order_id,data) => {
+    deleteOrder: async (order_id, data) => {
         try {
-            return await http.post(`/QuanLyDonHang/HuyDonHang/${order_id}`,data);
+            return await http.post(`/QuanLyDonHang/HuyDonHang/${order_id}`, data);
         } catch (error) {
             console.error("Lỗi Order Services:", error);
             throw error;
         }
     },
-    getOrderByUser: async () => {
+    getOrderByUser: async (page = 1, limit = 999) => {
         try {
-            return await http.get("/QuanLyDonHang/LayDanhSachDonHangTheoTrangThai?page=1&limit=1000");
+            return await http.get(`/QuanLyDonHang/LayDanhSachDonHangUser?page=${page}&limit=${limit}`);
         } catch (error) {
             console.error("Lỗi Order Services:", error);
             throw error;
         }
     },
 
-   
+    buyAgain: async (order_detail_id) => {
+        try {
+            return await http.post(`/QuanLyDonHang/MuaLai/${order_detail_id}`);
+        } catch (error) {
+            console.error("Lỗi Order Services:", error);
+            throw error;
+        }
+    },
+
+
 };

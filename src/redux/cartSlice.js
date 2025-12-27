@@ -1,7 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-
-
 const cartSlice = createSlice({
     name: "cart",
     initialState: {
@@ -17,23 +15,20 @@ const cartSlice = createSlice({
             state.items = [];
             state.count = 0;
         },
-        // Xóa 1 item theo id
         removeItem(state, action) {
             const id = action.payload;
-            state.items = state.items.filter(item => item.id !== id);
+            state.items = state.items.filter(item => item.cart_detail_id !== id);
             state.count = state.items.length;
         },
-        // Cập nhật số lượng 1 item theo id
         updateItemQuantity(state, action) {
-            const { product_variant_id, quantity } = action.payload;
-            const item = state.items.find(item => item.product_variant_id === product_variant_id);
+            const { cart_detail_id, quantity } = action.payload;
+            const item = state.items.find(item => item.cart_detail_id === cart_detail_id);
             if (item) {
                 item.quantity = quantity;
             }
         },
-
     },
 });
 
-export const { setCart, clearCart } = cartSlice.actions;
+export const { setCart, clearCart, removeItem, updateItemQuantity } = cartSlice.actions;
 export default cartSlice.reducer;

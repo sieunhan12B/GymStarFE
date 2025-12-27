@@ -6,6 +6,10 @@ import {
     FileTextOutlined,
     DownloadOutlined,
     InfoCircleOutlined,
+    ClockCircleOutlined,
+    EnvironmentOutlined,
+    PhoneOutlined,
+    CheckCircleFilled,
 } from '@ant-design/icons';
 import {
     Modal,
@@ -14,17 +18,24 @@ import {
     Button,
     Input,
     Select,
-    Rate
+    Rate,
+    Tooltip
 } from 'antd';
 import { NotificationContext } from "@/App";
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import InvoicePDF from '../../../utils/InvoicePDF';
 import { orderService } from '../../../services/order.service';
 import { reviewService } from '../../../services/review.service';
+import dayjs from 'dayjs';
+import { cartService } from '../../../services/cart.service';
+import { useDispatch } from 'react-redux';
+import { setCart } from '@/redux/cartSlice';
+import AddedToCartToast from '../../../components/AddedToCartToast/AddedToCartToast';
 
 const OrderDetail = () => {
     const { orderId } = useParams();
     const { showNotification } = useContext(NotificationContext);
+    const dispatch = useDispatch();
 
     const [activeTab, setActiveTab] = useState('products');
     const [orderData, setOrderData] = useState(null);
@@ -41,7 +52,6 @@ const OrderDetail = () => {
     const [comment, setComment] = useState('');
     const [reviewImages, setReviewImages] = useState([]);
     const [submittingReview, setSubmittingReview] = useState(false);
-
     const allStatus = [
         'chờ xác nhận',
         'đã xác nhận',
@@ -119,49 +129,80 @@ const OrderDetail = () => {
             );
         }
     };
+    const currentIndex = allStatus.indexOf(orderData.status);
+
+    const handleBuyAgain = async (orderDetailId) => {
+        try {
+            const res = await orderService.buyAgain(orderDetailId);
+
+
+            // get lại cart
+            const cartRes = await cartService.getCart();
+            dispatch(setCart(cartRes.data.data));
+
+            const { product_name, color, size, quantity, thumbnail } = res.data.data;
+            const product = {
+                thumbnail,
+                name: product_name
+            }
+
+
+            showNotification(<AddedToCartToast product={product} color={color} quantity={quantity} size={size} message={"Đã thêm sản phẩm vào giờ hàng"} />, 'success');
+
+        } catch (error) {
+            console.error(error);
+            showNotification(
+                error?.response?.data?.message || "Mua lại thất bại",
+                "error"
+            );
+        }
+    };
+
+
 
     const handleSubmitReview = async () => {
-    if (!reviewItem) return;
+        if (!reviewItem) return;
 
-    try {
-        setSubmittingReview(true);
+        try {
+            setSubmittingReview(true);
 
-        const formData = new FormData();
-        formData.append("order_detail_id", reviewItem.order_detail_id);
-        formData.append("rating", rating);
-        formData.append("comment", comment);
+            const formData = new FormData();
+            formData.append("order_detail_id", reviewItem.order_detail_id);
+            formData.append("rating", rating);
+            formData.append("comment", comment);
 
-        reviewImages.forEach(img =>
-            formData.append("images", img)
-        );
+            reviewImages.forEach(img =>
+                formData.append("images", img)
+            );
 
-      const res=  await reviewService.createReviewByUser(formData);
+            const res = await reviewService.createReviewByUser(formData);
 
-        showNotification(res.data.message, "success");
+            showNotification(res.data.message, "success");
 
-        // ✅ Update trạng thái item đã review
-        setOrderData(prev => ({
-            ...prev,
-            items: prev.items.map(item =>
-                item.order_detail_id === reviewItem.order_detail_id
-                    ? { ...item, isReviewed: true }
-                    : item
-            )
-        }));
+            // ✅ Update trạng thái item đã review
+            setOrderData(prev => ({
+                ...prev,
+                items: prev.items.map(item =>
+                    item.order_detail_id === reviewItem.order_detail_id
+                        ? { ...item, is_review: true }
+                        : item
+                )
+            }));
 
-        // Reset modal
-        setIsReviewModalOpen(false);
-        setReviewItem(null);
-        setRating(5);
-        setComment('');
-        setReviewImages([]);
-    } catch (error) {
-        console.error(error);
-        showNotification(error.response.data.message, "error");
-    } finally {
-        setSubmittingReview(false);
-    }
-};
+
+            // Reset modal
+            setIsReviewModalOpen(false);
+            setReviewItem(null);
+            setRating(5);
+            setComment('');
+            setReviewImages([]);
+        } catch (error) {
+            console.error(error);
+            showNotification(error.response.data.message, "error");
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
 
 
     /* ================== REVIEW MODAL ================== */
@@ -252,6 +293,9 @@ const OrderDetail = () => {
                     >
                         Gửi đánh giá
                     </Button>
+
+
+
                 </div>
             )}
         </Modal>
@@ -259,7 +303,7 @@ const OrderDetail = () => {
 
     /* ================== RENDER ================== */
     return (
-        <div className="max-w-7xl min-h-screen mx-auto bg-gray-50">
+        <div className="max-w-7xl  mx-auto bg-gray-50 mb-12">
             {/* Header */}
             <div className="bg-[#4455D5] text-white p-6">
                 <h1 className="text-2xl font-bold">Chi tiết đơn hàng</h1>
@@ -314,25 +358,38 @@ const OrderDetail = () => {
                                             Size {item.variant.size} | {item.variant.color} | x{item.quantity}
                                         </p>
 
-                                        {orderData.status === "đã giao" && (
-                                            <Button
-                                                className="
-                                                    mt-2
-                                                    bg-amber-500
-                                                    hover:bg-amber-600
-                                                    border-none
-                                                    text-white
-                                                    font-semibold
-                                                    rounded-lg
-                                                "
-                                                onClick={() => {
-                                                    setReviewItem(item);
-                                                    setIsReviewModalOpen(true);
-                                                }}
-                                            >
-                                                ⭐ Đánh giá
-                                            </Button>
-                                        )}
+                                        <div className="flex max-w-64  gap-2 mt-14">
+                                            {/* Nút đánh giá */}
+                                            {orderData.status === "đã giao" && (
+                                                item.is_review ? (
+                                                    <Button disabled className=" bg-gray-300 w-1/2 text-gray-700 rounded-lg">
+                                                        ✅ Đã đánh giá
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        className=" bg-amber-500 w-1/2 hover:bg-amber-600 text-white rounded-lg font-semibold"
+                                                        onClick={() => {
+                                                            setReviewItem(item);
+                                                            setIsReviewModalOpen(true);
+                                                        }}
+                                                    >
+                                                        ⭐ Đánh giá
+                                                    </Button>
+                                                )
+                                            )}
+
+                                            {/* Nút mua lại */}
+                                            {["đã giao", "giao thất bại", "đã hủy", "đổi hàng"].includes(orderData.status) && (
+                                                <Button
+                                                    className=" bg-green-500 w-1/2 hover:bg-green-600 text-white rounded-lg font-semibold"
+                                                    onClick={() => { handleBuyAgain(item.order_detail_id) }}
+                                                >
+                                                    🔁 Mua lại
+                                                </Button>
+                                            )}
+                                        </div>
+
+
                                     </div>
 
                                     <div className="font-bold">
@@ -342,13 +399,106 @@ const OrderDetail = () => {
                             ))}
                         </div>
                     )}
+
+                    {/* Tab tracking */}
+                    {activeTab === 'tracking' && (
+                        <div className="flex flex-col space-y-6 p-6">
+                            {allStatus.map((status, i) => {
+                                const isCompleted = i < currentIndex;
+                                const isCurrent = i === currentIndex;
+
+                                return (
+                                    <div key={i} className="flex items-start gap-4">
+                                        <div className="flex flex-col items-center">
+                                            {isCompleted ? (
+                                                <CheckCircleFilled style={{ color: 'black', fontSize: 28 }} />
+                                            ) : isCurrent ? (
+                                                <div className="w-8 h-8 rounded-full border-4 border-yellow-400 flex items-center justify-center shadow-md animate-pulse">
+                                                    <ClockCircleOutlined style={{ color: '#f59e0b', fontSize: 20 }} />
+                                                </div>
+                                            ) : (
+                                                <div className="w-6 h-6 rounded-full bg-gray-300"></div>
+                                            )}
+                                            {i < allStatus.length - 1 && (
+                                                <div className={`w-px h-full ${i < currentIndex ? 'bg-black' : 'bg-gray-300'} mt-1`}></div>
+                                            )}
+                                        </div>
+                                        <Tooltip title={status} placement="topLeft">
+                                            <div>
+                                                <p className={`font-bold ${isCurrent ? 'text-yellow-600' : isCompleted ? 'text-black' : 'text-gray-500'}`}>{status}</p>
+                                            </div>
+                                        </Tooltip>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+
+
+                    {/* Tab thông tin */}
+                    {activeTab === 'info' && (
+                        <div className="space-y-4 p-6">
+                            <div className="flex items-center gap-2">
+                                <EnvironmentOutlined />
+                                <span className="font-medium">Người nhận:</span> {orderData.receiver_name}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <PhoneOutlined />
+                                <span className="font-medium">Số điện thoại:</span> {orderData.phone}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <EnvironmentOutlined />
+                                <span className="font-medium">Địa chỉ:</span> {orderData.address_detail}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <ClockCircleOutlined />
+                                <span className="font-medium">Ngày đặt hàng:</span>
+                                {dayjs(orderData.order_date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <ClockCircleOutlined />
+                                <span className="font-medium">Ngày nhận hàng:</span>
+                                {orderData.received_date
+                                    ? dayjs(orderData.received_date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
+                                    : "Đang cập nhật"}
+                            </div>
+
+                        </div>
+                    )}
+
                 </div>
 
                 {/* Sidebar */}
-                <div className="bg-black text-white rounded-lg p-6 h-fit">
+                <div className="bg-black text-white rounded-lg p-6 h-fit space-y-6">
                     <h2 className="font-bold text-lg mb-4">Tổng đơn</h2>
 
                     <p className="flex justify-between text-xl font-bold">
+                        <span>Phương thức thanh toán</span>
+                        <span>
+                            {orderData.payments[0]?.method}
+                        </span>
+                    </p>
+                       <p className="flex justify-between text-xl font-bold">
+                        <span>Trạng thái thanh toán</span>
+                        <span>
+                            {orderData.payments[0]?.status}
+                        </span>
+                    </p>
+
+                    {orderData.payments[0]?.payment_date != null && (
+
+                        <p className="flex justify-between text-xl font-bold">
+                            <span>Ngày thanh toán</span>
+                            <span>
+                                {orderData.payments[0]?.payment_date
+                                    ? dayjs(orderData.payments[0].payment_date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
+                                    : "—"
+                                }
+                            </span>
+                        </p>
+                    )}
+                    <p className="flex justify-between text-xl font-bold border-t pt-4">
                         <span>Thành tiền</span>
                         <span>
                             {orderData.payments[0]?.total?.toLocaleString('vi-VN')}đ

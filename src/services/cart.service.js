@@ -52,12 +52,15 @@ export const cartService = {
     //Xóa nhiều sản phẩm
     deleteCartItems: async (data) => {
         try {
-            return await http.delete("/QuanLyGioHang/XoaNhieuSanPhamKhoiGioHang/", data);
+            return await http.delete("/QuanLyGioHang/XoaNhieuSanPhamKhoiGioHang/", {
+                data // data = { cart_detail_ids: [...] }
+            });
         } catch (error) {
             console.error("Lỗi trong cartService:", error);
             throw error;
         }
     },
+
 
 
 

@@ -26,6 +26,8 @@ import Error from "../pages/Error/Error";
 import OrderManager from "../pages/admin/OrderManager/OrderManager";
 import ReviewManager from "../pages/admin/ReviewManager/ReviewManager";
 import FeedbackManager from "../pages/admin/FeedbackManager/FeedbackManager";
+import PaymentManager from "../pages/admin/PaymentManager/PaymentManager";
+import RoleManager from "../pages/admin/RoleManager/RoleManager";
 
 
 // ------------------ USER ------------------
@@ -89,8 +91,8 @@ export const AppRouter = [
                 element: <Category />,
             },
             {
-                path:path.searchPage,
-                element:<Category/>
+                path: path.searchPage,
+                element: <Category />
             },
             {
                 path: path.product,
@@ -102,14 +104,14 @@ export const AppRouter = [
 
             },
             {
-                path:path.checkout,
-                element:<Checkout/>
+                path: path.checkout,
+                element: <Checkout />
             },
             {
-                path: path.orderSuccess,
+                path: path.orderStatus,
                 element: <OrderSuccess />,
             },
-              {
+            {
                 path: path.orderDetail,
                 element: <OrderDetail />,
             },
@@ -120,25 +122,25 @@ export const AppRouter = [
                 children: [
                     {
                         element: <Account />,
-                        path:path.accountInfo,
-                   
+                        path: path.accountInfo,
+
                     },
                     {
-                        path:path.orderHistory,
-                        element:<OrderHistory/>,
+                        path: path.orderHistory,
+                        element: <OrderHistory />,
                     },
                     {
-                        path:path.addressBook,
-                        element:<AddressBook/>,
+                        path: path.addressBook,
+                        element: <AddressBook />,
                     },
                     {
-                        path:path.reviewFeedback,
-                        element:<ReviewsFeedback/>
+                        path: path.reviewFeedback,
+                        element: <ReviewsFeedback />
                     }
 
                 ]
             },
-          
+
 
 
         ],
@@ -213,7 +215,7 @@ export const AppRouter = [
                 path: path.feedbackManager,
                 element: (
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FEEDBACK_MANAGER]}>
-                        <FeedbackManager/>
+                        <FeedbackManager />
                     </ProtectedRoute>
                 ),
             },
@@ -224,7 +226,25 @@ export const AppRouter = [
                         <ReviewManager />
                     </ProtectedRoute>
                 ),
+            },
+            {
+                path: path.paymentManager,
+                element: (
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                        <PaymentManager />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: path.roleManager,
+                element: (
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                        <RoleManager />
+                    </ProtectedRoute>
+                ),
             }
+
+
 
 
         ],

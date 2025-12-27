@@ -47,14 +47,23 @@ export const authService = {
         }
     },
 
-    resetPassword: async (data) => {
+    resetPassword: async (data, resetToken) => {
         try {
-            return await http.put("/QuanLyNguoiDung/DatLaiMatKhau", data);
+            return await http.put(
+                "/QuanLyNguoiDung/DatLaiMatKhau",
+                data,
+                {
+                    headers: {
+                        Authorization: `Bearer ${resetToken}`
+                    }
+                }
+            );
         } catch (error) {
             console.error("Lỗi đặt lại mật khẩu:", error);
             throw error;
         }
     },
+
 
 
 };

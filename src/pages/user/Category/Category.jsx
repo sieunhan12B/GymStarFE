@@ -26,6 +26,15 @@ const Category = () => {
   const [categoryFilter, setCategoryFilter] = useState([]);
   const listRef = useRef(null); // thêm ref
   const [loading, setLoading] = useState(false);
+  const filterSellingProducts = (products = []) => {
+    return products.filter(
+      (p) =>
+        p?.status === "đang bán" &&
+        Array.isArray(p.product_variants) &&
+        p.product_variants.some(v => v.stock > 0)
+    );
+  };
+
 
 
 
@@ -36,7 +45,8 @@ const Category = () => {
     { name: "Xám", hex: "#808080" },
     { name: "Xanh", hex: "#0000FF" },
     { name: "Đỏ", hex: "#FF0000" },
-    { name: "Nâu", hex: "#8B4513" },      // bổ sung màu Nâu
+    { name: "Nâu", hex: "#8B4513" },
+    { name: "Hồng", hex: "#FFC0CB" }   ,
 
   ];
 
@@ -62,7 +72,8 @@ const Category = () => {
           res = await productService.getProductByCategoryId(categoryId);
           setCategory(res.data.category);
         }
-        setProducts(res.data.data || []);
+        const sellingProducts = filterSellingProducts(res.data.data || []);
+        setProducts(sellingProducts);
       } catch (error) {
         console.error(error);
         message.error("Không thể tải sản phẩm!");
@@ -86,6 +97,7 @@ const Category = () => {
   // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!categoryId) return;
       try {
         const res = await danhMucService.getCategoryByParentCategory(categoryId);
         setCategoryFilter(res.data.data || []);
@@ -163,9 +175,12 @@ const Category = () => {
 
   // Count products per category
   const categoryCounts = categoryFilter.reduce((acc, cat) => {
-    acc[cat.category_id] = products.filter(p => p.category_id === cat.category_id).length;
+    acc[cat.category_id] = filterSellingProducts(products).filter(
+      p => p.category_id === cat.category_id
+    ).length;
     return acc;
   }, {});
+
   const activeCategories = filters.categories
     .map(catId => {
       const cat = categoryFilter.find(c => c.category_id === catId);
@@ -180,7 +195,7 @@ const Category = () => {
 
   // Sidebar filters
   const renderContentLeft = () => (
-    <aside className="hidden lg:block w-64 flex-shrink-0">
+    <aside className="hidden lg:block w-64 pt-24 flex-shrink-0">
       <div className="sticky top-20">
         <div className="flex flex-col h-full">
           <h2 className="font-bold text-lg mb-4 sticky top-0 bg-white z-10">
@@ -188,6 +203,7 @@ const Category = () => {
           </h2>
 
           <div className="flex-1 space-y-4">
+            {console.log(categoryFilter)}
             {/* Categories */}
             {categoryFilter.length > 0 && (
               <div>
@@ -294,6 +310,7 @@ const Category = () => {
 
   // Main content
   const renderContentRight = () => {
+
     const hasActiveFilters =
       filters.categories.length ||
       filters.colors.length ||
@@ -399,10 +416,10 @@ const Category = () => {
             <p className="mt-2 text-base md:text-lg text-gray-800 italic border-l-4 border-blue-400 bg-blue-50 px-4 py-3 rounded shadow-sm flex items-center gap-2">
               <span>🎉</span>
               <span>
-                {`Tìm thấy ${filteredProducts.length} sản phẩm`}
-                {activeCategories.length > 0 && ` thuộc danh mục "${activeCategories.join(", ")}"`}
-                {filters.colors.length > 0 && ` màu "${filters.colors.join(",")}"`}
-                {filters.sizes.length > 0 && `, size "${filters.sizes.join(",")}"`}
+                {`Tìm thấy ${filteredProducts.length} sản phẩm có`}
+                {activeCategories.length > 0 && ` danh mục "${activeCategories.join(", ")}"`}
+                {filters.colors.length > 0 && ` màu "${filters.colors.join(", ")}"`}
+                {filters.sizes.length > 0 && ` size "${filters.sizes.join(", ")}"`}
                 . Hãy click chọn để xem chi tiết!
               </span>
 
@@ -468,15 +485,16 @@ const Category = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className={`font-bold mb-4 ${keyword?"text-3xl":"text-5xl"}`}>
+        <h1 className={`font-bold mb-10 ${keyword ? "text-3xl" : "text-5xl"}`}>
           {!keyword
-            ? `${category?.name} (${products.length})`
-            : `Kết quả tìm kiếm: "${keyword}" (${products.length} sản phẩm)`}
+            ? `${category?.name} (${sortedProducts.length})`
+            : `Kết quả tìm kiếm: "${keyword}" (${sortedProducts.length} sản phẩm)`}
         </h1>
 
-      
 
-        <div className="flex gap-8">
+
+
+        <div className="flex  gap-8">
           {renderContentLeft()}
           {renderContentRight()}
         </div>

@@ -18,38 +18,41 @@ const VerifyOtp = () => {
   const email = location.state?.email;
   console.log(location)
 
-  const onFinish =  async (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
     try {
-          // Chuẩn bị dữ liệu gửi lên API
-          const payload = {
-            email: email,
-            otp: values.otp,
-    
-          };
-          console.log(payload)
-    
-          // Gọi API đăng ký
-          const response = await authService.verifyOtp(payload);
-          console.log(response);
-    
-          showNotification(response.data.message, "success");
-          // Nếu API trả về thành công
-          navigate(path.resetPassword,{
-                  state: { reset_token: response.data.reset_token }
-                });
-        } catch (error) {
-          // Xử lý lỗi trả về từ API
-          if (error.response?.data?.message) {
-            showNotification("Xác thực thất bại: " + error.response.data.message, "error");
-          } else {
-            showNotification("Đã xảy ra lỗi. Vui lòng thử lại!", "error");
-          }
-          console.error(error);
-    
-        } finally {
-          setLoading(false);
-        }
+      // Chuẩn bị dữ liệu gửi lên API
+      const payload = {
+        email: email,
+        otp: values.otp,
+
+      };
+      console.log(payload)
+
+      // Gọi API đăng ký
+      const response = await authService.verifyOtp(payload);
+      console.log(response);
+
+      showNotification(response.data.message, "success");
+      // Nếu API trả về thành công
+      // LƯU reset_token (quan trọng)
+      sessionStorage.setItem("reset_token", response.data.reset_token);
+
+      // Điều hướng sang trang đặt lại mật khẩu
+      navigate(path.resetPassword);
+
+    } catch (error) {
+      // Xử lý lỗi trả về từ API
+      if (error.response?.data?.message) {
+        showNotification("Xác thực thất bại: " + error.response.data.message, "error");
+      } else {
+        showNotification("Đã xảy ra lỗi. Vui lòng thử lại!", "error");
+      }
+      console.error(error);
+
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -92,7 +95,7 @@ const VerifyOtp = () => {
               size="large"
               className="w-full bg-black hover:!bg-gray-700 border-none rounded-full font-semibold"
             >
-             XÁC NHẬN
+              XÁC NHẬN
             </Button>
           </Form.Item>
         </Form>

@@ -182,7 +182,7 @@ const Header = () => {
 
                   {/* Dropdown container luôn tồn tại */}
                   <div
-                    className={`absolute  left-0 top-16 w-screen min-h-[30vh]  bg-white shadow-lg border-t z-50 transition-all duration-200 ease-out
+                    className={`absolute  left-0 top-16 inset-x-0 min-h-[30vh]  bg-white shadow-lg border-t z-50 transition-all duration-200 ease-out
     ${isFocused && suggestions.length > 0
                         ? "opacity-100 translate-y-0"
                         : "opacity-0 -translate-y-2 pointer-events-none"
@@ -230,52 +230,81 @@ const Header = () => {
                       {/* Overlay */}
                       <div className="fixed inset-0 z-40" onClick={() => setIsUserOpen(false)} />
 
-                      {/* Dropdown content */}
+                      {/* Dropdown */}
                       <div
-                        className="absolute right-0 top-12 z-50 transition-all duration-200 ease-out opacity-0 translate-y-2"
+                        className="absolute right-0 top-12 z-50 w-64"
                         style={{ animation: "fadeSlideDown 0.2s forwards ease-out" }}
                       >
-                        <div className="w-48 bg-white shadow-lg rounded-lg border border-gray-100 py-2">
+                        <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+
+                          {/* USER INFO */}
                           {user ? (
-                            <>
-                              <Link
-                                to={`${path.account}/${path.accountInfo}`}
-                                className="block px-4 py-2 text-sm hover:bg-gray-100"
-                                onClick={() => setIsUserOpen(false)}
-                              >
-                                Tài khoản
-                              </Link>
-                              <Link
-                                to="/orders"
-                                className="block px-4 py-2 text-sm hover:bg-gray-100"
-                                onClick={() => setIsUserOpen(false)}
-                              >
-                                Đơn hàng
-                              </Link>
-                              <div className="border-t my-1"></div>
-                              <span
-                                onClick={() => {
-                                  handleLogout();
-                                  setIsUserOpen(false);
-                                }}
-                                className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
-                              >
-                                Đăng xuất
-                              </span>
-                            </>
+                            <div className="px-4 py-4 flex items-center gap-3 bg-gray-50">
+                              <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold">
+                                <UserOutlined />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                  {user?.full_name || 'Người dùng'}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  {user?.email || 'Xin chào bạn 👋'}
+                                </p>
+                              </div>
+                            </div>
                           ) : (
-                            <Link
-                              to={path.logIn}
-                              className="block px-4 py-2 text-sm hover:bg-gray-100"
-                              onClick={() => setIsUserOpen(false)}
-                            >
-                              Đăng nhập
-                            </Link>
+                            <div className="px-4 py-4 bg-gray-50">
+                              <p className="text-sm font-medium text-gray-700">
+                                Chào mừng bạn 👋
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Đăng nhập để mua sắm nhanh hơn
+                              </p>
+                            </div>
                           )}
+
+                          {/* ACTIONS */}
+                          <div className="py-2">
+                            {user ? (
+                              <>
+                                <Link
+                                  to={`${path.account}/${path.accountInfo}`}
+                                  onClick={() => setIsUserOpen(false)}
+                                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition"
+                                >
+                                  <UserOutlined />
+                                  Thông tin tài khoản
+                                </Link>
+
+                                <div className="my-1 h-px bg-gray-100" />
+
+                                <button
+                                  onClick={() => {
+                                    handleLogout();
+                                    setIsUserOpen(false);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
+                                >
+                                  <CloseOutlined />
+                                  Đăng xuất
+                                </button>
+                              </>
+                            ) : (
+                              <Link
+                                to={path.logIn}
+                                onClick={() => setIsUserOpen(false)}
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition"
+                              >
+                                <UserOutlined />
+                                Đăng nhập
+                              </Link>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </>
                   )}
+
                 </div>
 
 
@@ -440,7 +469,7 @@ const Header = () => {
                           {child.children.map((sub) => (
                             <Link
                               key={sub.category_id}
-                             to={buildCategoryUrl(sub, [activeMenu, child])}
+                              to={buildCategoryUrl(sub, [activeMenu, child])}
 
                               className="text-gray-600 hover:text-black text-sm font-semibold block"
                             >

@@ -17,19 +17,25 @@ import useEmblaCarousel from 'embla-carousel-react';
 import ProductCard from '../../../components/ProductCard/ProductCard';
 import { generateSlug } from '../../../utils/generateSlug';
 import ProductReview from './ProductReview';
+import SuggestionSize from './SuggestionSize';
 
 dayjs.extend(relativeTime);
 
 const Product = () => {
+  const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
+
   const { productId } = useParams();
   const [product, setProduct] = useState(null);
   const [relativeProducts, setRelativeProducts] = useState([]);
 
   const [relativeRef, relativeEmbla] = useEmblaCarousel({ dragFree: true });
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
+
   const [quantity, setQuantity] = useState(1);
   const [newReview, setNewReview] = useState({
     rating: 0,
@@ -46,6 +52,10 @@ const Product = () => {
   const { showNotification } = useContext(NotificationContext);
   const hasSize = product?.product_variants?.some(v => v.size != null);
   console.log(hasSize)
+
+  const isVideo = (url = "") =>
+    url.match(/\.(mp4|webm|ogg)$/i);
+
 
 
 
@@ -67,7 +77,7 @@ const Product = () => {
       console.log(res);
       const cartRes = await cartService.getCart();
       dispatch(setCart(cartRes.data.data));
-      showNotification(<AddedToCartToast product={product} color={selectedVariant.color} size={selectedVariant.size} message={res.data.message} />, 'success');
+      showNotification(<AddedToCartToast product={product} quantity={quantity} color={selectedVariant.color} size={selectedVariant.size} message={res.data.message} />, 'success');
     } catch (error) {
       showNotification(error.response.data.message, 'error');
       console.error('ADD CART ERROR:', error);
@@ -75,42 +85,20 @@ const Product = () => {
   };
   //=================XỬ LÝ MUA NGAY ======================
   const handleBuyNow = (selectedVariant, quantity, product) => {
-    navigate('/gio-hang', {
+    console.log(product);
+    navigate('/dat-hang', {
       state: {
         buyNowItem: {
           product_variant: selectedVariant,
           quantity,
-          product_info: {
-            thumbnail: product.thumbnail,
-            name: product.name,
-            price: product.price,
-            discount: product.discount
-          }
+          product,
         }
       }
     });
   };
 
 
-  // Submit handler
-  const handleSubmitReview = async () => {
-    if (!user?.user_id) return showNotification('Bạn cần đăng nhập trước!', 'error');
-    if (newReview.rating === 0 || !newReview.content) {
-      return showNotification('Vui lòng điền đầy đủ thông tin đánh giá', 'warning');
-    }
 
-    try {
-      // TODO: Gọi API submit review, kèm file images nếu có
-      // await reviewService.submitReview(productId, newReview);
-
-      showNotification('Đánh giá thành công!', 'success');
-      setNewReview({ rating: 0, content: '', images: [] });
-      // Optionally: fetch lại reviews
-    } catch (error) {
-      console.error(error);
-      showNotification('Có lỗi xảy ra khi gửi đánh giá', 'error');
-    }
-  };
 
 
   useEffect(() => {
@@ -158,6 +146,14 @@ const Product = () => {
     : null;
 
 
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    videoRef.current?.play();
+  }, [selectedImage, selectedColor]);
+
+
+
 
 
   useEffect(() => {
@@ -187,7 +183,11 @@ const Product = () => {
 
 
   const sku = selectedVariant ? selectedVariant.sku : 'Chưa chọn';
-  const colorImages = product.colors.find(c => c.color === selectedColor)?.images || [];
+  const colorImages =
+    product.colors
+      .find(c => c.color === selectedColor)
+      ?.images
+      ?.sort((a, b) => isVideo(a) - isVideo(b)) || [];
 
 
   const renderProductDetail = () => (
@@ -195,13 +195,57 @@ const Product = () => {
       {/* Left - Images */}
       <div className="space-y-4">
         <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-          <img src={colorImages[selectedImage] || product.thumbnail} alt={product.name} className="w-full h-full object-cover" />
+          <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+            {isVideo(colorImages[selectedImage]) ? (
+              <video
+                key={colorImages[selectedImage]} // ⭐ QUAN TRỌNG NHẤT
+                src={colorImages[selectedImage]}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
+
+            ) : (
+              <img
+                src={colorImages[selectedImage] || product.thumbnail}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
         </div>
         <div className="grid grid-cols-4 gap-4">
           {colorImages.map((img, idx) => (
-            <button key={idx} onClick={() => setSelectedImage(idx)} className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx ? 'border-black' : 'border-gray-200 hover:border-gray-400'}`}>
-              <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+            <button
+              key={idx}
+              onClick={() => setSelectedImage(idx)}
+              className={`relative aspect-square rounded-lg overflow-hidden border-2
+    ${selectedImage === idx ? 'border-black' : 'border-gray-200 hover:border-gray-400'}
+  `}
+            >
+              {isVideo(img) ? (
+                <>
+                  <video
+                    src={img}
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <span className="text-white text-2xl">▶</span>
+                  </div>
+                </>
+              ) : (
+                <img
+                  src={img}
+                  alt={`View ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </button>
+
           ))}
         </div>
       </div>
@@ -239,14 +283,54 @@ const Product = () => {
         {/* Size Selection */}
         {hasSize && (
           <div>
-            <label className="text-sm font-bold uppercase mb-3 block">Size</label>
+            <div className="flex justify-between">
+              <label className="text-sm font-bold uppercase mb-3 block">Size</label>
+
+              <button
+                onClick={() => setIsSizeGuideOpen(true)}
+                className="text-lg font-semibold text-blue-600 hover:underline"
+              >
+                📏 Hướng dẫn chọn size
+              </button>
+            </div>
+
             <div className="grid grid-cols-6 gap-2">
-              {product.product_variants.filter(v => v.color === selectedColor && v.stock > 0).map(variant => (
-                <button key={variant.product_variant_id} onClick={() => setSelectedSize(variant.size)} className={`py-3 text-sm font-medium border rounded-lg transition-all ${selectedSize === variant.size ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-300 hover:border-black'}`}>{variant.size}</button>
-              ))}
+              {product.product_variants
+                .filter(v => v.color === selectedColor && v.stock > 0)
+                .sort((a, b) => {
+                  const indexA = SIZE_ORDER.indexOf(a.size);
+                  const indexB = SIZE_ORDER.indexOf(b.size);
+
+                  // Nếu size không nằm trong SIZE_ORDER
+                  if (indexA === -1 && indexB === -1) return 0;
+                  if (indexA === -1) return 1;
+                  if (indexB === -1) return -1;
+
+                  return indexA - indexB;
+                })
+                .map(variant => (
+                  <button
+                    key={variant.product_variant_id}
+                    onClick={() => setSelectedSize(variant.size)}
+                    className={`py-3 text-sm font-medium border rounded-lg transition-all
+        ${selectedSize === variant.size
+                        ? 'bg-black text-white border-black'
+                        : 'bg-white text-black border-gray-300 hover:border-black'}
+      `}
+                  >
+                    {variant.size}
+                  </button>
+                ))
+              }
+
             </div>
           </div>
         )}
+        <SuggestionSize
+          isOpen={isSizeGuideOpen}
+          onClose={() => setIsSizeGuideOpen(false)}
+        // sizeChart={product.sizeChart} // nếu có data từ backend
+        />
 
 
 
@@ -293,7 +377,7 @@ const Product = () => {
           <div className="flex items-end justify-between mb-8">
             <div className="flex items-end gap-4">
               <h2 className="text-2xl font-bold">Sản phẩm liên quan</h2>
-              <Link to={`/danh-muc/${product.category_id}-${generateSlug(product.category_name)}`} className="text-sm hover:underline flex items-center">
+              <Link to={`/danh-muc/${generateSlug(product.category_name)}-${product.category_id}`} className="text-sm hover:underline flex items-center">
                 Xem Tất Cả <RightOutlined className="ml-1 text-xs" />
               </Link>
             </div>

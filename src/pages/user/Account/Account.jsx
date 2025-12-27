@@ -3,7 +3,6 @@ import { Modal, Form, Input, DatePicker, Select, Button, message, Spin } from "a
 import { userService } from "@/services/user.service";
 import dayjs from "dayjs";
 
-import { getLocalStorage } from "../../../utils/utils";
 import { NotificationContext } from "@/App"; // giả sử bạn có NotificationContext trong App.jsx
 
 
@@ -20,8 +19,6 @@ const Account = () => {
   const { showNotification } = useContext(NotificationContext);
 
 
-  const authUser = getLocalStorage("user");
-
   // Fetch User
   const fetchUserInfo = async () => {
     try {
@@ -29,7 +26,8 @@ const Account = () => {
       const res = await userService.getInfoUser();
       setUserInfo(res.data.data);
     } catch (error) {
-      message.error("Không thể lấy thông tin người dùng");
+      console.log(error);
+      showNotification(error.response.data.message,"error");
     } finally {
       setLoading(false);
     }
@@ -71,7 +69,7 @@ const Account = () => {
           : null,
       };
 
-      const res = await userService.updateProfile(authUser.user_id, payload);
+      const res = await userService.updateProfile(payload);
       showNotification(res.data.message, "success");
       fetchUserInfo();
       setIsModalOpen(false);
@@ -98,7 +96,7 @@ const Account = () => {
       };
       console.log(payload)
 
-      const res = await userService.changePassword(authUser.user_id, payload);
+      const res = await userService.changePassword( payload);
 
       showNotification(res.data.message, "success");
       setIsPasswordModal(false);

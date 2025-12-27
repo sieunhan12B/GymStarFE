@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Layout } from 'antd';
 import {
   UserOutlined,
@@ -12,14 +12,23 @@ import {
   HeartOutlined,
   FileTextOutlined
 } from '@ant-design/icons';
-import { Link, Outlet, Route, useLocation } from 'react-router-dom';
+import { Link, Outlet, Route, useLocation, useNavigate } from 'react-router-dom';
 import { path } from '../../common/path';
+import Cookies from "js-cookie";
+import { useDispatch } from 'react-redux';
+import { clearCart } from '@/redux/cartSlice';
+import { logout } from '@/redux/userSlice';
+import { NotificationContext } from '@/App';
+
+
 
 const { Content } = Layout;
 
 const ManagerAccount = () => {
   const location = useLocation();
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { showNotification } = useContext(NotificationContext);
 
 
   const sidebarItems = [
@@ -46,7 +55,7 @@ const ManagerAccount = () => {
     {
       key: '4',
       icon: <HeartOutlined />,
-      label: 'Đánh giá và phản hồi',
+      label: 'Đánh giá, góp ý và phản hồi',
       path: path.reviewFeedback,
 
     },
@@ -66,6 +75,14 @@ const ManagerAccount = () => {
     }
   ];
 
+  const handleLogout = () => {
+    Cookies.remove("access_token");
+    dispatch(clearCart());
+    dispatch(logout());
+    showNotification("Đăng xuất thành công!", "success");
+    navigate(path.logIn);
+  };
+
 
 
   return (
@@ -79,17 +96,37 @@ const ManagerAccount = () => {
             {sidebarItems.map((item) => {
               const isActive = location.pathname.endsWith(item.path);
 
+              // 👉 Nếu là Đăng xuất
+              if (item.label === 'Đăng xuất') {
+                return (
+                  <div
+                    key={item.key}
+                    onClick={handleLogout}
+                    className="
+          flex items-center justify-between p-3 rounded-lg cursor-pointer
+          bg-white text-gray-800 hover:bg-red-50 hover:text-red-600 transition-all
+        "
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl w-6 h-6 flex items-center justify-center bg-white text-black rounded-full">
+                        {item.icon}
+                      </span>
+                      <span className="font-medium text-sm">{item.label}</span>
+                    </div>
+                    <span className="text-gray-400">→</span>
+                  </div>
+                );
+              }
+
+              // 👉 Các item bình thường
               return (
                 <Link
                   to={item.path}
                   key={item.key}
                   className={`
-          flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all
-          ${isActive
-                      ? 'bg-black text-white'
-                      : 'bg-white text-gray-800 hover:bg-gray-100'
-                    }
-        `}
+        flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all
+        ${isActive ? 'bg-black text-white' : 'bg-white text-gray-800 hover:bg-gray-100'}
+      `}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xl w-6 h-6 flex items-center justify-center bg-white text-black rounded-full">
@@ -97,12 +134,11 @@ const ManagerAccount = () => {
                     </span>
                     <span className="font-medium text-sm">{item.label}</span>
                   </div>
-                  <span className={isActive ? 'text-white' : 'text-gray-400'}>
-                    →
-                  </span>
+                  <span className={isActive ? 'text-white' : 'text-gray-400'}>→</span>
                 </Link>
               );
             })}
+
           </div>
           {/* Content */}
           <Content className=" w-1/2 p-6 bg-gray-50">

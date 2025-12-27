@@ -21,6 +21,18 @@ export const reviewService = {
         }
     },
 
+    getReviewUser: async () => {
+        try {
+            return await http.get(
+                "/QuanLyDanhGia/LayDanhGiaCuaNguoiDung?page=1&limit=9999"
+            );
+        } catch (error) {
+            console.error("Lỗi trong Review Services:", error);
+            throw error;
+        }
+    },
+
+
     updateStatusReview: async (review_id) => {
         try {
             return await http.put(`/QuanLyDanhGia/CapNhatTrangThaiDanhGia/${review_id}`);

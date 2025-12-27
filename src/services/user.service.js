@@ -51,9 +51,9 @@ export const userService = {
 
 
 
-    updateProfile: async (user_id, data) => {
+    updateProfile: async (data) => {
         try {
-            return await http.put(`/QuanLyNguoiDung/CapNhatThongTin/${user_id}`, data);
+            return await http.put("/QuanLyNguoiDung/CapNhatThongTin",data);
         } catch (error) {
             console.error("Lỗi cập nhật thông tin người dùng:", error);
             throw error;
@@ -67,9 +67,9 @@ export const userService = {
             throw error;
         }
     },
-    changePassword: async (user_id, data) => {
+    changePassword: async (data) => {
         try {
-            return await http.put(`/QuanLyNguoiDung/DoiMatKhau/${user_id}`, data);
+            return await http.put("/QuanLyNguoiDung/DoiMatKhau", data);
         } catch (error) {
             console.error("Lỗi cập nhật mật khẩu:", error);
             throw error;

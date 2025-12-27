@@ -3,10 +3,11 @@ import { EyeOutlined, LockOutlined, UnlockOutlined } from "@ant-design/icons";
 import DataTable from "@/components/DataTable/DataTable";
 import { reviewService } from "@/services/review.service";
 import dayjs from "dayjs";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useMemo } from "react";
 import { NotificationContext } from "@/App";
 import Header from "@/templates/AdminTemplate/Header";
 import { removeVietnameseTones } from '@/utils/removeVietnameseTones';
+import { normalizeText } from "../../../utils/normalizeText";
 
 const ReviewManager = () => {
     // ===== STATE =====
@@ -45,14 +46,26 @@ const ReviewManager = () => {
     }, []);
 
     // ===== FILTER SEARCH =====
-    const filteredData = data.filter(item => {
-        if (!searchText) return true;
-        return (
-            removeVietnameseTones(item.comment).toLowerCase().includes(searchText.toLowerCase()) ||
-            removeVietnameseTones(item.reviewer?.full_name).toLowerCase().includes(searchText.toLowerCase()) ||
-            removeVietnameseTones(item.reviewer?.email).toLowerCase().includes(searchText.toLowerCase())
+
+
+    const filteredData = useMemo(() => {
+        if (!searchText) return data;
+
+        const keyword = removeVietnameseTones(
+            normalizeText(searchText)
         );
-    });
+
+        return data.filter((item) => {
+            const user = item.reviewer;
+            return (
+                removeVietnameseTones(
+                    normalizeText(user?.full_name)
+                ).includes(keyword) ||
+                normalizeText(user?.email).includes(keyword)
+            );
+        });
+    }, [data, searchText]);
+
 
     const openReplyModal = (record) => {
         setSelectedReview(record);
@@ -352,7 +365,7 @@ const ReviewManager = () => {
     // ===== HEADER =====
     const renderHeader = () => (
         <Header
-            searchText={searchText}
+
             setSearchText={setSearchText}
             itemName="đánh giá"
             categoryFilterOn={false}

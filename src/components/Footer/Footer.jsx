@@ -54,10 +54,7 @@ const Footer = () => {
     ];
 
     const badges = [
-        'https://mcdn.GYMSTAR.me/image/September2023/mceclip0_46.png',
-        'https://mcdn.GYMSTAR.me/image/January2024/mceclip1_37.png',
-        'https://mcdn.GYMSTAR.me/image/January2024/mceclip0_37.png',
-        'https://theme.hstatic.net/1000306633/1000891789/14/footer_trustbadge_4.png',
+        
     ];
 
     const scrollToTop = () => {

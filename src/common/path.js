@@ -10,6 +10,7 @@ export const path = {
   product: "san-pham/:subcategory/:productId",
   cart:"gio-hang",
   checkout:"checkout",
+  orderStatus:"ket-qua-thanh-toan/:orderId",
   orderSuccess:"dat-hang-thanh-cong/:orderId",
   orderDetail:"chi-tiet-don-hang/:orderId",
   orderHistory:"lich-su-don-hang",
@@ -40,5 +41,7 @@ export const path = {
   categoryManager: "quan-ly-danh-muc",
   feedbackManager: "quan-ly-gop-y",
   reviewManager: "quan-ly-danh-gia",
+  paymentManager:"quan-ly-thanh-toan",
+  roleManager:"quan-ly-loai-nguoi-dung",
 
 };

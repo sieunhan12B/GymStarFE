@@ -9,14 +9,19 @@ export const http = axios.create({
 });
 
 // 🟦 Interceptor request (gắn token nếu có)
-http.interceptors.request.use(
-  (config) => {
-    const token = Cookies.get("access_token"); console.log(token) //
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+http.interceptors.request.use((config) => {
+  if (config.url?.includes("dat-lai-mat-khau")) {
+    return config; // bỏ qua interceptor
+  }
+
+  const token = Cookies.get("access_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 
 // 🟥 Interceptor response (log lỗi + throw)  
 http.interceptors.response.use(

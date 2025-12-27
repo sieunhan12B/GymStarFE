@@ -22,6 +22,7 @@ const OrderHistory = () => {
     const [cancelReason, setCancelReason] = useState('');
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [cancelLoading, setCancelLoading] = useState(false);
+    const [isExchangeModalVisible, setIsExchangeModalVisible] = useState(false);
 
 
     const { showNotification } = useContext(NotificationContext);
@@ -57,6 +58,7 @@ const OrderHistory = () => {
             setOrders(res.data.data || []);
         } catch (error) {
             console.error("Lỗi lấy đơn hàng:", error);
+            showNotification(error.response.data.message, "error")
         } finally {
             setLoading(false);
         }
@@ -188,18 +190,54 @@ const OrderHistory = () => {
     };
 
 
+    const renderExchangeOrder = () => {
+        return (
+            <Modal
+                title="Hướng dẫn đổi hàng"
+                open={isExchangeModalVisible}
+                onCancel={() => setIsExchangeModalVisible(false)}
+                footer={[
+                    <Button key="close" type="primary" onClick={() => setIsExchangeModalVisible(false)}>
+                        Đã hiểu
+                    </Button>
+                ]}
+            >
+                <div className="space-y-3 text-gray-700">
+                    <p>📝 <strong>Điều kiện đổi hàng:</strong></p>
+                    <ul className="list-disc pl-5 text-sm">
+                        <li>Sản phẩm còn nguyên tem mác, chưa qua sử dụng</li>
+                        <li>Yêu cầu đổi hàng trong vòng <strong>7 ngày</strong> kể từ khi nhận hàng</li>
+                        <li>Chỉ hỗ trợ đổi size hoặc màu (không hoàn tiền)</li>
+                    </ul>
+
+                    <p>📦 <strong>Cách thức đổi hàng:</strong></p>
+                    <ul className="list-disc pl-5 text-sm">
+                        <li>Liên hệ CSKH qua hotline hoặc fanpage</li>
+                        <li>Cung cấp mã đơn hàng và sản phẩm cần đổi</li>
+                        <li>Nhân viên sẽ hướng dẫn gửi hàng đổi</li>
+                    </ul>
+
+                    <p className="text-sm text-red-500">
+                        ⚠️ Phí vận chuyển đổi hàng (nếu có) khách hàng tự chi trả
+                    </p>
+                </div>
+            </Modal>
+        )
+    };
+
+
     /* ================== RENDER ================== */
     return (
         <div className="bg-white rounded-lg shadow-sm">
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b min-h-[128px] ">
                 <div className="">
-                      <h2 className="text-2xl font-bold">Lịch sử đơn hàng</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                    Theo dõi và quản lý các đơn hàng của bạn
-                </p>
+                    <h2 className="text-2xl font-bold">Lịch sử đơn hàng</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Theo dõi và quản lý các đơn hàng của bạn
+                    </p>
                 </div>
-              
+
             </div>
 
             {/* Tabs */}
@@ -325,15 +363,21 @@ const OrderHistory = () => {
                                         >
                                             Chi tiết
                                         </button>
-
-
                                         {order.status === "đã giao" && (
-                                            <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800">
-                                                Mua lại
-                                            </button>
+                                            <Tooltip title="Hướng dẫn đổi hàng">
+                                                <button
+                                                    onClick={() => setIsExchangeModalVisible(true)}
+                                                    className="px-4 py-2 border border-blue-400 text-blue-600 rounded-lg text-sm hover:bg-blue-50"
+                                                >
+                                                    Đổi hàng
+                                                </button>
+                                            </Tooltip>
                                         )}
+                                        {renderExchangeOrder()}
 
-                                        {["chờ xác nhận", "đã xác nhận", "đang xử lý"].includes(order.status) && (
+
+
+                                        {["chờ xác nhận", "đã xác nhận", "đang xử lý", "đang giao"].includes(order.status) && (
                                             <Tooltip title="Huỷ đơn có thể ảnh hưởng đến ưu đãi của bạn">
                                                 <button
                                                     onClick={() => {
