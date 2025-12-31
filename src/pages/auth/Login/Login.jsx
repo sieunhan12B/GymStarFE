@@ -27,7 +27,6 @@ const Login = () => {
 
   const onFinish = async (values) => {
     setLoading(true);
-    console.log("📤 Đăng nhập với:", values);
     try {
       // Chuẩn bị dữ liệu gửi lên API
       const payload = {
@@ -40,7 +39,6 @@ const Login = () => {
       // Gọi API đăng nhập
       const response = await authService.logIn(payload);
 
-      console.log(response);
 
 
 

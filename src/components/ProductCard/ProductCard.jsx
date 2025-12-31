@@ -6,6 +6,7 @@ import { cartService } from "@/services/cart.service";
 import { NotificationContext } from "@/App";
 import { setCart } from "@/redux/cartSlice";
 import AddedToCartToast from "@/components/AddedToCartToast/AddedToCartToast";
+import { formatPrice } from "../../utils/utils";
 
 const ProductCard = ({ product, hoverSize = true }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -57,17 +58,9 @@ const ProductCard = ({ product, hoverSize = true }) => {
 
     // lấy 2 ảnh đầu tiên hợp lệ
     const images = [
-        validImages[0],
-        validImages[1] || validImages[0],
+        validImages[0] || product.thumbnail || "/placeholder.png",
+        validImages[1] || validImages[0] || product.thumbnail || "/placeholder.png",
     ];
-
-
-    // const images = [
-    //     selectedColor?.images?.[0] || product.thumbnail,
-    //     selectedColor?.images?.[1] ||
-    //     selectedColor?.images?.[0] ||
-    //     product.thumbnail,
-    // ];
 
     // ===============================
     // SIZE THEO MÀU CỦA VARIANT ĐẦU TIÊN
@@ -201,12 +194,21 @@ const ProductCard = ({ product, hoverSize = true }) => {
                     <p className="text-xs text-gray-600 mb-1">
                         {firstVariant.color}
                     </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                        {Number(product.price).toLocaleString("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                        })}
-                    </p>
+
+                    <div className="flex items-baseline gap-2">
+                        {product.discount ? (
+                            <>
+                                <span className="text-sm font-bold">
+                                    {formatPrice(product.price * (1 - parseFloat(product.discount) / 100))}
+                                </span>
+                                <span className="text-sm text-gray-400 line-through">
+                                    {formatPrice(product.price)}
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-sm font-bold">{formatPrice(product.price)}</span>
+                        )}
+                    </div>
                 </div>
             </Link>
         </div>

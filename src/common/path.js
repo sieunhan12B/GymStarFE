@@ -34,6 +34,7 @@ export const path = {
 
 
   // ------------------ ADMIN ------------------
+  admin: "/admin",
   dashboard: "dashboard",
   userManager: "quan-ly-nguoi-dung",
   productManager: "quan-ly-san-pham",

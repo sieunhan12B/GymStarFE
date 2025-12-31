@@ -48,6 +48,7 @@ const AdminTemplate = () => {
       { key: path.reviewManager, icon: <StarOutlined />, label: 'Đánh giá', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
       { key: path.paymentManager, icon: <DollarOutlined />, label: 'Thanh toán', roles: [ROLES.ADMIN] },
       { key: path.roleManager, icon: <AppstoreOutlined />, label: 'Loại người dùng', roles: [ROLES.ADMIN] },
+      { key: path.promotionManager, icon: <UploadOutlined />, label: 'Khuyến mãi', roles: [ROLES.ADMIN, ROLES.PRODUCT_MANAGER] },
     ];
 
     return allItems.filter(item => item.roles.includes(role_id));

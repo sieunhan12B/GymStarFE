@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext, use } from 'react';
 import { Input, Badge, Image } from 'antd';
 import { SearchOutlined, HeartOutlined, UserOutlined, ShoppingOutlined, CloseOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ import { productService } from '../../services/product.service';
 import './header.css';
 import ProductCard from '../ProductCard/ProductCard';
 import { buildCategoryUrl } from '../../utils/generateSlug';
+import { ROLES } from '../../constants/role';
 
 const Header = () => {
   const [activeMenu, setActiveMenu] = useState(null);
@@ -94,6 +95,7 @@ const Header = () => {
     };
     fetchCart();
   }, [user]);
+
 
   const handleDeleteCartItem = async (cart_detail_id) => {
     try {
@@ -211,10 +213,7 @@ const Header = () => {
                   <SearchOutlined className="text-xl" />
                 </button>
 
-                {/* HEART */}
-                <button className="text-gray-600 hover:text-gray-900">
-                  <HeartOutlined className="text-xl" />
-                </button>
+
 
                 {/* USER DROPDOWN */}
                 <div className='relative'>

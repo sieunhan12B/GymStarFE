@@ -257,11 +257,20 @@ const Product = () => {
           <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">{product.category_name}</p>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
-            {product.discount && (
-              <span className="text-xl text-gray-400 line-through">{formatPrice(parseFloat(product.price) / (1 - parseFloat(product.discount) / 100))}</span>
+            {product.discount ? (
+              <>
+                <span className="text-3xl font-bold">
+                  {formatPrice(product.price * (1 - parseFloat(product.discount) / 100))}
+                </span>
+                <span className="text-xl text-gray-400 line-through">
+                  {formatPrice(product.price)}
+                </span>
+              </>
+            ) : (
+              <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
             )}
           </div>
+
           <p className="text-sm text-gray-600 mt-2">{product.description}</p>
         </div>
 

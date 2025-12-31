@@ -12,7 +12,7 @@ export const productService = {
     },
 
 
-   
+
 
 
     // Cập nhật thông tin sản phẩm theo product_id
@@ -109,7 +109,7 @@ export const productService = {
         }
     },
 
-    getProductByCategoryId:async (category_id, page = 1, limit = 999) => {
+    getProductByCategoryId: async (category_id, page = 1, limit = 999) => {
         try {
             return await http.get(
                 `/QuanLySanPham/LaySanPhamTheoDanhMuc/${category_id}?page=${page}&limit=${limit}`
@@ -132,10 +132,10 @@ export const productService = {
         }
     },
 
-    
 
-     // Lấy tất cả sản phẩm cho user
-    getAllForUserWithKeyWord: async (keyword,page=1,limit=9999) => {
+
+    // Lấy tất cả sản phẩm cho user
+    getAllForUserWithKeyWord: async (keyword, page = 1, limit = 9999) => {
         try {
             return await http.get(
                 `/QuanLySanPham/LayDanhSachSanPhamTheoTuKhoaUser?keyword=${encodeURIComponent(keyword)}&page=${page}&limit=${limit}`
@@ -145,6 +145,31 @@ export const productService = {
             throw error;
         }
     },
+
+    //Thêm size cho biến thể
+    addSizeToVariant: async (product_id, color, sizeData) => {
+        try {
+            return await http.post(`/QuanLySanPham/ThemSize/${product_id}/${encodeURIComponent(color)}`, sizeData);
+        } catch (error) {
+            console.error("Lỗi thêm size mới:", error);
+            throw error;
+        }
+    },
+
+
+    // Thêm biến thể cho sản phẩm
+    addProductVariant: async (product_id, formData) => {
+        try {
+            return await http.post(
+                `/QuanLySanPham/ThemBienThe/${product_id}`,
+                formData
+            );
+        } catch (error) {
+            console.error("Lỗi thêm biến thể:", error);
+            throw error;
+        }
+    },
+
 
 
 };

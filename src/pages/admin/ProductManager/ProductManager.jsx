@@ -1,4 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
+// React
+import React, { useContext, useEffect, useMemo, useState } from "react";
+
+// UI libraries
 import {
     Table,
     Tag,
@@ -13,54 +16,70 @@ import {
     Select,
     Typography,
     Upload,
-    Collapse,
-} from 'antd';
-import { EyeOutlined, EditOutlined, SyncOutlined, PlusOutlined, DeleteOutlined, InboxOutlined } from '@ant-design/icons';
-import DataTable from '@/components/DataTable/DataTable';
-import { removeVietnameseTones } from '@/utils/removeVietnameseTones';
-import { productService } from '@/services/product.service';
-import { danhMucService } from '@/services/category.service';
+} from "antd";
+import {
+    EyeOutlined,
+    EditOutlined,
+    SyncOutlined,
+    PlusOutlined,
+    DeleteOutlined,
+} from "@ant-design/icons";
 
+// Components
+import DataTable from "@/components/DataTable/DataTable";
+import Header from "@/templates/AdminTemplate/Header";
+
+// Services
+import { productService } from "@/services/product.service";
+import { danhMucService } from "@/services/category.service";
+
+// Utils
+import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
+import { formatPrice } from "@/utils/utils";
+
+// Context
 import { NotificationContext } from "@/App";
-import Header from '../../../templates/AdminTemplate/Header';
-import { formatPrice } from '../../../utils/utils';
 
 const ProductManager = () => {
 
-    const [searchText, setSearchText] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [addForm] = Form.useForm();
+    const { showNotification } = useContext(NotificationContext);
 
+    // ===== STATE =====
+
+    // data
+    const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
+
+    // ui
+    const [loading, setLoading] = useState(true);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const [submitLoading, setSubmitLoading] = useState(false);
+
+    // search & filter
+    const [searchText, setSearchText] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("all");
+
+    // selected
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [selectedProductForStatus, setSelectedProductForStatus] = useState(null);
+
+
+    // modal
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [statusModalOpen, setStatusModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
 
-
-
-
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [selectedProductForStatus, setSelectedProductForStatus] = useState(null);
-
-
+    // ===== FORM / PREVIEW =====
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
-    const [variantPreviews, setVariantPreviews] = useState({});
 
+    // ===== CATEGORY LEVEL =====
     const [categoryLevel1, setCategoryLevel1] = useState(null);
     const [categoryLevel2, setCategoryLevel2] = useState(null);
     const [categoryLevel3, setCategoryLevel3] = useState(null);
-
-
-    const [loading, setLoading] = useState(true);
-    const [submitLoading, setSubmitLoading] = useState(false);
-
-    const [data, setData] = useState([]);
-    const [categoriesForModal, setCategoriesForModal] = useState([]);
-
-
-    const [addForm] = Form.useForm();
-
-    const { showNotification } = useContext(NotificationContext);
 
 
 
@@ -69,7 +88,7 @@ const ProductManager = () => {
         try {
             const res = await danhMucService.getAll();
             const data = res?.data?.data || [];
-            setCategoriesForModal(data);
+            setCategories(data);
         } catch (err) {
             console.error("Lỗi tải danh mục", err);
         }
@@ -80,18 +99,16 @@ const ProductManager = () => {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const response = await productService.getAllForAdmin();
-            // Optionally show notification on load — you had it previously, keep if desired
-            // showNotification(response.data.message, "success");
-            setData(response.data.data);
-        } catch (err) {
-            console.error("Lỗi fetch sản phẩm:", err);
+            const res = await productService.getAllForAdmin();
+            setProducts(res.data.data);
+        } catch {
             showNotification("Lỗi khi tải sản phẩm", "error");
         } finally {
             setLoading(false);
         }
     };
 
+    // ===== EFFECTS =====
     useEffect(() => {
         fetchProducts();
         fetchCategories();
@@ -115,9 +132,9 @@ const ProductManager = () => {
         });
     };
 
-    const getLevel2 = (categoriesForModal, parentId) => {
+    const getLevel2 = (categories, parentId) => {
         if (!parentId) return [];
-        const parent = categoriesForModal.find(c => c.category_id === parentId);
+        const parent = categories.find(c => c.category_id === parentId);
         return parent?.children || [];
     };
     const getLevel3 = (categories, level1Id, level2Id) => {
@@ -125,8 +142,6 @@ const ProductManager = () => {
         const level2 = level2List.find(c => c.category_id === level2Id);
         return level2?.children || [];
     };
-
-
 
     const findCategoryParents = (categories, targetId) => {
         for (const cat of categories) {
@@ -146,25 +161,27 @@ const ProductManager = () => {
         return { level1: null, level2: null, level3: null };
     };
 
-
-
-
     // ===== FILTERING =====
-    const filteredData = data.filter(item => {
-        const normalizedName = removeVietnameseTones(item.name).toLowerCase();
-        const normalizedSearch = removeVietnameseTones(searchText).toLowerCase();
+    const filteredProducts = useMemo(() => {
+        const keyword = removeVietnameseTones(searchText).toLowerCase();
 
-        const matchesSearch = normalizedName.includes(normalizedSearch);
+        return products.filter(p => {
+            const nameMatch = removeVietnameseTones(p.name)
+                .toLowerCase()
+                .includes(keyword);
 
-        const matchesCategory =
-            categoryFilter === "all" ||
-            removeVietnameseTones(item.category_name).toLowerCase() ===
-            removeVietnameseTones(categoryFilter).toLowerCase();
+            const categoryMatch =
+                categoryFilter === "all" ||
+                removeVietnameseTones(p.category_name)
+                    .toLowerCase() ===
+                removeVietnameseTones(categoryFilter).toLowerCase();
 
-        return matchesSearch && matchesCategory;
-    });
+            return nameMatch && categoryMatch;
+        });
+    }, [products, searchText, categoryFilter]);
 
-    const categories = ['all', ...Array.from(new Set(data.map(item => item.category_name).filter(Boolean)))];
+
+    const categoryForHeader = ['all', ...Array.from(new Set(products.map(item => item.category_name).filter(Boolean)))];
 
     // ===== TABLE COLUMNS =====
     const productColumns = [
@@ -216,7 +233,6 @@ const ProductManager = () => {
                 );
             }
         },
-
 
         {
             title: 'Danh mục',
@@ -288,12 +304,6 @@ const ProductManager = () => {
             fixed: 'right',
             render: (_, record) => {
 
-                const status = record.status
-                    ?.toString()
-                    .trim()
-                    .normalize("NFC")
-                    .toLowerCase();
-
                 return (
                     <div className="flex gap-2">
                         <Button
@@ -326,10 +336,81 @@ const ProductManager = () => {
         },
 
     ];
+    const productDetailColumns = [
+        {
+            title: "SKU",
+            dataIndex: "sku",
+            key: "sku",
+            render: (text) => (
+                <span className="font-mono text-sm">{text}</span>
+            ),
+        },
+        {
+            title: "Màu sắc",
+            dataIndex: "color",
+            key: "color",
+            render: (color) => (
+                <Tag color="cyan">{color}</Tag>
+            ),
+        },
+        {
+            title: "Kích thước",
+            dataIndex: "size",
+            key: "size",
+            render: (size) => (
+                <Tag color="geekblue">{size}</Tag>
+            ),
+        },
+        {
+            title: "Tồn kho",
+            dataIndex: "stock",
+            key: "stock",
+            render: (stock) => (
+                <Tag
+                    color={
+                        stock > 10
+                            ? "green"
+                            : stock > 0
+                                ? "orange"
+                                : "red"
+                    }
+                >
+                    {stock} sản phẩm
+                </Tag>
+            ),
+        },
+        {
+            title: "Hình ảnh / Video",
+            dataIndex: "images",
+            key: "images",
+            render: (images = []) => (
+                <div className="flex gap-2">
+                    {images.map((url, idx) => {
+                        const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
 
+                        return isVideo ? (
+                            <video
+                                src={url}
+                                controls
+                                className="w-[80px] h-[80px] object-cover rounded-lg border"
+                            />
 
+                        ) : (
+                            <Image
+                                key={idx}
+                                src={url}
+                                width={80}
+                                height={80}
+                                className="rounded-lg object-cover"
+                                preview
+                            />
+                        );
+                    })}
+                </div>
+            ),
+        },
 
-
+    ]
 
     // ===== HÀM MỞ MODAL CHI TIẾT SẢN PHẨM =====
     const openDetailModal = (product) => {
@@ -342,107 +423,82 @@ const ProductManager = () => {
         setIsDetailModalOpen(true);
     };
 
-
     // ===== HÀM MỞ MODAL THÊM SẢN PHẨM =====
     const openAddModal = () => {
-        setSelectedProduct(null);          // ✅ reset trạng thái
-        setThumbnailPreview(null);         // ✅ reset preview
-        setVariantPreviews({});            // ✅ reset variant images
-
+        setSelectedProduct(null);
+        setThumbnailPreview(null);
         addForm.resetFields();
-
         setCategoryLevel1(null);
         setCategoryLevel2(null);
         setCategoryLevel3(null);
-
         setIsAddModalVisible(true);
     };
 
-
-    // ===== HÀM MỞ MODAL SỬA SẢN PHẨM =====
+    // ===== MỞ MODAL SỬA SẢN PHẨM =====
     const openEditModal = (product) => {
-        console.log(product);
         if (!product) return;
+        console.log(product)
 
-        // 1️⃣ Group biến thể theo màu
-        const variantsByColor = {};
-        (product.product_variants || []).forEach(v => {
-            if (!variantsByColor[v.color]) variantsByColor[v.color] = [];
-            variantsByColor[v.color].push({ size: v.size, stock: Number(v.stock) });
-        });
-        console.log(variantsByColor)
+        // ===== GROUP VARIANTS THEO MÀU =====
+        const variantsByColor = (product.product_variants || []).reduce(
+            (acc, { color, size, stock }) => {
+                if (!acc[color]) acc[color] = { sizes: [], stocks: {} };
+                acc[color].sizes.push(size);
+                acc[color].stocks[size] = Number(stock) || 0;
+                return acc;
+            },
+            {}
+        );
 
-        // 2️⃣ Map vào Form.List structure
+        // ===== BUILD DATA CHO FORM =====
         const variantsWithPreview = Object.entries(variantsByColor).map(
-            ([color, items], index) => {
-                const media =
+            ([color, data], index) => {
+                const colorImages =
                     product.colors?.find(c => c.color === color)?.images || [];
 
                 return {
                     color,
-                    images: media.map((url, i) => {
-                        const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
-
+                    sizes: data.sizes,
+                    stocks: data.stocks,
+                    images: colorImages.map((url, i) => {
+                        const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
                         return {
-                            uid: `-variant-${index}-${i}`,
-                            name: url.split('/').pop(),
-                            status: 'done',
+                            uid: `variant-${index}-${i}`,
+                            name: url.split("/").pop(),
+                            status: "done",
                             url,
-                            type: isVideo ? 'video/mp4' : 'image/jpeg',
+                            type: isVideo ? "video/mp4" : "image/jpeg",
                         };
                     }),
-                    items,
                 };
             }
         );
 
-
-        console.log(variantsWithPreview);
-
-        // 3️⃣ Set preview ảnh cho từng màu
-        const variantPreviewsObj = {};
-        (product.colors || []).forEach(c => {
-            const index = variantsWithPreview.findIndex(v => v.color === c.color);
-            if (index !== -1) {
-                variantPreviewsObj[index] = (c.images || []).map((url, i) => ({
-
-                    uid: `-variant-${index}-${i}`,
-                    name: url.split('/').pop(),
-                    status: 'done',
-                    url,
-                    originFileObj: null, // file cũ không có originFileObj
-                }));
-            }
-        });
-        console.log(variantPreviewsObj)
-        setVariantPreviews(variantPreviewsObj);
-
-        // 4️⃣ Set thumbnail preview
-        let thumbnailFileList = [];
-        if (product.thumbnail) {
-            thumbnailFileList = [{
-                uid: '-1',
-                name: product.thumbnail.split('/').pop(),
-                status: 'done',
+        // ===== THUMBNAIL =====
+        const thumbnailFileList = product.thumbnail
+            ? [{
+                uid: "thumbnail-1",
+                name: product.thumbnail.split("/").pop(),
+                status: "done",
                 url: product.thumbnail,
-                originFileObj: null,
-            }];
+            }]
+            : [];
+
+        if (product.thumbnail) {
             setThumbnailPreview(product.thumbnail);
         }
 
-        console.log(thumbnailFileList);
+        // ===== CATEGORY =====
+        const { level1, level2, level3 } = findCategoryParents(
+            categories,
+            product.category_id
+        );
 
-        console.log(variantsWithPreview)
-
-
-
-        // 5️⃣ Set category levels
-        const { level1, level2, level3 } = findCategoryParents(categoriesForModal, product.category_id);
         setCategoryLevel1(level1);
         setCategoryLevel2(level2);
         setCategoryLevel3(level3);
 
-        // 6️⃣ Set Form values
+        // ===== SET FORM =====
         addForm.setFieldsValue({
             name: product.name,
             description: product.description,
@@ -456,13 +512,10 @@ const ProductManager = () => {
             thumbnail: thumbnailFileList,
         });
 
-        // 7️⃣ Set selectedProduct
         setSelectedProduct(product);
-
-        // 8️⃣ Mở modal
         setIsAddModalVisible(true);
     };
-    console.log(thumbnailPreview);
+
 
 
 
@@ -482,119 +535,166 @@ const ProductManager = () => {
 
     // ===== XỬ LÝ THÊM SỬA SẢN PHẨM  =====
     const handleSubmitProductForm = async (values) => {
-
         console.log(values)
-        setSubmitLoading(true);   // <-- bật loading
+        setSubmitLoading(true);
+        const oldColors = selectedProduct
+            ? selectedProduct.colors?.map(c => c.color)
+            : [];
 
-        const formData = new FormData();
-        formData.append("name", values.name);
-        formData.append("description", values.description || "");
-        formData.append("price", Number(values.price));
-        formData.append("discount", Number(values.discount || 0));
+        const oldVariantMap = {};
 
-
-        const finalCategoryId = values.category_level_3 || values.category_level_2 || values.category_level_1;
-        formData.append("category_id", finalCategoryId);
-
-        // Thumbnail
-        // ===== Thumbnail =====
-        if (values.thumbnail && values.thumbnail.length > 0) {
-            const file = values.thumbnail[0];
-            if (file.originFileObj) {
-                formData.append("thumbnail", file.originFileObj); // file mới
-            } else if (file.url) {
-                formData.append("thumbnail_url", file.url); // file cũ
-            }
+        if (selectedProduct?.product_variants?.length) {
+            selectedProduct.product_variants.forEach(v => {
+                const key = `${v.color}_${v.size}`;
+                oldVariantMap[key] = true;
+            });
         }
 
-        // specs
-        if (values.spec?.length) formData.append("spec", JSON.stringify(values.spec));
 
+        try {
+            // ================= UPDATE INFO =================
+            const formData = new FormData();
+            formData.append("name", values.name);
+            formData.append("description", values.description || "");
+            formData.append("price", Number(values.price));
+            formData.append("discount", Number(values.discount || 0));
 
-        const oldColors = selectedProduct
-            ? selectedProduct.colors?.map(c => c.color) || []
-            : [];
-        const productVariantsArray = [];
+            const finalCategoryId =
+                values.category_level_3 ||
+                values.category_level_2 ||
+                values.category_level_1;
+            formData.append("category_id", finalCategoryId);
 
+            // thumbnail
+            if (values.thumbnail?.length) {
+                const file = values.thumbnail[0];
+                if (file.originFileObj) formData.append("thumbnail", file.originFileObj);
+                else if (file.url) formData.append("thumbnail_url", file.url);
+            }
 
-        // ===== VARIANTS =====
-        if (values.variants?.length) {
+            if (values.spec?.length) {
+                formData.append("spec", JSON.stringify(values.spec));
+            }
 
-            values.variants.forEach(variant => {
-                const color = variant.color;
+            const updateVariants = [];
+            const newColorVariants = [];
 
-                (variant.items || []).forEach(item => {
-                    productVariantsArray.push({
-                        color,
-                        size: item.size,
-                        stock: Number(item.stock || 0)
+            // ================= PHÂN LOẠI VARIANT =================
+            for (const variant of values.variants || []) {
+                const { color, sizes = [], stocks = {}, images = [] } = variant;
+
+                const isNewColor = !oldColors.includes(color);
+
+                if (isNewColor) {
+                    // gom màu mới để gọi ThemBienThe
+                    sizes.forEach(size => {
+                        newColorVariants.push({
+                            color,
+                            size,
+                            stock: Number(stocks[size] || 0),
+                        });
                     });
-                });
+                } else {
+                    // màu cũ
+                    for (const size of sizes) {
+                        updateVariants.push({
+                            color,
+                            size,
+                            stock: Number(stocks[size] || 0),
+                        });
 
-                const encodedColor = encodeURIComponent(
-                    color.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                );
-
-                const keepOldImages = [];
-                const newImages = [];
-
-                (variant.images || []).forEach(file => {
-                    if (file.originFileObj) {
-                        newImages.push(file.originFileObj);
-                    } else if (file.url) {
-                        keepOldImages.push(file.url);
+                        const key = `${color}_${size}`;
+                        if (!oldVariantMap[key]) {
+                            // size mới → gọi ThemSize
+                            await productService.addSizeToVariant(
+                                selectedProduct.product_id,
+                                color,
+                                { size, stock: Number(stocks[size] || 0) }
+                            );
+                        }
                     }
-                });
+                }
 
-                // ✅ CHỈ GỬI keep_images NẾU LÀ MÀU CŨ
-                if (oldColors.includes(color)) {
+                // xử lý images cho màu cũ
+                if (!isNewColor) {
+                    const encodedColor = encodeURIComponent(
+                        color.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                    );
+
+                    const keepOldImages = [];
+                    const newImages = [];
+
+                    images.forEach(file => {
+                        if (file.originFileObj) newImages.push(file.originFileObj);
+                        else if (file.url) keepOldImages.push(file.url);
+                    });
+
                     formData.append(
                         `keep_images[${encodedColor}]`,
                         JSON.stringify(keepOldImages)
                     );
+
+                    newImages.forEach(file => {
+                        formData.append(`images[${encodedColor}][]`, file);
+                    });
                 }
-
-                // luôn append ảnh mới
-                newImages.forEach(file => {
-                    formData.append(`images[${encodedColor}][]`, file);
-                });
-            });
-            formData.append(
-                "product_variants",
-                JSON.stringify(productVariantsArray)
-            );
-        }
-
-
-
-
-        try {
-            if (selectedProduct) {
-                await productService.updateInfo(selectedProduct.product_id, formData);
-                showNotification("Cập nhật sản phẩm thành công", "success");
-            } else {
-                await productService.add(formData);
-                showNotification("Thêm sản phẩm thành công", "success");
             }
 
+            // update variant cũ
+            formData.append("product_variants", JSON.stringify(updateVariants));
+
+            await productService.updateInfo(
+                selectedProduct.product_id,
+                formData
+            );
+
+            // ================= THÊM MÀU MỚI =================
+            if (newColorVariants.length > 0) {
+                const variantFormData = new FormData();
+                variantFormData.append(
+                    "variants",
+                    JSON.stringify(newColorVariants)
+                );
+
+                values.variants.forEach(v => {
+                    if (!oldColors.includes(v.color)) {
+                        const encodedColor = encodeURIComponent(v.color);
+                        v.images?.forEach(file => {
+                            if (file.originFileObj) {
+                                variantFormData.append(
+                                    `images[${encodedColor}][]`,
+                                    file.originFileObj
+                                );
+                            }
+                        });
+                    }
+                });
+
+                await productService.addProductVariant(
+                    selectedProduct.product_id,
+                    variantFormData
+                );
+            }
+
+            showNotification("Cập nhật sản phẩm thành công", "success");
             setIsAddModalVisible(false);
             fetchProducts();
 
         } catch (err) {
             console.error(err);
-            showNotification(err?.response?.data?.message || "Có lỗi xảy ra", "error");
-
+            showNotification(
+                err?.response?.data?.message || "Có lỗi xảy ra",
+                "error"
+            );
         } finally {
-            setSubmitLoading(false);  // <-- tắt loading
+            setSubmitLoading(false);
         }
     };
-
 
 
     // ===== XỬ LÝ THAY ĐỔI TRẠNG THÁI =====
     const handleUpdateStatus = async () => {
         if (!selectedProductForStatus) return;
-
         try {
             const res = await productService.updateStatus(selectedProductForStatus.product_id);
             showNotification(res.data.message, "success");
@@ -610,16 +710,19 @@ const ProductManager = () => {
     const handleDeleteProduct = async () => {
         if (!selectedProduct) return;
         try {
+            setDeleteLoading(true); // bật loading
             await productService.del(selectedProduct.product_id);
             showNotification("Xóa sản phẩm thành công", "success");
             fetchProducts(); // tải lại danh sách
         } catch (error) {
             console.error(error);
-            showNotification(error.response.data.message, "error");
+            showNotification(error.response?.data?.message || "Xóa thất bại", "error");
         } finally {
             setIsDeleteModalOpen(false);
+            setDeleteLoading(false); // tắt loading
         }
     };
+
 
 
     // ===== MODAL CHI TIẾT SẢN PHẨM =====
@@ -731,70 +834,7 @@ const ProductManager = () => {
                             rowKey="product_variant_id"
                             pagination={false}
                             size="small"
-                            columns={[
-                                {
-                                    title: "SKU",
-                                    dataIndex: "sku",
-                                    key: "sku",
-                                    render: (text) => (
-                                        <span className="font-mono text-sm">{text}</span>
-                                    ),
-                                },
-                                {
-                                    title: "Màu sắc",
-                                    dataIndex: "color",
-                                    key: "color",
-                                    render: (color) => (
-                                        <Tag color="cyan">{color}</Tag>
-                                    ),
-                                },
-                                {
-                                    title: "Kích thước",
-                                    dataIndex: "size",
-                                    key: "size",
-                                    render: (size) => (
-                                        <Tag color="geekblue">{size}</Tag>
-                                    ),
-                                },
-                                {
-                                    title: "Tồn kho",
-                                    dataIndex: "stock",
-                                    key: "stock",
-                                    render: (stock) => (
-                                        <Tag
-                                            color={
-                                                stock > 10
-                                                    ? "green"
-                                                    : stock > 0
-                                                        ? "orange"
-                                                        : "red"
-                                            }
-                                        >
-                                            {stock} sản phẩm
-                                        </Tag>
-                                    ),
-                                },
-                                {
-                                    title: "Hình ảnh",
-                                    dataIndex: "images",
-                                    key: "images",
-                                    render: (images = []) => (
-                                        <Image.PreviewGroup>
-                                            <div className="flex gap-2">
-                                                {images.slice(0, 3).map((img, idx) => (
-                                                    <Image
-                                                        key={idx}
-                                                        src={img}
-                                                        width={50}
-                                                        height={50}
-                                                        className="rounded object-cover"
-                                                    />
-                                                ))}
-                                            </div>
-                                        </Image.PreviewGroup>
-                                    ),
-                                },
-                            ]}
+                            columns={productDetailColumns}
                         />
                     </Card>
 
@@ -819,7 +859,7 @@ const ProductManager = () => {
             onCancel={() => setIsAddModalVisible(false)}
             afterClose={() => {
                 setThumbnailPreview(null);
-                setVariantPreviews({});
+
                 addForm.resetFields();
                 setCategoryLevel1(null);
                 setCategoryLevel2(null);
@@ -857,21 +897,31 @@ const ProductManager = () => {
                                 value={categoryLevel1}
                                 onChange={(val) => {
                                     setCategoryLevel1(val);
-                                    console.log(categoryLevel1)
                                     setCategoryLevel2(null);
                                     setCategoryLevel3(null);
+
                                     addForm.setFieldsValue({
                                         category_level_1: val,
                                         category_level_2: null,
-                                        category_level_3: null
+                                        category_level_3: null,
                                     });
+
+                                    // Auto NOSIZE nếu là phụ kiện
+                                    if (val === 3) {
+                                        const variants = addForm.getFieldValue("variants") || [];
+                                        const nextVariants = variants.map(v => ({
+                                            ...v,
+                                            sizes: [null],          // null cho NoSize
+                                            stocks: { null: v?.stocks?.NOSIZE || 0 },
+                                        }));
+                                        addForm.setFieldValue("variants", nextVariants);
+                                    }
                                 }}
-                                options={categoriesForModal.map(c => ({ label: c.name, value: c.category_id }))}
+                                options={categories.map(c => ({ label: c.name, value: c.category_id }))}
                                 allowClear
-                                optionLabelProp="label" // quan trọng
-
+                                optionLabelProp="label"
+                                disabled={!!selectedProduct}   // <-- khóa nếu đang edit
                             />
-
                         </Form.Item>
 
                         {/* Cấp 2 */}
@@ -883,21 +933,18 @@ const ProductManager = () => {
                             <Select
                                 placeholder="Chọn danh mục cấp 2"
                                 value={categoryLevel2}
-                                disabled={!categoryLevel1}
+                                disabled={!categoryLevel1 || !!selectedProduct}  // <-- khóa nếu đang edit
                                 onChange={(val) => {
-                                    console.log(val);
                                     setCategoryLevel2(val);
                                     setCategoryLevel3(null);
                                     addForm.setFieldsValue({
                                         category_level_2: val,
-                                        category_level_3: null
+                                        category_level_3: null,
                                     });
                                 }}
-                                options={getLevel2(categoriesForModal, categoryLevel1).map(c => ({ label: c.name, value: c.category_id }))}
+                                options={getLevel2(categories, categoryLevel1).map(c => ({ label: c.name, value: c.category_id }))}
                                 allowClear
-                                optionLabelProp="label" // ← Thêm dòng này
-
-
+                                optionLabelProp="label"
                             />
                         </Form.Item>
 
@@ -909,16 +956,17 @@ const ProductManager = () => {
                             <Select
                                 placeholder="Chọn danh mục cấp 3"
                                 value={categoryLevel3}
-                                disabled={!categoryLevel2}
+                                disabled={!categoryLevel2 || !!selectedProduct}  // <-- khóa nếu đang edit
                                 onChange={(val) => {
                                     setCategoryLevel3(val);
                                     addForm.setFieldValue("category_level_3", val);
                                 }}
-                                options={getLevel3(categoriesForModal, categoryLevel1, categoryLevel2).map(c => ({ label: c.name, value: c.category_id }))}
+                                options={getLevel3(categories, categoryLevel1, categoryLevel2).map(c => ({ label: c.name, value: c.category_id }))}
                                 allowClear
                                 optionLabelProp="label"
                             />
                         </Form.Item>
+
 
                     </div>
 
@@ -966,10 +1014,6 @@ const ProductManager = () => {
                                     />
                                 )}
                             </div>
-
-
-
-
 
                             <div className="flex flex-col gap-4">
                                 <Descriptions column={1} bordered size="small">
@@ -1073,7 +1117,8 @@ const ProductManager = () => {
                                             title={
                                                 <div className="flex justify-between items-center">
                                                     <span>Màu #{key + 1}</span>
-                                                    <Button danger size="small" onClick={() => remove(name)}>X</Button>
+                                                    {selectedProduct ? "" : <Button danger size="small" onClick={() => remove(name)}>X</Button>}
+
                                                 </div>
                                             }
                                         >
@@ -1114,34 +1159,136 @@ const ProductManager = () => {
 
 
 
-                                            {/* Size + Stock */}
-                                            <Form.List name={[name, "items"]}>
-                                                {(subFields, subOps) => (
-                                                    <>
-                                                        {subFields.map(({ key: k2, name: n2 }) => (
-                                                            <div key={k2} className="flex gap-3 mb-3">
-                                                                <Form.Item name={[n2, "size"]} label="Size" className="flex-1" rules={[{ required: true, message: "Vui lòng chọn size" }]}>
-                                                                    <Select placeholder="Chọn size">
-                                                                        <Select.Option value="XS">XS</Select.Option>
-                                                                        <Select.Option value="S">S</Select.Option>
-                                                                        <Select.Option value="M">M</Select.Option>
-                                                                        <Select.Option value="XL">XL</Select.Option>
-                                                                        <Select.Option value="XXL">XXL</Select.Option>
-                                                                    </Select>
-                                                                </Form.Item>
+                                            {/* ===== SIZE SELECT – UI MỚI ===== */}
+                                            <Form.Item shouldUpdate>
+                                                {() => {
+                                                    const selectedSizes =
+                                                        addForm.getFieldValue(["variants", name, "sizes"]) || [];
 
-                                                                <Form.Item name={[n2, "stock"]} label="Tồn kho" className="w-32">
-                                                                    <InputNumber min={1} />
-                                                                </Form.Item>
-                                                                <Button danger onClick={() => subOps.remove(n2)}>X</Button>
+                                                    const isAccessory = categoryLevel1 === 3;
+
+                                                    const SIZE_OPTIONS = ["S", "M", "L", "XL", "XXL"];
+
+                                                    return (
+                                                        <Form.Item
+                                                            label="Chọn size"
+                                                            name={[name, "sizes"]}
+                                                            rules={[
+                                                                {
+                                                                    validator: (_, value) =>
+                                                                        value?.length
+                                                                            ? Promise.resolve()
+                                                                            : Promise.reject("Chọn ít nhất 1 size"),
+                                                                },
+                                                            ]}
+                                                        >
+                                                            <div className="flex flex-wrap gap-3">
+
+                                                                {/* ===== NOSIZE ===== */}
+                                                                <Button
+                                                                    type="default"
+                                                                    disabled={!isAccessory}
+                                                                    onClick={() => {
+                                                                        addForm.setFieldValue(
+                                                                            ["variants", name, "sizes"],
+                                                                            [null]  // <-- thay "NOSIZE" bằng null
+                                                                        );
+                                                                        addForm.setFieldValue(
+                                                                            ["variants", name, "stocks"],
+                                                                            { null: 0 } // tồn kho duy nhất
+                                                                        );
+                                                                    }}
+                                                                    className={`min-w-[72px] rounded-full font-medium transition-all
+                                                                            ${selectedSizes.includes(null)
+                                                                            ? "bg-purple-600 text-white border-purple-600"
+                                                                            : "bg-white text-gray-700 border-gray-300"
+                                                                        }`}
+                                                                >
+                                                                    No size
+                                                                </Button>
+
+
+                                                                {/* ===== SIZE THƯỜNG ===== */}
+                                                                {SIZE_OPTIONS.map(size => {
+                                                                    const active = selectedSizes.includes(size);
+
+                                                                    return (
+                                                                        <Button
+                                                                            key={size}
+                                                                            disabled={isAccessory}
+                                                                            onClick={() => {
+                                                                                const nextSizes = active
+                                                                                    ? selectedSizes.filter(s => s !== size)
+                                                                                    : [...selectedSizes.filter(s => s !== "NOSIZE"), size];
+
+                                                                                addForm.setFieldValue(
+                                                                                    ["variants", name, "sizes"],
+                                                                                    nextSizes
+                                                                                );
+
+                                                                                if (active) {
+                                                                                    const stocks =
+                                                                                        addForm.getFieldValue(["variants", name, "stocks"]) || {};
+                                                                                    delete stocks[size];
+                                                                                    addForm.setFieldValue(
+                                                                                        ["variants", name, "stocks"],
+                                                                                        { ...stocks }
+                                                                                    );
+                                                                                }
+                                                                            }}
+                                                                            className={`
+                                    min-w-[48px]
+                                    rounded-full
+                                    font-medium
+                                    transition-all
+                                    ${active
+                                                                                    ? "bg-blue-600 text-white border-blue-600"
+                                                                                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+                                                                                }
+                                `}
+                                                                        >
+                                                                            {size}
+                                                                        </Button>
+                                                                    );
+                                                                })}
                                                             </div>
-                                                        ))}
-                                                        <Button type="dashed" onClick={() => subOps.add()} block>
-                                                            + Thêm size
-                                                        </Button>
-                                                    </>
-                                                )}
-                                            </Form.List>
+
+                                                            {isAccessory && (
+                                                                <p className="text-sm text-gray-500 mt-2">
+                                                                    ⚠️ Danh mục phụ kiện không sử dụng size
+                                                                </p>
+                                                            )}
+                                                        </Form.Item>
+                                                    );
+                                                }}
+                                            </Form.Item>
+
+
+                                            {/* ===== STOCK INPUT ===== */}
+                                            <Form.Item shouldUpdate>
+                                                {() => {
+                                                    const sizes =
+                                                        addForm.getFieldValue(["variants", name, "sizes"]) || [];
+
+                                                    return (
+                                                        <div className="grid grid-cols-3 gap-3">
+                                                            {sizes.map(size => (
+                                                                <Form.Item
+                                                                    key={size}
+                                                                    label={`Tồn kho size ${size != null ? size : "No size"}`}
+                                                                    name={[name, "stocks", size]}
+                                                                    rules={[
+                                                                        { required: true, message: "Nhập tồn kho" },
+                                                                    ]}
+                                                                >
+                                                                    <InputNumber min={0} className="w-full" />
+                                                                </Form.Item>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                }}
+                                            </Form.Item>
+
                                         </Card>
                                     ))}
                                     <Button type="primary" onClick={() => add()} block>
@@ -1150,9 +1297,6 @@ const ProductManager = () => {
                                 </>
                             )}
                         </Form.List>
-
-
-
 
                     </Card>
 
@@ -1224,7 +1368,8 @@ const ProductManager = () => {
             centered
             okButtonProps={{
                 className:
-                    "bg-black text-white hover:!bg-white rounded-lg px-5 py-2 font-medium hover:!text-black border-black border-2"
+                    "bg-black text-white hover:!bg-white rounded-lg px-5 py-2 font-medium hover:!text-black border-black border-2",
+                loading: deleteLoading, // <-- thêm đây
             }}
             cancelButtonProps={{
                 className:
@@ -1236,6 +1381,7 @@ const ProductManager = () => {
                 <b> {selectedProduct?.name}</b> không?
             </p>
         </Modal>
+
     );
 
     // ========== RENDER HEADER ==========
@@ -1245,7 +1391,7 @@ const ProductManager = () => {
             setSearchText={setSearchText}
             categoryFilter={categoryFilter}
             setCategoryFilter={setCategoryFilter}
-            categories={categories}
+            categories={categoryForHeader}
             onAddItem={openAddModal}
             itemName={"sản phẩm"}
             addItemOn={true}
@@ -1256,26 +1402,22 @@ const ProductManager = () => {
     const renderTable = () => (
         <DataTable
             columns={productColumns}
-            dataSource={filteredData}
+            dataSource={filteredProducts}
             loading={loading}
             totalText="sản phẩm"
         />
     );
-
-    const log = () => {
-        console.log(selectedProduct);
-    }
-
-
 
 
     return (
         <div className="bg-white rounded-lg shadow-sm">
             {renderHeader()}
             {renderTable()}
+
+
             {renderDetailProductModal()}
-            {/* {renderEditModal()} */}
             {renderAddEditModal()}
+
             {renderStatusModal()}
             {renderDeleteModal()}
 
