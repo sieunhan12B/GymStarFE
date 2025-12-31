@@ -28,6 +28,8 @@ import ReviewManager from "../pages/admin/ReviewManager/ReviewManager";
 import FeedbackManager from "../pages/admin/FeedbackManager/FeedbackManager";
 import PaymentManager from "../pages/admin/PaymentManager/PaymentManager";
 import RoleManager from "../pages/admin/RoleManager/RoleManager";
+import PromotionManager from "../pages/admin/PromotionManager/PromotionManager";
+
 
 
 // ------------------ USER ------------------
@@ -136,13 +138,9 @@ export const AppRouter = [
                     {
                         path: path.reviewFeedback,
                         element: <ReviewsFeedback />
-                    }
-
+                    },
                 ]
             },
-
-
-
         ],
     },
 
@@ -242,11 +240,15 @@ export const AppRouter = [
                         <RoleManager />
                     </ProtectedRoute>
                 ),
-            }
-
-
-
-
+            },
+            {
+                path: path.promotionManager,
+                element: (
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.PRODUCT_MANAGER]}>
+                        <PromotionManager />
+                    </ProtectedRoute>
+                ),
+            },
         ],
     },
 
