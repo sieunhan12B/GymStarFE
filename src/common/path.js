@@ -44,5 +44,6 @@ export const path = {
   reviewManager: "quan-ly-danh-gia",
   paymentManager:"quan-ly-thanh-toan",
   roleManager:"quan-ly-loai-nguoi-dung",
+  promotionManager:"quan-ly-khuyen-mai",
 
 };
