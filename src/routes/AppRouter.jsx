@@ -46,6 +46,7 @@ import OrderHistory from "../pages/user/OrderHistory/OrderHistory";
 import AddressBook from "../pages/user/AddressBook/AddressBook";
 import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
 import Checkout from "../pages/user/Checkout/Checkout";
+import Voucher from "../pages/user/Voucher/Voucher";
 
 
 
@@ -130,6 +131,10 @@ export const AppRouter = [
                     {
                         path: path.orderHistory,
                         element: <OrderHistory />,
+                    },
+                    {
+                        path: path.voucher,
+                        element: <Voucher />,
                     },
                     {
                         path: path.addressBook,

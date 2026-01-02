@@ -39,9 +39,13 @@ const PromotionManager = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editLoading, setEditLoading] = useState(false);
     const [editForm] = Form.useForm();
+    const discountType = Form.useWatch("discount_type", form);
+
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
+
+
 
 
 
@@ -109,6 +113,13 @@ const PromotionManager = () => {
     useEffect(() => {
         fetchPromotions();
     }, []);
+
+    useEffect(() => {
+        if (discountType !== "percent") {
+            form.setFieldValue("max_discount", undefined);
+        }
+    }, [discountType]);
+
 
     /* ===== FILTER PROMOTIONS ===== */
     const filteredPromotions = useMemo(() => {
@@ -495,10 +506,24 @@ const PromotionManager = () => {
                         <Form.Item
                             label="Giảm tối đa"
                             name="max_discount"
-                            extra="Chỉ áp dụng cho giảm theo %"
+                            extra={
+                                discountType === "percent"
+                                    ? "Áp dụng cho giảm theo %"
+                                    : "Không áp dụng cho giảm cố định"
+                            }
                         >
-                            <InputNumber className="w-full" min={0} />
+                            <InputNumber
+                                className="w-full"
+                                min={0}
+                                disabled={discountType !== "percent"}
+                                placeholder={
+                                    discountType !== "percent"
+                                        ? "Chỉ dùng cho giảm theo %"
+                                        : undefined
+                                }
+                            />
                         </Form.Item>
+
 
                         <Form.Item
                             label="Đơn hàng tối thiểu"
@@ -540,6 +565,10 @@ const PromotionManager = () => {
     };
 
     const renderEditModalPromotion = () => {
+        if (!selectedPromotion) return null;
+
+        const isPercent = selectedPromotion.discount_type === "percent";
+
         return (
             <Modal
                 title="Cập nhật khuyến mãi"
@@ -548,19 +577,22 @@ const PromotionManager = () => {
                 onOk={() => editForm.submit()}
                 confirmLoading={editLoading}
                 okText="Cập nhật"
-                width={600}
+                width={720}
+                centered
             >
                 <Form
                     form={editForm}
                     layout="vertical"
                     onFinish={handleUpdatePromotion}
                 >
+                    {/* ================= THÔNG TIN CƠ BẢN ================= */}
+                    <Divider orientation="left">Thông tin cơ bản</Divider>
+
                     <Form.Item
                         label="Mã khuyến mãi"
                         name="code"
-                        rules={[{ required: true }]}
                     >
-                        <Input />
+                        <Input readOnly className="bg-gray-50" />
                     </Form.Item>
 
                     <Form.Item
@@ -570,6 +602,54 @@ const PromotionManager = () => {
                     >
                         <Input.TextArea rows={2} />
                     </Form.Item>
+
+                    {/* ================= CẤU HÌNH GIẢM GIÁ (READONLY) ================= */}
+                    <Divider orientation="left">Cấu hình giảm giá</Divider>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Form.Item label="Loại giảm">
+                            <Input
+                                readOnly
+                                className="bg-gray-50"
+                                value={isPercent ? "Phần trăm (%)" : "Cố định (VNĐ)"}
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Giá trị giảm">
+                            <Input
+                                readOnly
+                                className="bg-gray-50"
+                                value={
+                                    isPercent
+                                        ? `${selectedPromotion.value}%`
+                                        : `${Number(selectedPromotion.value).toLocaleString()}đ`
+                                }
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Giảm tối đa">
+                            <Input
+                                readOnly
+                                className="bg-gray-50"
+                                value={
+                                    selectedPromotion.max_discount
+                                        ? `${Number(selectedPromotion.max_discount).toLocaleString()}đ`
+                                        : "—"
+                                }
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Đơn hàng tối thiểu">
+                            <Input
+                                readOnly
+                                className="bg-gray-50"
+                                value={`${Number(selectedPromotion.min_order_value).toLocaleString()}đ`}
+                            />
+                        </Form.Item>
+                    </div>
+
+                    {/* ================= THỜI GIAN & GIỚI HẠN ================= */}
+                    <Divider orientation="left">Thời gian & giới hạn</Divider>
 
                     <Form.Item
                         label="Thời gian áp dụng"
@@ -590,15 +670,17 @@ const PromotionManager = () => {
                         <InputNumber min={1} max={30} className="w-full" />
                     </Form.Item>
 
+                    {/* ================= NOTICE ================= */}
                     <Divider />
 
-                    {/* INFO READONLY */}
-                    <Tag color="blue">Không thể chỉnh loại giảm & giá trị</Tag>
+                    <Tag color="blue">
+                        Các thông tin về loại giảm và giá trị không thể chỉnh sửa sau khi tạo
+                    </Tag>
                 </Form>
             </Modal>
-
         );
     };
+
 
     /* ===== RENDER ===== */
     return (

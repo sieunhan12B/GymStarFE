@@ -47,27 +47,34 @@ const ManagerAccount = () => {
     },
     {
       key: '3',
+      icon: <GiftOutlined />,
+      label: 'Voucher của tôi',
+      path: path.voucher,
+    },
+
+    {
+      key: '4',
       icon: <FileTextOutlined />,
       label: 'Số địa chỉ',
       path: path.addressBook,
 
     },
     {
-      key: '4',
+      key: '5',
       icon: <HeartOutlined />,
       label: 'Đánh giá, góp ý và phản hồi',
       path: path.reviewFeedback,
 
     },
     {
-      key: '5',
+      key: '6',
       icon: <HistoryOutlined />,
       label: 'Chính sách & Câu hỏi thường gặp',
       path: "/chi",
 
     },
     {
-      key: '6',
+      key: '7',
       icon: <SettingOutlined />,
       label: 'Đăng xuất',
       path: path.account,

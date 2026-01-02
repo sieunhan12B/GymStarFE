@@ -50,6 +50,22 @@ export const promotionService = {
     },
 
 
+    // ------------------ USER ------------------
+
+    // Lấy danh sách voucher của user
+    getUserPromotions: async () => {
+        try {
+            return await http.get(
+                `/QuanLyKhuyenMai/LayDanhSachKhuyenMaiUser`
+            );
+        } catch (error) {
+            console.error("Lỗi lấy voucher user:", error);
+            throw error;
+        }
+    },
+
+
+
 
 
 

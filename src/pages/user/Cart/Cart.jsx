@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
+import { DeleteOutlined, GiftOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Checkbox, Button, Tooltip } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { cartService } from '@/services/cart.service';
@@ -19,6 +19,17 @@ const Cart = () => {
     const [selectedCartItems, setSelectedCartItems] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const debouncedCartItems = useDebounce(cartItems, 500);
+
+
+
+    // ------------------- State và biến khởi tạo -------------------
+
+    const [selectedVoucher, setSelectedVoucher] = useState(null); // voucher đang được áp dụng
+    const [availableVoucherCount, setAvailableVoucherCount] = useState(0); // số voucher khả dụng
+    const [discountAmount, setDiscountAmount] = useState(0); // số tiền giảm theo voucher
+    const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false); // trạng thái mở modal chọn voucher
+
+
 
     // Load cart từ redux
     useEffect(() => {
@@ -265,57 +276,88 @@ const Cart = () => {
                     {/* Footer cố định */}
                     <div
                         style={{ boxShadow: "0 -4px 6px -4px rgba(0,0,0,0.1)" }} // chỉ phía trên
+                        className=" sticky bottom-0  w-full bg-white sha  border-t py-8">
 
-                        className="sticky bottom-0  w-full bg-white sha  border-t py-8 flex justify-between items-center  ">
-                        {/* Chọn tất cả / Xóa tất cả */}
-                        <div className="flex items-center gap-4">
-                            <Checkbox
-                                checked={selectedCartItems.length === cartItems.length && cartItems.length > 0}
-                                indeterminate={selectedCartItems.length > 0 && selectedCartItems.length < cartItems.length}
-                                onChange={e => {
-                                    if (e.target.checked) {
-                                        setSelectedCartItems(cartItems.map(item => item.cart_detail_id));
-                                    } else {
-                                        setSelectedCartItems([]);
-                                    }
-                                }}
-                            >
-                                Chọn tất cả
-                            </Checkbox>
-                            <button
-                                className="text-red-600 text-sm font-medium hover:underline"
-                                onClick={handleDeleteSelectedItems}
-                                disabled={selectedCartItems.length === 0}
-                            >
-                                Xóa tất cả
-                            </button>
 
+                        {/* Voucher block */}
+                        <div
+                            onClick={() => selectedCartItems.length > 0 && setIsVoucherModalOpen(true)}
+                            className={`
+        flex items-center gap-3 px-4 py-2 rounded-lg border cursor-pointer transition-all
+        ${selectedCartItems.length === 0
+                                    ? "border-gray-200 bg-gray-100 cursor-not-allowed opacity-60"
+                                    : "border-blue-500 bg-blue-50 hover:bg-blue-100"}
+      `}
+                        >
+                            <GiftOutlined className="text-blue-600 text-xl" />
+                            <div className="flex flex-col">
+                                <span className="font-medium text-sm">
+                                    {selectedVoucher ? `Đã áp dụng: ${selectedVoucher.code}` : "Chọn voucher"}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    {selectedVoucher
+                                        ? `Giảm ${discountAmount.toLocaleString()}đ`
+                                        : `${availableVoucherCount} voucher khả dụng`}
+                                </span>
+                            </div>
                         </div>
 
-                        {/* Tổng số lượng + thành tiền */}
-                        <div className="flex items-center gap-6">
-                            <span className="text-gray-500 text-sm">
-                                Tổng sản phẩm: {selectedCartItems.length} {/* chỉ đếm số item được tick */}
-                            </span>
-                            <span className="text-lg font-bold">
-                                Thành tiền: {cartItems.filter(item => selectedCartItems.includes(item.cart_detail_id))
-                                    .reduce((sum, item) => sum + (item.product_variant?.product?.final_price || 0) * item.quantity, 0)
-                                    .toLocaleString()}đ
-                            </span>
 
-                            {/* Nút Đặt hàng */}
-                            <button
-                                className="bg-black text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-gray-800 flex items-center gap-2"
-                                onClick={handleCheckout}
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting && <LoadingOutlined />}
-                                Mua hàng
-                            </button>
+
+                        <div
+                            className=" flex justify-between items-center  ">
+                            {/* Chọn tất cả / Xóa tất cả */}
+                            <div className="flex items-center gap-4">
+                                <Checkbox
+                                    checked={selectedCartItems.length === cartItems.length && cartItems.length > 0}
+                                    indeterminate={selectedCartItems.length > 0 && selectedCartItems.length < cartItems.length}
+                                    onChange={e => {
+                                        if (e.target.checked) {
+                                            setSelectedCartItems(cartItems.map(item => item.cart_detail_id));
+                                        } else {
+                                            setSelectedCartItems([]);
+                                        }
+                                    }}
+                                >
+                                    Chọn tất cả
+                                </Checkbox>
+                                <button
+                                    className="text-red-600 text-sm font-medium hover:underline"
+                                    onClick={handleDeleteSelectedItems}
+                                    disabled={selectedCartItems.length === 0}
+                                >
+                                    Xóa tất cả
+                                </button>
+
+                            </div>
+
+                            {/* Tổng số lượng + thành tiền */}
+                            <div className="flex items-center gap-6">
+                                <span className="text-gray-500 text-sm">
+                                    Tổng sản phẩm: {selectedCartItems.length} {/* chỉ đếm số item được tick */}
+                                </span>
+                                <span className="text-lg font-bold">
+                                    Thành tiền: {cartItems.filter(item => selectedCartItems.includes(item.cart_detail_id))
+                                        .reduce((sum, item) => sum + (item.product_variant?.product?.final_price || 0) * item.quantity, 0)
+                                        .toLocaleString()}đ
+                                </span>
+
+                                {/* Nút Đặt hàng */}
+                                <button
+                                    className="bg-black text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-gray-800 flex items-center gap-2"
+                                    onClick={handleCheckout}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting && <LoadingOutlined />}
+                                    Mua hàng
+                                </button>
+                            </div>
+
+
                         </div>
-
 
                     </div>
+
 
                 </div>
             )}
