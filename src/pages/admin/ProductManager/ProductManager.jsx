@@ -1,5 +1,5 @@
 // React
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 // UI libraries
 import {
@@ -16,6 +16,7 @@ import {
     Select,
     Typography,
     Upload,
+    Tooltip,
 } from "antd";
 import {
     EyeOutlined,
@@ -64,6 +65,15 @@ const ProductManager = () => {
     // selected
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedProductForStatus, setSelectedProductForStatus] = useState(null);
+    const [deletedVariantIds, setDeletedVariantIds] = useState([]);
+    const deletedColorsRef = useRef(new Set());
+    const oldColorSet = useMemo(() => {
+        if (!selectedProduct?.colors) return new Set();
+        return new Set(selectedProduct.colors.map(c => c.color));
+    }, [selectedProduct]);
+
+
+
 
 
     // modal
@@ -71,6 +81,11 @@ const ProductManager = () => {
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [statusModalOpen, setStatusModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [mediaModal, setMediaModal] = useState({
+        open: false,
+        media: [],
+    });
+
 
 
     // ===== FORM / PREVIEW =====
@@ -161,6 +176,32 @@ const ProductManager = () => {
         return { level1: null, level2: null, level3: null };
     };
 
+    // ===== BUILD MAP SIZE CŨ THEO MÀU =====
+    const buildOldSizeMap = (product) => {
+        const map = {};
+
+        (product?.product_variants || []).forEach(v => {
+            if (!map[v.color]) {
+                map[v.color] = new Set();
+            }
+            map[v.color].add(v.size); // size có thể null
+        });
+
+        return map;
+    };
+
+    // ===== MAP (color + size) -> product_variant_id =====
+    const buildVariantIdMap = (product) => {
+        const map = {};
+        (product?.product_variants || []).forEach(v => {
+            if (!map[v.color]) map[v.color] = {};
+            map[v.color][v.size] = v.product_variant_id;
+        });
+        return map;
+    };
+
+
+
     // ===== FILTERING =====
     const filteredProducts = useMemo(() => {
         const keyword = removeVietnameseTones(searchText).toLowerCase();
@@ -249,25 +290,57 @@ const ProductManager = () => {
         {
             title: 'Giá bán',
             key: 'price',
-            width: 150,
+            width: 160,
             render: (_, record) => {
-                const price = Number(record.price) || 0;
-                const discount = Number(record.discount) || 0;
-                const finalPrice = price * (1 - discount / 100);
+                const variants = record.product_variants || [];
+                if (!variants.length) return <span className="text-gray-400">—</span>;
 
+                const prices = variants
+                    .map(v => Number(v.price))
+                    .filter(p => !isNaN(p));
+
+                if (!prices.length) return <span className="text-gray-400">—</span>;
+
+                const discount = Number(record.discount || 0);
+
+                const finalPrices = prices.map(
+                    p => p * (1 - discount / 100)
+                );
+
+                const min = Math.min(...finalPrices);
+                const max = Math.max(...finalPrices);
+
+                // 1 giá
+                if (min === max) {
+                    return (
+                        <span className="text-green-600 font-bold">
+                            {formatPrice(min)}
+                        </span>
+                    );
+                }
+
+                // khoảng giá bán
                 return (
-                    <span>
-                        {discount > 0 && <span className="line-through text-gray-400 mr-1">{formatPrice(price)}</span>}
-                        <span className="text-green-600 font-bold">{formatPrice(finalPrice)}</span>
+                    <span className="text-green-600 font-bold">
+                        {formatPrice(min)} – {formatPrice(max)}
                     </span>
                 );
             },
             sorter: (a, b) => {
-                const priceA = Number(a.price) * (1 - Number(a.discount) / 100);
-                const priceB = Number(b.price) * (1 - Number(b.discount) / 100);
-                return priceA - priceB;
-            }
+                const getMin = (p) => {
+                    const variants = p.product_variants || [];
+                    const prices = variants.map(v => Number(v.price)).filter(Boolean);
+                    if (!prices.length) return 0;
+
+                    const discount = Number(p.discount || 0);
+                    return Math.min(...prices) * (1 - discount / 100);
+                };
+
+                return getMin(a) - getMin(b);
+            },
         },
+
+
         {
             title: 'Giảm giá',
             dataIndex: 'discount',
@@ -282,6 +355,7 @@ const ProductManager = () => {
             key: 'product_variants',
             width: 120,
             align: 'center',
+            sorter: (a, b) => (a.product_variants?.length || 0) - (b.product_variants?.length || 0),
             render: (product_variants = []) => <Tag color="purple" className="rounded-full">{product_variants.length} biến thể</Tag>,
         },
         {
@@ -303,6 +377,7 @@ const ProductManager = () => {
             width: 220,
             fixed: 'right',
             render: (_, record) => {
+                const canEdit = record.status === "ngưng bán";
 
                 return (
                     <div className="flex gap-2">
@@ -310,18 +385,29 @@ const ProductManager = () => {
                             type="primary"
                             icon={<EyeOutlined />}
                             size="small"
-
                             onClick={() => openDetailModal(record)}
                         />
 
-                        <Button
-                            type="default"
-                            icon={<EditOutlined />}
-                            size="small"
-                            className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                        <Tooltip
+                            title={
+                                canEdit
+                                    ? "Chỉnh sửa sản phẩm"
+                                    : "Vui lòng ngưng bán sản phẩm trước khi chỉnh sửa"
+                            }
+                        >
+                            {/* span để Tooltip hoạt động khi button disabled */}
+                            <span>
+                                <Button
+                                    type="default"
+                                    icon={<EditOutlined />}
+                                    size="small"
+                                    className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                                    disabled={!canEdit}
+                                    onClick={() => openEditModal(record)}
+                                />
+                            </span>
+                        </Tooltip>
 
-                            onClick={() => openEditModal(record)}
-                        />
                         <Button
                             type="primary"
                             danger
@@ -331,10 +417,8 @@ const ProductManager = () => {
                         />
                     </div>
                 );
-
             }
         },
-
     ];
     const productDetailColumns = [
         {
@@ -362,6 +446,29 @@ const ProductManager = () => {
             ),
         },
         {
+            title: "Giá bán",
+            dataIndex: "price",
+            width: 150,
+            key: "price",
+            render: (price, record) => {
+                const discount = Number(selectedProduct?.discount || 0);
+                const finalPrice = price * (1 - discount / 100);
+
+                return (
+                    <div>
+                        {discount > 0 && (
+                            <div className="text-gray-400 line-through text-xs">
+                                {formatPrice(price)}
+                            </div>
+                        )}
+                        <div className="text-green-600 font-bold">
+                            {formatPrice(finalPrice)}
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
             title: "Tồn kho",
             dataIndex: "stock",
             key: "stock",
@@ -383,32 +490,51 @@ const ProductManager = () => {
             title: "Hình ảnh / Video",
             dataIndex: "images",
             key: "images",
-            render: (images = []) => (
-                <div className="flex gap-2">
-                    {images.map((url, idx) => {
-                        const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
+            render: (images = []) => {
+                if (!images.length) return <span className="text-gray-400">—</span>;
 
-                        return isVideo ? (
-                            <video
-                                src={url}
-                                controls
-                                className="w-[80px] h-[80px] object-cover rounded-lg border"
-                            />
+                const maxDisplay = 5;
+                const visibleItems = images.slice(0, maxDisplay);
+                const remaining = images.length - maxDisplay;
 
-                        ) : (
-                            <Image
-                                key={idx}
-                                src={url}
-                                width={80}
-                                height={80}
-                                className="rounded-lg object-cover"
-                                preview
-                            />
-                        );
-                    })}
-                </div>
-            ),
+                return (
+                    <div className="flex items-center gap-2">
+                        {visibleItems.map((url, idx) => {
+                            const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
+                            return isVideo ? (
+                                <video
+                                    key={idx}
+                                    src={url}
+                                    controls
+                                    className="w-[80px] h-[80px] object-cover rounded-lg border cursor-pointer"
+                                    onClick={() => setMediaModal({ open: true, media: images })}
+                                />
+                            ) : (
+                                <img
+                                    key={idx}
+                                    src={url}
+                                    className="w-[80px] h-[80px] object-cover rounded-lg border cursor-pointer"
+                                    onClick={() => setMediaModal({ open: true, media: images })}
+                                />
+                            );
+                        })}
+
+                        {remaining > 0 && (
+                            <div
+                                className="w-[80px] h-[80px] rounded-lg bg-gray-100
+                                   flex items-center justify-center text-sm font-medium
+                                   text-gray-600 border cursor-pointer"
+                                title={`${remaining} media khác`}
+                                onClick={() => setMediaModal({ open: true, media: images })}
+                            >
+                                +{remaining}
+                            </div>
+                        )}
+                    </div>
+                );
+            },
         },
+
 
     ]
 
@@ -441,14 +567,17 @@ const ProductManager = () => {
 
         // ===== GROUP VARIANTS THEO MÀU =====
         const variantsByColor = (product.product_variants || []).reduce(
-            (acc, { color, size, stock }) => {
-                if (!acc[color]) acc[color] = { sizes: [], stocks: {} };
+            (acc, { color, size, stock, price }) => {
+                if (!acc[color]) acc[color] = { sizes: [], stocks: {}, prices: {} };
                 acc[color].sizes.push(size);
                 acc[color].stocks[size] = Number(stock) || 0;
+                acc[color].prices[size] = Number(price) || 0; // <-- thêm dòng này
                 return acc;
             },
             {}
         );
+
+        console.log(variantsByColor)
 
         // ===== BUILD DATA CHO FORM =====
         const variantsWithPreview = Object.entries(variantsByColor).map(
@@ -460,6 +589,7 @@ const ProductManager = () => {
                     color,
                     sizes: data.sizes,
                     stocks: data.stocks,
+                    prices: data.prices,
                     images: colorImages.map((url, i) => {
                         const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
                         return {
@@ -533,162 +663,284 @@ const ProductManager = () => {
 
 
 
-    // ===== XỬ LÝ THÊM SỬA SẢN PHẨM  =====
-    const handleSubmitProductForm = async (values) => {
-        console.log(values)
+    // ===== XỬ LÝ THÊM MỚI SẢN PHẨM =====
+    const handleCreateProduct = async (values) => {
         setSubmitLoading(true);
-        const oldColors = selectedProduct
-            ? selectedProduct.colors?.map(c => c.color)
-            : [];
-
-        const oldVariantMap = {};
-
-        if (selectedProduct?.product_variants?.length) {
-            selectedProduct.product_variants.forEach(v => {
-                const key = `${v.color}_${v.size}`;
-                oldVariantMap[key] = true;
-            });
-        }
-
 
         try {
-            // ================= UPDATE INFO =================
-            const formData = new FormData();
-            formData.append("name", values.name);
-            formData.append("description", values.description || "");
-            formData.append("price", Number(values.price));
-            formData.append("discount", Number(values.discount || 0));
+            // ===== 1. BUILD VARIANTS =====
+            const productVariants = buildVariantsForCreate(values);
 
-            const finalCategoryId =
-                values.category_level_3 ||
-                values.category_level_2 ||
-                values.category_level_1;
-            formData.append("category_id", finalCategoryId);
-
-            // thumbnail
-            if (values.thumbnail?.length) {
-                const file = values.thumbnail[0];
-                if (file.originFileObj) formData.append("thumbnail", file.originFileObj);
-                else if (file.url) formData.append("thumbnail_url", file.url);
-            }
-
-            if (values.spec?.length) {
-                formData.append("spec", JSON.stringify(values.spec));
-            }
-
-            const updateVariants = [];
-            const newColorVariants = [];
-
-            // ================= PHÂN LOẠI VARIANT =================
-            for (const variant of values.variants || []) {
-                const { color, sizes = [], stocks = {}, images = [] } = variant;
-
-                const isNewColor = !oldColors.includes(color);
-
-                if (isNewColor) {
-                    // gom màu mới để gọi ThemBienThe
-                    sizes.forEach(size => {
-                        newColorVariants.push({
-                            color,
-                            size,
-                            stock: Number(stocks[size] || 0),
-                        });
-                    });
-                } else {
-                    // màu cũ
-                    for (const size of sizes) {
-                        updateVariants.push({
-                            color,
-                            size,
-                            stock: Number(stocks[size] || 0),
-                        });
-
-                        const key = `${color}_${size}`;
-                        if (!oldVariantMap[key]) {
-                            // size mới → gọi ThemSize
-                            await productService.addSizeToVariant(
-                                selectedProduct.product_id,
-                                color,
-                                { size, stock: Number(stocks[size] || 0) }
-                            );
-                        }
-                    }
-                }
-
-                // xử lý images cho màu cũ
-                if (!isNewColor) {
-                    const encodedColor = encodeURIComponent(
-                        color.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                    );
-
-                    const keepOldImages = [];
-                    const newImages = [];
-
-                    images.forEach(file => {
-                        if (file.originFileObj) newImages.push(file.originFileObj);
-                        else if (file.url) keepOldImages.push(file.url);
-                    });
-
-                    formData.append(
-                        `keep_images[${encodedColor}]`,
-                        JSON.stringify(keepOldImages)
-                    );
-
-                    newImages.forEach(file => {
-                        formData.append(`images[${encodedColor}][]`, file);
-                    });
-                }
-            }
-
-            // update variant cũ
-            formData.append("product_variants", JSON.stringify(updateVariants));
-
-            await productService.updateInfo(
-                selectedProduct.product_id,
-                formData
-            );
-
-            // ================= THÊM MÀU MỚI =================
-            if (newColorVariants.length > 0) {
-                const variantFormData = new FormData();
-                variantFormData.append(
-                    "variants",
-                    JSON.stringify(newColorVariants)
+            // ===== 2. VALIDATE BIẾN THỂ =====
+            if (!productVariants.length) {
+                showNotification(
+                    "Sản phẩm phải có ít nhất 1 biến thể",
+                    "error"
                 );
-
-                values.variants.forEach(v => {
-                    if (!oldColors.includes(v.color)) {
-                        const encodedColor = encodeURIComponent(v.color);
-                        v.images?.forEach(file => {
-                            if (file.originFileObj) {
-                                variantFormData.append(
-                                    `images[${encodedColor}][]`,
-                                    file.originFileObj
-                                );
-                            }
-                        });
-                    }
-                });
-
-                await productService.addProductVariant(
-                    selectedProduct.product_id,
-                    variantFormData
-                );
+                setSubmitLoading(false);
+                return;
             }
 
-            showNotification("Cập nhật sản phẩm thành công", "success");
+            // ===== 3. BUILD FORM DATA =====
+            const formData = buildFormData(values, {
+                variants: productVariants,
+                mode: "create"
+            });
+
+            // ===== 4. CALL API =====
+            await productService.createProduct(formData);
+
+            showNotification("Thêm sản phẩm thành công", "success");
             setIsAddModalVisible(false);
             fetchProducts();
 
         } catch (err) {
             console.error(err);
             showNotification(
-                err?.response?.data?.message || "Có lỗi xảy ra",
+                err?.response?.data?.message || "Thêm sản phẩm thất bại",
                 "error"
             );
         } finally {
             setSubmitLoading(false);
         }
+    };
+
+
+    // ===== BUILD VARIANT KHI THÊM MỚI =====
+    const buildVariantsForCreate = (values) => {
+        const variants = [];
+
+        values.variants?.forEach(variant => {
+            const { color, sizes = [], stocks = {}, prices = {} } = variant;
+
+            sizes.forEach(size => {
+                variants.push({
+                    color,
+                    size, // có thể null (NoSize)
+                    stock: Number(stocks?.[size] || 0),
+                    price: Number(prices?.[size] || 0),
+                });
+            });
+        });
+
+        return variants;
+    };
+
+    const extractNewVariants = (values) => {
+        const newVariants = [];
+
+        values.variants?.forEach(variant => {
+            if (oldColorSet.has(variant.color)) return; // bỏ màu cũ
+
+            const sizes = variant.sizes || [];
+            sizes.forEach(size => {
+                newVariants.push({
+                    color: variant.color,
+                    size,
+                    stock: Number(variant.stocks?.[size] || 0),
+                    price: Number(variant.prices?.[size] || 0),
+                });
+            });
+        });
+
+        return newVariants;
+    };
+
+
+
+    // ===== XỬ LÝ CẬP NHẬT SẢN PHẨM =====
+    const handleUpdateProduct = async (values) => {
+        setSubmitLoading(true);
+
+        const oldSizeMap = buildOldSizeMap(selectedProduct);
+        const oldColors = new Set(
+            selectedProduct.colors?.map(c => c.color) || []
+        );
+
+        try {
+            // ===== 1. XÓA SIZE =====
+            for (const variantId of deletedVariantIds) {
+                await productService.deleteSize(variantId);
+            }
+
+            // ===== 2. XÓA MÀU =====
+            for (const color of deletedColorsRef.current) {
+                await productService.deleteVariantByColor(
+                    selectedProduct.product_id,
+                    color
+                );
+            }
+            deletedColorsRef.current.clear();
+
+            // ===== 3. THÊM BIẾN THỂ MỚI =====
+            const newVariants = extractNewVariants(values);
+            if (newVariants.length > 0) {
+                const fd = buildAddVariantFormData(values, newVariants);
+                await productService.addProductVariant(
+                    selectedProduct.product_id,
+                    fd
+                );
+            }
+
+            // ===== 4. THÊM SIZE CHO MÀU CŨ =====
+            for (const variant of values.variants || []) {
+                const color = variant.color;
+                if (!oldColors.has(color)) continue;
+
+                const oldSizes = oldSizeMap[color] || new Set();
+
+                for (const size of variant.sizes || []) {
+                    if (size === null) continue;
+                    if (oldSizes.has(size)) continue;
+
+                    await productService.addSizeToVariant(
+                        selectedProduct.product_id,
+                        color,
+                        {
+                            size,
+                            stock: Number(variant.stocks?.[size] || 0),
+                            price: Number(variant.prices?.[size] || 0),
+                        }
+                    );
+                }
+            }
+
+            // ===== 5. UPDATE INFO =====
+            const formData = buildFormData(values);
+            await productService.updateInfo(
+                selectedProduct.product_id,
+                formData
+            );
+
+            showNotification("Cập nhật sản phẩm thành công", "success");
+            setDeletedVariantIds([]);
+            setIsAddModalVisible(false);
+            fetchProducts();
+
+        } catch (err) {
+            console.error(err);
+            showNotification(
+                err?.response?.data?.message || "Cập nhật sản phẩm thất bại",
+                "error"
+            );
+        } finally {
+            setSubmitLoading(false);
+        }
+    };
+
+
+    // ===== HÀM CHUNG XÂY DỰNG FormData (tách riêng để tái sử dụng) =====
+    const buildFormData = (values) => {
+        const formData = new FormData();
+
+        /* ================= BASIC INFO ================= */
+        formData.append("name", values.name);
+        formData.append("description", values.description || "");
+        formData.append("discount", Number(values.discount || 0));
+
+        const finalCategoryId =
+            values.category_level_3 ||
+            values.category_level_2 ||
+            values.category_level_1;
+
+        formData.append("category_id", finalCategoryId);
+
+        /* ================= THUMBNAIL ================= */
+        if (values.thumbnail?.length) {
+            const file = values.thumbnail[0];
+            if (file.originFileObj) {
+                formData.append("thumbnail", file.originFileObj);
+            } else if (file.url) {
+                formData.append("thumbnail_url", file.url);
+            }
+        }
+
+        /* ================= SPECS ================= */
+        if (values.spec?.length) {
+            formData.append("spec", JSON.stringify(values.spec));
+        }
+
+        /* ================= VARIANTS ================= */
+        const productVariants = [];
+
+        values.variants?.forEach(variant => {
+            if (!variant.color || !variant.sizes?.length) return;
+
+            const color = variant.color.trim();
+            const encodedColor = encodeURIComponent(
+                color.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            );
+
+            /* ===== SIZE / STOCK / PRICE ===== */
+            variant.sizes.forEach(sizeRaw => {
+                const size = sizeRaw === null ? "NOSIZE" : sizeRaw;
+
+                productVariants.push({
+                    color,
+                    size,
+                    stock: Number(variant.stocks?.[sizeRaw] ?? 0),
+                    price: Number(variant.prices?.[sizeRaw] ?? 0),
+                });
+            });
+
+            /* ===== MEDIA THEO MÀU ===== */
+            const keepOldImages = [];
+            const newImages = [];
+
+            (variant.images || []).forEach(file => {
+                if (file.originFileObj) {
+                    newImages.push(file.originFileObj);
+                } else if (file.url) {
+                    keepOldImages.push(file.url);
+                }
+            });
+
+            // UPDATE: giữ ảnh cũ
+            if (selectedProduct) {
+                formData.append(
+                    `keep_images[${encodedColor}]`,
+                    JSON.stringify(keepOldImages)
+                );
+            }
+
+            // CREATE + UPDATE: ảnh mới
+            newImages.forEach(file => {
+                formData.append(`images[${encodedColor}][]`, file);
+            });
+        });
+
+        if (!productVariants.length) {
+            throw new Error("Sản phẩm phải có ít nhất 1 biến thể hợp lệ");
+        }
+
+        formData.append(
+            "product_variants",
+            JSON.stringify(productVariants)
+        );
+
+        return formData;
+    };
+
+    const buildAddVariantFormData = (values, newVariants) => {
+        const formData = new FormData();
+
+        formData.append("variants", JSON.stringify(newVariants));
+
+        values.variants?.forEach(variant => {
+            if (!newVariants.some(v => v.color === variant.color)) return;
+
+            const encodedColor = encodeURIComponent(
+                variant.color.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            );
+
+            (variant.images || []).forEach(file => {
+                if (file.originFileObj) {
+                    formData.append(`images[${encodedColor}][]`, file.originFileObj);
+                }
+            });
+        });
+
+        return formData;
     };
 
 
@@ -723,6 +975,53 @@ const ProductManager = () => {
         }
     };
 
+    // ===== XÓA MÀU TRONG FORM =====
+    const handleDeleteColor = (color, index) => {
+        deletedColorsRef.current.add(color);
+
+        const variants = addForm.getFieldValue("variants") || [];
+        addForm.setFieldValue(
+            "variants",
+            variants.filter((_, i) => i !== index)
+        );
+    };
+
+
+
+    const renderMediaModal = () => (
+        <Modal
+            open={mediaModal.open}
+            footer={null}
+            onCancel={() => setMediaModal({ open: false, media: [] })}
+            width={800}
+            centered
+        >
+            <div className="flex flex-wrap gap-3">
+                {mediaModal.media.map((url, idx) => {
+                    const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
+                    return isVideo ? (
+                        <video
+                            key={idx}
+                            src={url}
+                            controls
+                            className="w-[200px] h-[200px] object-cover rounded-lg border"
+                        />
+                    ) : (
+                        <Image
+                            key={idx}
+                            src={url}
+                            width={200}
+                            height={200}
+                            className="rounded-lg object-cover"
+                            preview
+                        />
+                    );
+                })}
+            </div>
+        </Modal>
+
+    );
+
 
 
     // ===== MODAL CHI TIẾT SẢN PHẨM =====
@@ -732,7 +1031,7 @@ const ProductManager = () => {
             open={isDetailModalOpen}
             onCancel={() => setIsDetailModalOpen(false)}
             footer={null}
-            width={900}
+            width={1200}
             centered
         >
             {selectedProduct && (
@@ -781,24 +1080,10 @@ const ProductManager = () => {
                                         </Typography.Paragraph>
                                     </Descriptions.Item>
 
-                                    <Descriptions.Item label="Giá gốc">
-                                        <span className="text-gray-500 line-through">
-                                            {formatPrice(selectedProduct.price)}
-                                        </span>
-                                    </Descriptions.Item>
-
                                     <Descriptions.Item label="Giảm giá">
                                         <Tag color="red">{selectedProduct.discount}%</Tag>
                                     </Descriptions.Item>
 
-                                    <Descriptions.Item label="Giá bán">
-                                        <span className="text-xl font-bold text-green-600">
-                                            {formatPrice(
-                                                selectedProduct.price *
-                                                (1 - selectedProduct.discount / 100)
-                                            )}
-                                        </span>
-                                    </Descriptions.Item>
                                 </Descriptions>
 
                                 {/* Thông số kỹ thuật */}
@@ -859,7 +1144,7 @@ const ProductManager = () => {
             onCancel={() => setIsAddModalVisible(false)}
             afterClose={() => {
                 setThumbnailPreview(null);
-
+                deletedColorsRef.current.clear();
                 addForm.resetFields();
                 setCategoryLevel1(null);
                 setCategoryLevel2(null);
@@ -870,7 +1155,11 @@ const ProductManager = () => {
             width={900}
             centered
         >
-            <Form form={addForm} layout="vertical" onFinish={handleSubmitProductForm}>
+            <Form
+                form={addForm}
+                layout="vertical"
+                onFinish={selectedProduct ? handleUpdateProduct : handleCreateProduct}
+            >
                 <div className="py-4">
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">{selectedProduct ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới"}</h2>
 
@@ -1026,23 +1315,6 @@ const ProductManager = () => {
                                             <Input.TextArea rows={3} placeholder="Mô tả sản phẩm..." />
                                         </Form.Item>
                                     </Descriptions.Item>
-                                    <Descriptions.Item label={<><span style={{ color: 'red' }}>*  </span> <span>Giá gốc</span></>}>
-                                        <Form.Item
-                                            name="price"
-
-                                            rules={[
-                                                { required: true, message: "Vui lòng nhập giá tiền" },
-                                                {
-                                                    type: "number",
-                                                    min: 40000,
-                                                    max: 10000000,
-                                                    message: "Giá phải từ 40.000 đến 10.000.000"
-                                                }
-                                            ]}
-                                        >
-                                            <InputNumber min={0} style={{ width: "100%" }} />
-                                        </Form.Item>
-                                    </Descriptions.Item>
                                     <Descriptions.Item label="Giảm giá (%)">
                                         <Form.Item name="discount" noStyle>
                                             <InputNumber min={0} max={99} style={{ width: "100%" }} />
@@ -1106,7 +1378,16 @@ const ProductManager = () => {
 
                     {/* Biến thể sản phẩm */}
                     <Card title={<><span style={{ color: 'red' }}>*  </span> <span>Biến thể sản phẩm</span></>} size="small">
-                        <Form.List name="variants">
+                        <Form.List
+                            rules={[
+                                {
+                                    validator: (_, value) =>
+                                        value?.length
+                                            ? Promise.resolve()
+                                            : Promise.reject("Cần ít nhất 1 màu"),
+                                },
+                            ]}
+                            name="variants">
                             {(fields, { add, remove }) => (
                                 <>
                                     {fields.map(({ key, name }) => (
@@ -1117,7 +1398,18 @@ const ProductManager = () => {
                                             title={
                                                 <div className="flex justify-between items-center">
                                                     <span>Màu #{key + 1}</span>
-                                                    {selectedProduct ? "" : <Button danger size="small" onClick={() => remove(name)}>X</Button>}
+                                                    <Button
+                                                        danger
+                                                        size="small"
+                                                        onClick={() =>
+                                                            handleDeleteColor(
+                                                                addForm.getFieldValue(["variants", name, "color"]),
+                                                                name
+                                                            )
+                                                        }
+                                                    >
+                                                        X
+                                                    </Button>
 
                                                 </div>
                                             }
@@ -1217,25 +1509,53 @@ const ProductManager = () => {
                                                                             key={size}
                                                                             disabled={isAccessory}
                                                                             onClick={() => {
+                                                                                // 🔒 KHÔNG CHO XÓA NOSIZE
+                                                                                if (size === null) return;
+
+                                                                                const selectedSizes =
+                                                                                    addForm.getFieldValue(["variants", name, "sizes"]) || [];
+
+                                                                                const active = selectedSizes.includes(size);
+
                                                                                 const nextSizes = active
                                                                                     ? selectedSizes.filter(s => s !== size)
-                                                                                    : [...selectedSizes.filter(s => s !== "NOSIZE"), size];
+                                                                                    : [...selectedSizes, size];
 
                                                                                 addForm.setFieldValue(
                                                                                     ["variants", name, "sizes"],
                                                                                     nextSizes
                                                                                 );
 
+                                                                                // ===== NẾU LÀ TẮT SIZE → ĐÁNH DẤU XÓA =====
+                                                                                if (active && selectedProduct) {
+                                                                                    const variantIdMap = buildVariantIdMap(selectedProduct);
+                                                                                    const color = addForm.getFieldValue(["variants", name, "color"]);
+                                                                                    const variantId = variantIdMap?.[color]?.[size];
+
+                                                                                    if (variantId) {
+                                                                                        setDeletedVariantIds(prev =>
+                                                                                            prev.includes(variantId)
+                                                                                                ? prev
+                                                                                                : [...prev, variantId]
+                                                                                        );
+                                                                                    }
+                                                                                }
+
+                                                                                // ===== DỌN STOCK + PRICE =====
                                                                                 if (active) {
                                                                                     const stocks =
                                                                                         addForm.getFieldValue(["variants", name, "stocks"]) || {};
+                                                                                    const prices =
+                                                                                        addForm.getFieldValue(["variants", name, "prices"]) || {};
+
                                                                                     delete stocks[size];
-                                                                                    addForm.setFieldValue(
-                                                                                        ["variants", name, "stocks"],
-                                                                                        { ...stocks }
-                                                                                    );
+                                                                                    delete prices[size];
+
+                                                                                    addForm.setFieldValue(["variants", name, "stocks"], { ...stocks });
+                                                                                    addForm.setFieldValue(["variants", name, "prices"], { ...prices });
                                                                                 }
                                                                             }}
+
                                                                             className={`
                                     min-w-[48px]
                                     rounded-full
@@ -1265,29 +1585,57 @@ const ProductManager = () => {
 
 
                                             {/* ===== STOCK INPUT ===== */}
+
+                                            {/* Stock + Giá cho từng size */}
                                             <Form.Item shouldUpdate>
                                                 {() => {
-                                                    const sizes =
-                                                        addForm.getFieldValue(["variants", name, "sizes"]) || [];
-
+                                                    const sizes = addForm.getFieldValue(["variants", name, "sizes"]) || [];
                                                     return (
-                                                        <div className="grid grid-cols-3 gap-3">
+                                                        <div className="flex flex-col gap-3">
                                                             {sizes.map(size => (
-                                                                <Form.Item
-                                                                    key={size}
-                                                                    label={`Tồn kho size ${size != null ? size : "No size"}`}
-                                                                    name={[name, "stocks", size]}
-                                                                    rules={[
-                                                                        { required: true, message: "Nhập tồn kho" },
-                                                                    ]}
-                                                                >
-                                                                    <InputNumber min={0} className="w-full" />
-                                                                </Form.Item>
+                                                                <div key={size} className="flex items-center gap-4">
+                                                                    <Tooltip title={size == null ? "Phụ kiện không cần size" : ""}>
+                                                                        <Tag
+                                                                            color={size != null ? "blue" : "purple"}
+                                                                            className="min-w-[60px] px-3 py-1 text-center"
+                                                                        >
+                                                                            {size != null ? size : "No size"}
+                                                                        </Tag>
+                                                                    </Tooltip>
+
+
+
+                                                                    <Form.Item
+                                                                        label="Số lượng"
+                                                                        name={[name, "stocks", size]}
+                                                                        rules={[{ required: true, message: "Nhập tồn kho" }]}
+                                                                        className="flex-1 mb-0"
+                                                                    >
+                                                                        <InputNumber min={0} className="w-full" />
+                                                                    </Form.Item>
+
+                                                                    <Form.Item
+                                                                        label="Giá"
+                                                                        name={[name, "prices", size]}
+                                                                        rules={[{ required: true, message: "Nhập giá" }]}
+                                                                        className="flex-1 mb-0"
+                                                                    >
+                                                                        <InputNumber
+                                                                            min={0}
+                                                                            formatter={value => value ? formatPrice(value) : ""}
+                                                                            parser={value => value.replace(/₫|\./g, '')} // convert về số
+                                                                            style={{ width: "100%" }}
+                                                                        />
+
+                                                                    </Form.Item>
+                                                                </div>
                                                             ))}
                                                         </div>
                                                     );
                                                 }}
                                             </Form.Item>
+
+
 
                                         </Card>
                                     ))}
@@ -1417,6 +1765,7 @@ const ProductManager = () => {
 
             {renderDetailProductModal()}
             {renderAddEditModal()}
+            {renderMediaModal()}
 
             {renderStatusModal()}
             {renderDeleteModal()}

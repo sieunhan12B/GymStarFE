@@ -391,7 +391,7 @@ const Header = () => {
                                         </p>
                                         {item.product_variant.product.discount > 0 && (
                                           <p className="text-xs text-gray-400 line-through">
-                                            {formatPrice(item.product_variant.product.price)}
+                                            {formatPrice(item.product_variant.price)}
                                           </p>
                                         )}
                                       </div>

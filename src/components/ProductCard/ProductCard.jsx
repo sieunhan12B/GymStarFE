@@ -88,7 +88,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
 
         const variant = variantsOfSelectedColor.find(v => v.size === size);
         if (!variant) return;
-
+        console.log(variant);
         try {
             const res = await cartService.addToCart({
                 product_variant_id: variant.product_variant_id,
@@ -101,8 +101,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
             showNotification(
                 <AddedToCartToast
                     product={product}
-                    size={size}
-                    color={firstVariant.color}
+                    product_variant={variant}
                     message={res.data.message}
                 />,
                 "success"
@@ -199,14 +198,14 @@ const ProductCard = ({ product, hoverSize = true }) => {
                         {product.discount ? (
                             <>
                                 <span className="text-sm font-bold">
-                                    {formatPrice(product.price * (1 - parseFloat(product.discount) / 100))}
+                                    {formatPrice(product.product_variants[0].final_price)}
                                 </span>
                                 <span className="text-sm text-gray-400 line-through">
-                                    {formatPrice(product.price)}
+                                    {formatPrice(product.product_variants[0].price)}
                                 </span>
                             </>
                         ) : (
-                            <span className="text-sm font-bold">{formatPrice(product.price)}</span>
+                            <span className="text-sm font-bold">{formatPrice(product.product_variants[0].price)}</span>
                         )}
                     </div>
                 </div>

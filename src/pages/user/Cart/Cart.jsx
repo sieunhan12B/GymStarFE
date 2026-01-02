@@ -56,10 +56,10 @@ const Cart = () => {
                     }
                     // Cập nhật UI ngay
                     dispatch(updateItemQuantity({ cart_detail_id, quantity: newQuantity }));
-                 
+
                     return { ...item, quantity: newQuantity };
                 }
-                
+
                 return item;
             })
         );
@@ -222,7 +222,7 @@ const Cart = () => {
                                 {/* 2. Giá 1 sản phẩm (gốc + sau giảm) */}
                                 <div className="col-span-2 flex flex-col items-center">
                                     <span className={item.product_variant?.product?.discount > 0 ? "line-through text-sm text-gray-400" : "text-sm"}>
-                                        {formatPrice(item.product_variant?.product?.price)}
+                                        {formatPrice(item.product_variant?.price)}
                                     </span>
                                     {item.product_variant?.product?.discount > 0 && (
                                         <span className="font-bold">{formatPrice(item.product_variant?.product?.final_price)}</span>
@@ -246,7 +246,7 @@ const Cart = () => {
 
                                 {/* 4. Thành tiền (gốc + sau giảm) */}
                                 <div className="col-span-2 flex flex-col items-center">
-                                    <span className="line-through text-sm text-gray-400">{formatPrice(item.product_variant?.product?.price * item.quantity)}</span>
+                                    <span className="line-through text-sm text-gray-400">{formatPrice(item.product_variant?.price * item.quantity)}</span>
                                     <span className="font-bold">{formatPrice((item.product_variant?.product?.final_price || item.product_variant?.product?.price) * item.quantity)}</span>
                                 </div>
 

@@ -2,7 +2,8 @@ import React from "react";
 import { Image } from "antd";
 import { formatPrice } from "../../utils/utils";
 
-const AddedToCartToast = ({ product, size, color, quantity = 1, message }) => {
+const AddedToCartToast = ({ product, product_variant, quantity = 1, message }) => {
+    console.log(product);
     return (
         <div className="w-full max-w-sm bg-white ">
 
@@ -30,15 +31,15 @@ const AddedToCartToast = ({ product, size, color, quantity = 1, message }) => {
                     </p>
 
                     <p className="text-xs text-gray-600 mt-1">
-                        Màu: <span className="font-medium">{color}</span>
-                        {size && <>&nbsp;/&nbsp;Size: <span className="font-medium">{size}</span>&nbsp;/&nbsp;Số lượng: <span className="text-xs  text-gray-500">x{quantity}
+                        Màu: <span className="font-medium">{product_variant.color}</span>
+                        {product_variant.size && <>&nbsp;/&nbsp;Size: <span className="font-medium">{product_variant.size}</span>&nbsp;/&nbsp;Số lượng: <span className="text-xs  text-gray-500">x{quantity}
                         </span> </>}
                     </p>
 
 
-                    {product.price && (
+                    {product_variant.final_price && (
                         <p className="text-sm font-bold text-black mt-1">
-                            {formatPrice(product.price)}
+                            {formatPrice(product_variant.final_price)}
                         </p>
                     )}
 

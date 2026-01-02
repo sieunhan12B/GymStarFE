@@ -46,7 +46,7 @@ const Category = () => {
     { name: "Xanh", hex: "#0000FF" },
     { name: "Đỏ", hex: "#FF0000" },
     { name: "Nâu", hex: "#8B4513" },
-    { name: "Hồng", hex: "#FFC0CB" }   ,
+    { name: "Hồng", hex: "#FFC0CB" },
 
   ];
 
@@ -152,20 +152,40 @@ const Category = () => {
         filters.sizes.includes(variant.size)
       );
 
-    const price = parseFloat(product.price);
+    // ===== SỬA PHẦN GIÁ Ở ĐÂY =====
+    const prices = product.product_variants
+      .map(v => Number(v.price))
+      .filter(p => !isNaN(p) && p > 0);
+
+    if (prices.length === 0) return false; // không có giá → ẩn
+
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+
+    // Nếu các variant có giá khác nhau → kiểm tra khoảng
+    // Nhưng thường giá giống nhau → dùng minPrice
     const matchesPrice =
-      price >= filters.priceRange[0] && price <= filters.priceRange[1];
+      minPrice >= filters.priceRange[0] && maxPrice <= filters.priceRange[1];
 
     return matchesCategory && matchesColor && matchesSize && matchesPrice;
   });
 
-  // Sorted products
+  const getProductMinPrice = (product) => {
+    const prices = product.product_variants
+      .map(v => Number(v.price))
+      .filter(p => !isNaN(p));
+    return prices.length > 0 ? Math.min(...prices) : Infinity;
+  };
+
   const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const priceA = getProductMinPrice(a);
+    const priceB = getProductMinPrice(b);
+
     switch (sortBy) {
       case "price-low":
-        return parseFloat(a.price) - parseFloat(b.price);
+        return priceA - priceB;
       case "price-high":
-        return parseFloat(b.price) - parseFloat(a.price);
+        return priceB - priceA;
       case "newest":
         return new Date(b.createdAt) - new Date(a.createdAt);
       default:

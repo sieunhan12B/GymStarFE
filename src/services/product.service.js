@@ -35,7 +35,7 @@ export const productService = {
         }
     },
 
-    add: async (data) => {
+    createProduct: async (data) => {
         try {
             return await http.post("/QuanLySanPham/TaoSanPhamFull", data);
         } catch (error) {
@@ -156,6 +156,16 @@ export const productService = {
         }
     },
 
+    // Xóa size (theo product_variant_id)
+    deleteSize: async (product_variant_id) => {
+        try {
+            return await http.delete(`/QuanLySanPham/XoaSize/${product_variant_id}`);
+        } catch (error) {
+            console.error("Lỗi xóa size:", error);
+            throw error;
+        }
+    },
+
 
     // Thêm biến thể cho sản phẩm
     addProductVariant: async (product_id, formData) => {
@@ -166,6 +176,19 @@ export const productService = {
             );
         } catch (error) {
             console.error("Lỗi thêm biến thể:", error);
+            throw error;
+        }
+    },
+
+
+    // Xóa biến thể theo màu
+    deleteVariantByColor: async (product_id, color) => {
+        try {
+            return await http.delete(
+                `/QuanLySanPham/XoaBienThe/${product_id}/${encodeURIComponent(color)}`
+            );
+        } catch (error) {
+            console.error("Lỗi xóa biến thể:", error);
             throw error;
         }
     },

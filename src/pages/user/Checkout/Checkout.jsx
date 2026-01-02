@@ -476,7 +476,7 @@ const Checkout = () => {
                                     <p>
                                         {
                                             selectedCartItems
-                                                .reduce((sum, item) => sum + item.quantity * item.product_variant.product.price, 0)
+                                                .reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0)
                                                 .toLocaleString()
                                         }₫
                                     </p>
@@ -487,7 +487,7 @@ const Checkout = () => {
                                         {selectedCartItems
                                             .reduce(
                                                 (sum, item) =>
-                                                    sum + item.quantity * (item.product_variant.product.price - item.product_variant.product.final_price),
+                                                    sum + item.quantity * (item.product_variant.price - item.product_variant.product.final_price),
                                                 0
                                             )
                                             .toLocaleString()}₫

@@ -141,6 +141,7 @@ const OrderDetail = () => {
             dispatch(setCart(cartRes.data.data));
 
             const { product_name, color, size, quantity, thumbnail } = res.data.data;
+            console.log(res.data.data)
             const product = {
                 thumbnail,
                 name: product_name
@@ -479,7 +480,7 @@ const OrderDetail = () => {
                             {orderData.payments[0]?.method}
                         </span>
                     </p>
-                       <p className="flex justify-between text-xl font-bold">
+                    <p className="flex justify-between text-xl font-bold">
                         <span>Trạng thái thanh toán</span>
                         <span>
                             {orderData.payments[0]?.status}

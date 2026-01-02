@@ -53,11 +53,15 @@ const PromotionManager = () => {
     const getTimeStatus = (start, end) => {
         const now = dayjs();
 
-        if (now.isBefore(dayjs(start))) {
+        // Parse đúng định dạng DD/MM/YYYY
+        const startDate = dayjs(start, "DD/MM/YYYY");
+        const endDate = dayjs(end, "DD/MM/YYYY");
+
+        if (now.isBefore(startDate)) {
             return { text: "Sắp diễn ra", color: "gold" };
         }
 
-        if (now.isAfter(dayjs(end))) {
+        if (now.isAfter(endDate)) {
             return { text: "Hết hạn", color: "red" };
         }
 

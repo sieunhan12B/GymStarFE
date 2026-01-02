@@ -77,7 +77,7 @@ const Product = () => {
       console.log(res);
       const cartRes = await cartService.getCart();
       dispatch(setCart(cartRes.data.data));
-      showNotification(<AddedToCartToast product={product} quantity={quantity} color={selectedVariant.color} size={selectedVariant.size} message={res.data.message} />, 'success');
+      showNotification(<AddedToCartToast product={product} quantity={quantity} product_variant={selectedVariant} message={res.data.message} />, 'success');
     } catch (error) {
       showNotification(error.response.data.message, 'error');
       console.error('ADD CART ERROR:', error);
@@ -260,10 +260,10 @@ const Product = () => {
             {product.discount ? (
               <>
                 <span className="text-3xl font-bold">
-                  {formatPrice(product.price * (1 - parseFloat(product.discount) / 100))}
+                  {formatPrice(selectedVariant.final_price)}
                 </span>
                 <span className="text-xl text-gray-400 line-through">
-                  {formatPrice(product.price)}
+                  {formatPrice(selectedVariant.price)}
                 </span>
               </>
             ) : (
