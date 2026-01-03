@@ -1,79 +1,40 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến người dùng
+ */
 export const userService = {
+    // ================== ADMIN ==================
 
-
-    // ------------------ ADMIN ------------------
-
-
-    // Lấy danh sách tất cả người dùng
-    getAll: async () => {
-        try {
-            return await http.get(
-                "/QuanLyNguoiDung/LayDanhSachNguoiDung?page=1&limit=99999"
-            );
-        } catch (error) {
-            console.error("Lỗi trong userService:", error);
-            throw error;
-        }
+    /** Lấy danh sách tất cả người dùng (Admin) */
+    getAllUsers: () => {
+        return http.get("/QuanLyNguoiDung/LayDanhSachNguoiDung?page=1&limit=99999");
     },
 
-
-    // Cập nhật trạng thái người dùng (kích hoạt / vô hiệu hóa)
-    updateStatus: async (user_id) => {
-        try {
-            return await http.put(`/QuanLyNguoiDung/CapNhatTrangThai/${user_id}`);
-        } catch (error) {
-            console.error("Lỗi cập nhật trạng thái người dùng:", error);
-            throw error;
-        }
+    /** Cập nhật trạng thái người dùng (kích hoạt / vô hiệu hóa) */
+    updateUserStatus: (userId) => {
+        return http.put(`/QuanLyNguoiDung/CapNhatTrangThai/${userId}`);
     },
 
-    // Cập nhật loại người dùng
-    updateRole: async (user_id, data) => {
-        try {
-            return await http.put(`/QuanLyNguoiDung/PhanQuyenRole/${user_id}`, data);
-        } catch (error) {
-            console.error("Lỗi cập nhật loại người dùng:", error);
-            throw error;
-        }
+    /** Cập nhật loại người dùng (Role) */
+    updateUserRole: (userId, data) => {
+        return http.put(`/QuanLyNguoiDung/PhanQuyenRole/${userId}`, data);
     },
 
+    // ================== USER ==================
 
-
-
-
-
-
-
-
-
-
-
-
-    updateProfile: async (data) => {
-        try {
-            return await http.put("/QuanLyNguoiDung/CapNhatThongTin",data);
-        } catch (error) {
-            console.error("Lỗi cập nhật thông tin người dùng:", error);
-            throw error;
-        }
-    },
-    getInfoUser: async () => {
-        try {
-            return await http.get("/QuanLyNguoiDung/LayThongTinNguoiDung");
-        } catch (error) {
-            console.error("Lỗi lấy thông tin người dùng:", error);
-            throw error;
-        }
-    },
-    changePassword: async (data) => {
-        try {
-            return await http.put("/QuanLyNguoiDung/DoiMatKhau", data);
-        } catch (error) {
-            console.error("Lỗi cập nhật mật khẩu:", error);
-            throw error;
-        }
+    /** Lấy thông tin người dùng hiện tại */
+    getCurrentUser: () => {
+        return http.get("/QuanLyNguoiDung/LayThongTinNguoiDung");
     },
 
+    /** Cập nhật thông tin người dùng */
+    updateUserProfile: (data) => {
+        return http.put("/QuanLyNguoiDung/CapNhatThongTin", data);
+    },
+
+    /** Đổi mật khẩu người dùng */
+    changePassword: (data) => {
+        return http.put("/QuanLyNguoiDung/DoiMatKhau", data);
+    },
 };

@@ -1,33 +1,50 @@
 import axios from "axios";
-import { store } from "@/redux/configStore";
 import Cookies from "js-cookie";
 
-
+/**
+ * Axios instance dùng chung cho toàn bộ app
+ */
 export const http = axios.create({
   baseURL: "http://localhost:5000",
   timeout: 80000,
 });
 
-// 🟦 Interceptor request (gắn token nếu có)
-http.interceptors.request.use((config) => {
-  if (config.url?.includes("dat-lai-mat-khau")) {
-    return config; // bỏ qua interceptor
+/* ================= REQUEST INTERCEPTOR ================= */
+/**
+ * Tự động gắn access_token vào header
+ */
+http.interceptors.request.use(
+  (config) => {
+    // Bỏ qua interceptor cho endpoint reset password (nếu cần)
+    if (config.url?.includes("dat-lai-mat-khau")) {
+      return config;
+    }
+
+    const accessToken = Cookies.get("access_token");
+
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
-  const token = Cookies.get("access_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
-
-
-// 🟥 Interceptor response (log lỗi + throw)  
+/* ================= RESPONSE INTERCEPTOR ================= */
+/**
+ * Xử lý response & lỗi tập trung
+ */
 http.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("🔥 API Error:", error.response?.data || error.message);
-    return Promise.reject(error); // IMPORTANT: throw lỗi ra ngoài
+    const errorMessage =
+      error.response?.data?.message || error.message || "Unknown error";
+
+    console.error("🔥 API Error:", errorMessage);
+
+    return Promise.reject(error);
   }
 );

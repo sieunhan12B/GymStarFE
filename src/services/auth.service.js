@@ -1,69 +1,48 @@
 import { http } from "./config";
 import Cookies from "js-cookie";
 
+/**
+ * Service xử lý API liên quan đến xác thực (Auth)
+ */
 export const authService = {
-
-    signUp: async (data) => {
-        try {
-            return await http.post("/QuanLyNguoiDung/DangKy", data);
-        } catch (error) {
-            console.error("Lỗi đăng nhập:", error);
-            throw error;
-        }
+    /** Đăng ký tài khoản mới */
+    signUp: (data) => {
+        return http.post("/QuanLyNguoiDung/DangKy", data);
     },
 
+    /** Đăng nhập và lưu token vào Cookie */
     logIn: async (data) => {
-        try {
-            const response = await http.post("/QuanLyNguoiDung/DangNhap", data);
-            Cookies.set("access_token", response.data.access_token, {
-                expires: 15,
-                secure: true,
-                sameSite: "Strict"
-            });
-            return response; // trả về user info
+        const response = await http.post("/QuanLyNguoiDung/DangNhap", data);
 
+        Cookies.set("access_token", response.data.access_token, {
+            expires: 15,
+            secure: true,
+            sameSite: "Strict",
+        });
 
-        } catch (error) {
-            console.error("Lỗi đăng nhập:", error);
-            throw error;
-        }
+        return response;
     },
 
-    forgotPassword: async (data) => {
-        try {
-            return await http.post("/QuanLyNguoiDung/QuenMatKhau", data);
-        } catch (error) {
-            console.error("Lỗi quên mật khẩu:", error);
-            throw error;
-        }
+    /** Quên mật khẩu */
+    forgotPassword: (data) => {
+        return http.post("/QuanLyNguoiDung/QuenMatKhau", data);
     },
 
-    verifyOtp: async (data) => {
-        try {
-            return await http.post("/QuanLyNguoiDung/verify-otp", data);
-        } catch (error) {
-            console.error("Lỗi xác thực OTP:", error);
-            throw error;
-        }
+    /** Xác thực OTP */
+    verifyOtp: (data) => {
+        return http.post("/QuanLyNguoiDung/verify-otp", data);
     },
 
-    resetPassword: async (data, resetToken) => {
-        try {
-            return await http.put(
-                "/QuanLyNguoiDung/DatLaiMatKhau",
-                data,
-                {
-                    headers: {
-                        Authorization: `Bearer ${resetToken}`
-                    }
-                }
-            );
-        } catch (error) {
-            console.error("Lỗi đặt lại mật khẩu:", error);
-            throw error;
-        }
+    /** Đặt lại mật khẩu bằng token */
+    resetPassword: (data, resetToken) => {
+        return http.put(
+            "/QuanLyNguoiDung/DatLaiMatKhau",
+            data,
+            {
+                headers: {
+                    Authorization: `Bearer ${resetToken}`,
+                },
+            }
+        );
     },
-
-
-
 };

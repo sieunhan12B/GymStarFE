@@ -2,7 +2,7 @@
 import { useState, useEffect, useContext, useMemo } from "react";
 
 // UI
-import { Form, Select, Button, Modal, Tag } from "antd";
+import { Form, Select, Button, Modal, Tag, Tooltip } from "antd";
 import { EditOutlined, LockOutlined, UnlockOutlined } from "@ant-design/icons";
 
 // Redux
@@ -49,7 +49,7 @@ const UserManager = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await userService.getAll();
+      const res = await userService.getAllUsers();
       setUsers(res.data.data);
     } catch {
       showNotification("Tải danh sách người dùng thất bại!", "error");
@@ -110,7 +110,7 @@ const UserManager = () => {
   const handleChangeRole = async () => {
     try {
       const { role_id } = await form.validateFields();
-      const res = await userService.updateRole(editingUser.user_id, { role_id });
+      const res = await userService.updateUserRole(editingUser.user_id, { role_id });
       showNotification(res.data.message, "success");
       fetchUsers();
     } catch (err) {
@@ -126,7 +126,7 @@ const UserManager = () => {
   const handleChangeStatusUser = async () => {
     if (!selectedUser) return;
     try {
-      const res = await userService.updateStatus(selectedUser.user_id);
+      const res = await userService.updateUserStatus(selectedUser.user_id);
       showNotification(res.data.message, "success");
       fetchUsers();
     } catch (err) {
@@ -241,19 +241,21 @@ const UserManager = () => {
             </Tag>
 
             {statusKey !== "chưa xác nhận" && (
-              <Button
-                type="text"
-                icon={
-                  statusKey === "đang hoạt động"
-                    ? <LockOutlined />
-                    : <UnlockOutlined />
-                }
-                disabled={r.user_id === currentUser.user_id}
-                onClick={() => {
-                  setSelectedUser(r);
-                  setIsStatusModalOpen(true);
-                }}
-              />
+              <Tooltip title="Thay đổi phân quyền">
+                <Button
+                  type="text"
+                  icon={
+                    statusKey === "đang hoạt động"
+                      ? <LockOutlined className="text-red-500" />
+                      : <UnlockOutlined className="text-green-500" />
+                  }
+                  disabled={r.user_id === currentUser.user_id}
+                  onClick={() => {
+                    setSelectedUser(r);
+                    setIsStatusModalOpen(true);
+                  }}
+                />
+              </Tooltip>
             )}
           </div>
         );
@@ -317,13 +319,19 @@ const UserManager = () => {
 
       {/* STATUS MODAL */}
       <Modal
-        title="Xác nhận"
+        title="Xác nhận khoá tài khoản"
         open={isStatusModalOpen}
         onOk={handleChangeStatusUser}
         onCancel={() => setIsStatusModalOpen(false)}
       >
-        Bạn có chắc muốn thay đổi trạng thái của{" "}
-        <b>{selectedUser?.full_name}</b> không?
+        <p>
+          Bạn có chắc chắn muốn khoá tài khoản của{" "}
+          <b>{selectedUser?.full_name}</b> không?
+        </p>
+        <p className="text-red-500 text-sm mt-2">
+          Hành động này sẽ vô hiệu hoá quyền đăng nhập của người dùng.
+        </p>
+
       </Modal>
     </div>
   );

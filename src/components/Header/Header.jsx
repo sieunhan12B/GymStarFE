@@ -82,19 +82,6 @@ const Header = () => {
     fetchCategories();
   }, []);
 
-  // --- CART ---
-  useEffect(() => {
-    if (!user?.user_id) return;
-    const fetchCart = async () => {
-      try {
-        const res = await cartService.getCart();
-        dispatch(setCart(res.data.data));
-      } catch (error) {
-        console.error("Lỗi lấy giỏ hàng:", error);
-      }
-    };
-    fetchCart();
-  }, [user]);
 
 
   const handleDeleteCartItem = async (cart_detail_id) => {

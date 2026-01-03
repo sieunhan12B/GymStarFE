@@ -19,6 +19,7 @@ import Header from "@/templates/AdminTemplate/Header";
 
 // Context
 import { NotificationContext } from "@/App";
+import { formatPrice } from "../../../utils/utils";
 
 /* ================= COMPONENT ================= */
 const PromotionManager = () => {
@@ -498,7 +499,12 @@ const PromotionManager = () => {
                             extra="VD: 10 (%) hoặc 50.000 (VNĐ)"
                             rules={[{ required: true }]}
                         >
-                            <InputNumber className="w-full" min={1} />
+                            <InputNumber
+                                min={1}
+                                formatter={value => value ? formatPrice(value) : ""}
+                                parser={value => value.replace(/₫|\./g, '')} // convert về số
+                                style={{ width: "100%" }}
+                            />
                         </Form.Item>
                     </div>
 
@@ -515,6 +521,8 @@ const PromotionManager = () => {
                             <InputNumber
                                 className="w-full"
                                 min={0}
+                                formatter={value => value ? formatPrice(value) : ""}
+                                parser={value => value.replace(/₫|\./g, '')} // convert về số
                                 disabled={discountType !== "percent"}
                                 placeholder={
                                     discountType !== "percent"
@@ -531,7 +539,12 @@ const PromotionManager = () => {
                             extra="Đơn hàng phải đạt giá trị này mới áp dụng mã"
                             rules={[{ required: true }]}
                         >
-                            <InputNumber className="w-full" min={0} />
+                            <InputNumber
+                                min={0}
+                                formatter={value => value ? formatPrice(value) : ""}
+                                parser={value => value.replace(/₫|\./g, '')} // convert về số
+                                style={{ width: "100%" }}
+                            />
                         </Form.Item>
                     </div>
 

@@ -277,9 +277,21 @@ const Product = () => {
         {/* Color Selection */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-bold uppercase">Màu</label>
-            <span className="text-sm text-gray-600">{selectedColor}</span>
+            <label className="text-sm font-bold uppercase">Màu</label>
+
+            <span className="
+    text-sm font-bold
+    text-white
+    bg-black
+    px-3 py-1
+    rounded-full
+    tracking-wide
+  ">
+              {selectedColor}
+            </span>
           </div>
+
+
           <div className="flex gap-3">
             {product.colors.map(color => (
               <button key={color.color} onClick={() => { setSelectedColor(color.color); setSelectedImage(0); const defaultVariant = product.product_variants.find(v => v.color === color.color); if (defaultVariant) setSelectedSize(defaultVariant.size); }} className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${selectedColor === color.color ? 'border-black scale-105' : 'border-gray-200 hover:border-gray-400'}`}>

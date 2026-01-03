@@ -19,22 +19,20 @@ const Signup = () => {
     const onFinish = async (values) => {
         setLoading(true);
         try {
-            // Chuẩn bị dữ liệu gửi lên API
             const payload = {
                 full_name: values.name,
                 email: values.email,
                 password: values.password,
             };
 
-            // Gọi API đăng ký
+
             const response = await authService.signUp(payload);
             console.log(response);
 
             showNotification(response.data.message, "success");
-            // Nếu API trả về thành công
+
             navigate(path.logIn);
         } catch (error) {
-            // Xử lý lỗi trả về từ API
             if (error.response?.data?.message) {
                 showNotification("Đăng ký thất bại: " + error.response.data.message, "error");
             } else {
@@ -50,19 +48,16 @@ const Signup = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-white px-4">
             <div className="max-w-md w-full flex flex-col items-center text-center ">
-                {/* Logo */}
                 <Image preview={false} width={150} src={logo} alt="Gymshark Logo" />
 
-                {/* Title */}
                 <div className="mb-4">
                     <Title level={4} className="font-bold tracking-wide">
-                       ĐĂNG KÍ
+                        ĐĂNG KÍ
                     </Title>
                     <Text className="text-gray-500 text-sm">
                         Một tài khoản cho tất cả ứng dụng, giúp mọi thứ dễ dàng hơn.     </Text>
                 </div>
 
-                {/* Form */}
                 <Form
                     name="login"
                     layout="vertical"

@@ -97,6 +97,21 @@ const OrderDetail = () => {
     }
 
     const isPaid = orderData.payments[0]?.status === "thành công";
+    const subtotal = orderData.items.reduce(
+        (sum, item) => sum + item.original_price * item.quantity,
+        0
+    );
+
+    const productDiscount = orderData.items.reduce(
+        (sum, item) =>
+            sum + (item.original_price - item.price) * item.quantity,
+        0
+    );
+
+    const voucherDiscount = orderData.discount_amount || 0;
+
+    const finalTotal = orderData.total;
+
 
     /* ================== CANCEL ORDER ================== */
     const handleCancelOrder = async () => {
@@ -213,7 +228,7 @@ const OrderDetail = () => {
             onCancel={() => setIsReviewModalOpen(false)}
             footer={null}
             width={520}
-            destroyOnClose
+            destroyOnHidden
         >
             {reviewItem && (
                 <div className="space-y-4">
@@ -499,12 +514,32 @@ const OrderDetail = () => {
                             </span>
                         </p>
                     )}
-                    <p className="flex justify-between text-xl font-bold border-t pt-4">
+                    <div className="border-t pt-4 space-y-2 text-gray-300 text-sm">
+                        <div className="flex justify-between">
+                            <span>Tạm tính</span>
+                            <span>{subtotal.toLocaleString('vi-VN')}đ</span>
+                        </div>
+
+                        {productDiscount > 0 && (
+                            <div className="flex justify-between text-orange-400">
+                                <span>Giảm giá sản phẩm</span>
+                                <span>-{productDiscount.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                        )}
+
+                        {voucherDiscount > 0 && (
+                            <div className="flex justify-between text-orange-400">
+                                <span>Voucher</span>
+                                <span>-{voucherDiscount.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex justify-between text-xl font-bold border-t pt-4">
                         <span>Thành tiền</span>
-                        <span>
-                            {orderData.payments[0]?.total?.toLocaleString('vi-VN')}đ
-                        </span>
-                    </p>
+                        <span>{finalTotal.toLocaleString('vi-VN')}đ</span>
+                    </div>
+
 
                     {isPaid && (
                         <PDFDownloadLink
