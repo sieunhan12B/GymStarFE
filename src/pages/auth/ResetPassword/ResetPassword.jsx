@@ -18,29 +18,23 @@ const ResetPassword = () => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      // Chuẩn bị dữ liệu gửi lên API
       const payload = {
         new_password: values.password,
         confirm_password: values.confirmPassword,
 
       };
-      console.log(payload)
 
-      // Gọi API đăng ký
       const response = await authService.resetPassword(
         payload,
         resetToken
       );
       ;
-      console.log(response);
 
       showNotification(response.data.message, "success");
       sessionStorage.removeItem("reset_token");
 
-      // Nếu API trả về thành công
       navigate(path.logIn);
     } catch (error) {
-      // Xử lý lỗi trả về từ API
       if (error.response?.data?.message) {
         showNotification("reset thất bại: " + error.response.data.message, "error");
       } else {

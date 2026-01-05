@@ -1,21 +1,27 @@
 import React, { useContext, useState } from "react";
 import { Input, Button, Form, Typography, Image } from "antd";
-import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined, UserOutlined } from "@ant-design/icons";
-import logo from "@/assets/images/logo.svg"; // đổi đường dẫn nếu khác
+import {
+    EyeInvisibleOutlined,
+    EyeTwoTone,
+    LockOutlined,
+    MailOutlined,
+    UserOutlined,
+} from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
+
+import logo from "@/assets/images/logo.svg";
 import { path } from "@/common/path";
-const { Title, Text } = Typography;
-import { NotificationContext } from "@/App"; // giả sử bạn có NotificationContext trong App.jsx
+import { NotificationContext } from "@/App";
 import { authService } from "@/services/auth.service";
 
+const { Title, Text } = Typography;
 
 const Signup = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { showNotification } = useContext(NotificationContext);
 
-
-
+    // Xử lý submit form
     const onFinish = async (values) => {
         setLoading(true);
         try {
@@ -25,21 +31,15 @@ const Signup = () => {
                 password: values.password,
             };
 
-
             const response = await authService.signUp(payload);
-            console.log(response);
 
             showNotification(response.data.message, "success");
-
             navigate(path.logIn);
         } catch (error) {
-            if (error.response?.data?.message) {
-                showNotification("Đăng ký thất bại: " + error.response.data.message, "error");
-            } else {
-                showNotification("Đã xảy ra lỗi. Vui lòng thử lại!", "error");
-            }
+            const message =
+                error?.response?.data?.message || "Đã xảy ra lỗi. Vui lòng thử lại!";
+            showNotification(`Đăng ký thất bại: ${message}`, "error");
             console.error(error);
-
         } finally {
             setLoading(false);
         }
@@ -47,37 +47,41 @@ const Signup = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-white px-4">
-            <div className="max-w-md w-full flex flex-col items-center text-center ">
+            <div className="max-w-md w-full flex flex-col items-center text-center">
+                {/* Logo */}
                 <Image preview={false} width={150} src={logo} alt="Gymshark Logo" />
 
+                {/* Title */}
                 <div className="mb-4">
                     <Title level={4} className="font-bold tracking-wide">
                         ĐĂNG KÍ
                     </Title>
                     <Text className="text-gray-500 text-sm">
-                        Một tài khoản cho tất cả ứng dụng, giúp mọi thứ dễ dàng hơn.     </Text>
+                        Một tài khoản cho tất cả ứng dụng, giúp mọi thứ dễ dàng hơn.
+                    </Text>
                 </div>
 
+                {/* Form */}
                 <Form
-                    name="login"
+                    name="signup"
                     layout="vertical"
                     onFinish={onFinish}
                     className="w-full space-y-4"
                 >
+                    {/* Full Name */}
                     <Form.Item
                         name="name"
-                        rules={[
-                            { required: true, message: "Vui lòng nhập tên đăng nhập!" },
-                        ]}
+                        rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập!" }]}
                     >
                         <Input
                             size="large"
                             placeholder="Tên đăng nhập*"
                             className="rounded-md"
                             prefix={<UserOutlined />}
-
                         />
                     </Form.Item>
+
+                    {/* Email */}
                     <Form.Item
                         name="email"
                         rules={[
@@ -90,10 +94,10 @@ const Signup = () => {
                             placeholder="Email *"
                             className="rounded-md"
                             prefix={<MailOutlined />}
-
                         />
                     </Form.Item>
 
+                    {/* Password */}
                     <Form.Item
                         name="password"
                         rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
@@ -106,19 +110,16 @@ const Signup = () => {
                                 visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
                             }
                             prefix={<LockOutlined />}
-
                         />
                     </Form.Item>
+
+                    {/* Confirm Password */}
                     <Form.Item
                         name="confirm"
                         dependencies={["password"]}
                         hasFeedback
-
                         rules={[
-                            {
-                                required: true,
-                                message: "Xác nhận mật khẩu!",
-                            },
+                            { required: true, message: "Xác nhận mật khẩu!" },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
                                     if (!value || getFieldValue("password") === value) {
@@ -129,33 +130,36 @@ const Signup = () => {
                             }),
                         ]}
                     >
-                        <Input.Password placeholder="Nhập lại mật khẩu" prefix={<LockOutlined />}
+                        <Input.Password
+                            placeholder="Nhập lại mật khẩu"
+                            prefix={<LockOutlined />}
                         />
                     </Form.Item>
 
-
+                    {/* Submit Button */}
                     <Form.Item>
                         <Button
                             type="primary"
                             htmlType="submit"
                             loading={loading}
                             size="large"
-                            className="w-full bg-black  hover:!bg-gray-700 border-none rounded-full font-semibold"
+                            className="w-full bg-black hover:!bg-gray-700 border-none rounded-full font-semibold"
                         >
                             TẠO TÀI KHOẢN
                         </Button>
                     </Form.Item>
                 </Form>
 
-                <Text className="text-gray-600 text-sm ">
-                    Đã có tài khoản ?{" "}
-                    <Link to={path.logIn} className="text-black hover:underline ">
+                {/* Link to Login */}
+                <Text className="text-gray-600 text-sm">
+                    Đã có tài khoản?{" "}
+                    <Link to={path.logIn} className="text-black hover:underline">
                         Đăng nhập
                     </Link>
                 </Text>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Signup
+export default Signup;

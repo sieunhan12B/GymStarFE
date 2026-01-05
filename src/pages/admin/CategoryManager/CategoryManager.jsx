@@ -87,7 +87,7 @@ const CategoryManager = () => {
     const fetchCategories = async () => {
         try {
             setLoading(true);
-            const res = await danhMucService.getAll();
+            const res = await danhMucService.getAllCategory();
             setCategories(res?.data?.data || []);
             showNotification(res.data.message, "success");
         } catch {
@@ -134,13 +134,13 @@ const CategoryManager = () => {
             const parent_id = values.level2 || values.level1 || null;
 
             if (editingCategory) {
-                await danhMucService.update(editingCategory.category_id, {
+                await danhMucService.updateCategory(editingCategory.category_id, {
                     name: values.name,
                     parent_id,
                 });
                 showNotification("Cập nhật danh mục thành công!", "success");
             } else {
-                await danhMucService.add({
+                await danhMucService.addCategory({
                     name: values.name,
                     parent_id,
                 });
@@ -163,7 +163,7 @@ const CategoryManager = () => {
         if (!selectedCategory) return;
 
         try {
-            await danhMucService.delete(selectedCategory.category_id);
+            await danhMucService.deleteCategory(selectedCategory.category_id);
             showNotification("Xóa danh mục thành công!", "success");
             fetchCategories();
         } catch (err) {

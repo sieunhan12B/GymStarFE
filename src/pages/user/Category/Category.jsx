@@ -11,7 +11,6 @@ const { Option } = Select;
 
 const Category = () => {
   const { "*": splat, keyword } = useParams();
-  console.log(keyword)
   const categoryId = getCategoryId(splat);
 
   const [filters, setFilters] = useState({
@@ -99,7 +98,7 @@ const Category = () => {
     const fetchCategories = async () => {
       if (!categoryId) return;
       try {
-        const res = await danhMucService.getCategoryByParentCategory(categoryId);
+        const res = await danhMucService.getLvl3Category(categoryId);
         setCategoryFilter(res.data.data || []);
       } catch (error) {
         console.error(error);
@@ -223,7 +222,6 @@ const Category = () => {
           </h2>
 
           <div className="flex-1 space-y-4">
-            {console.log(categoryFilter)}
             {/* Categories */}
             {categoryFilter.length > 0 && (
               <div>
@@ -502,14 +500,18 @@ const Category = () => {
     );
   };
 
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className={`font-bold mb-10 ${keyword ? "text-3xl" : "text-5xl"}`}>
           {!keyword
-            ? `${category?.name} (${sortedProducts.length})`
+            ? category?.name
+              ? `${category.name} (${sortedProducts.length})`
+              : "Không có sản phẩm nào"
             : `Kết quả tìm kiếm: "${keyword}" (${sortedProducts.length} sản phẩm)`}
         </h1>
+
 
 
 

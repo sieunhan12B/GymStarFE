@@ -1,62 +1,28 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến danh mục
+ */
 export const danhMucService = {
-  getAll: async () => {
-    try {
-      return await http.get(
-        "/QuanLyDanhMuc/LayDanhSachDanhMuc?page=1&limit=0"
-      );
-    } catch (error) {
-      // Log kỹ thuật (optional)
-      console.error("Lỗi trong danhMucService:", error);
-      throw error; // quan trọng: đẩy lỗi ra ngoài để UI xử lý
-    }
-  },
+  // ================== LẤY DANH MỤC ==================
 
-  getCategoryByParentCategory: async (category_id) => {
-  try {
-    return await http.get(`/QuanLyDanhMuc/LayDanhMucCap3LocCap1/${category_id}`);
-  } catch (error) {
-    console.error("Lỗi lấy danh mục :", error);
-    throw error;
-  }
-},
-getCategoryByParent:async () => {
-  try {
-    return await http.get("/QuanLyDanhMuc/LayDanhMucCap1");
-  } catch (error) {
-    console.error("Lỗi lấy danh mục cấp 1:", error);
-    throw error;
-  }
-},
+  /** Lấy tất cả danh mục */
+  getAllCategory: () => http.get("/QuanLyDanhMuc/LayDanhSachDanhMuc?page=1&limit=0"),
 
+  /** Lấy danh mục cấp 3 theo category_id */
+  getLvl3Category: (category_id) =>
+    http.get(`/QuanLyDanhMuc/LayDanhMucCap3LocCap1/${category_id}`),
 
-  
+  // ================== QUẢN LÝ DANH MỤC ==================
 
-  add: async (data) => {
-    try {
-      return await http.post("/QuanLyDanhMuc/TaoDanhMuc", data);
-    } catch (error) {
-      console.error("Lỗi thêm danh mục:", error);
-      throw error;
-    }
-  },
+  /** Thêm mới danh mục */
+  addCategory: (data) => http.post("/QuanLyDanhMuc/TaoDanhMuc", data),
 
-  update: async (category_id, data) => {
-    try {
-      return await http.put(`/QuanLyDanhMuc/CapNhatDanhMuc/${category_id}`, data);
-    } catch (error) {
-      console.error("Lỗi cập nhật danh mục:", error);
-      throw error;
-    }
-  },
+  /** Cập nhật danh mục theo category_id */
+  updateCategory: (category_id, data) =>
+    http.put(`/QuanLyDanhMuc/CapNhatDanhMuc/${category_id}`, data),
 
-  delete: async (category_id) => {
-    try {
-      return await http.delete(`/QuanLyDanhMuc/XoaDanhMuc/${category_id}`);
-    } catch (error) {
-      console.error("Lỗi xóa danh mục:", error);
-      throw error;
-    }
-  },
+  /** Xóa danh mục theo category_id */
+  deleteCategory: (category_id) =>
+    http.delete(`/QuanLyDanhMuc/XoaDanhMuc/${category_id}`),
 };

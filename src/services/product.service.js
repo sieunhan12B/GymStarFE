@@ -44,7 +44,7 @@ export const productService = {
         }
     },
 
-    del: async (product_id) => {
+    deleteProduct: async (product_id) => {
         try {
             return await http.delete(`/QuanLySanPham/XoaSanPham/${product_id}`);
         } catch (error) {

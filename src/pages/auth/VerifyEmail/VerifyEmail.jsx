@@ -1,10 +1,10 @@
 import React, { useContext, useState } from "react";
 import { Input, Button, Form, Typography, Image } from "antd";
 import logo from "@/assets/images/logo.svg";
-import { Link, UNSAFE_LocationContext, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
 const { Title, Text } = Typography;
-import { NotificationContext } from "@/App"; // giả sử bạn có NotificationContext trong App.jsx
+import { NotificationContext } from "@/App";
 import { authService } from "../../../services/auth.service";
 import { useLocation } from "react-router-dom";
 
@@ -16,33 +16,25 @@ const VerifyOtp = () => {
   const { showNotification } = useContext(NotificationContext);
   const location = useLocation();
   const email = location.state?.email;
-  console.log(location)
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      // Chuẩn bị dữ liệu gửi lên API
       const payload = {
         email: email,
         otp: values.otp,
 
       };
-      console.log(payload)
 
-      // Gọi API đăng ký
       const response = await authService.verifyOtp(payload);
-      console.log(response);
 
       showNotification(response.data.message, "success");
-      // Nếu API trả về thành công
-      // LƯU reset_token (quan trọng)
+
       sessionStorage.setItem("reset_token", response.data.reset_token);
 
-      // Điều hướng sang trang đặt lại mật khẩu
       navigate(path.resetPassword);
 
     } catch (error) {
-      // Xử lý lỗi trả về từ API
       if (error.response?.data?.message) {
         showNotification("Xác thực thất bại: " + error.response.data.message, "error");
       } else {

@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useContext, use } from 'react';
 import { Input, Badge, Image } from 'antd';
-import { SearchOutlined, HeartOutlined, UserOutlined, ShoppingOutlined, CloseOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, ShoppingOutlined, CloseOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { path } from '@/common/path';
 import logo from '@/assets/images/logo.svg';
 import Announcement from '../Announcement/Announcement';
 import { danhMucService } from '@/services/category.service';
-import { generateSlug } from '@/utils/generateSlug';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '@/redux/userSlice';
 import { NotificationContext } from '@/App';
@@ -16,8 +15,7 @@ import Cookies from "js-cookie";
 import { productService } from '../../services/product.service';
 import './header.css';
 import ProductCard from '../ProductCard/ProductCard';
-import { buildCategoryUrl } from '../../utils/generateSlug';
-import { ROLES } from '../../constants/role';
+import { buildCategoryUrl } from '../../utils/categoryUtils';
 
 const Header = () => {
   const [activeMenu, setActiveMenu] = useState(null);
@@ -62,7 +60,6 @@ const Header = () => {
   const handleSearch = () => {
     const trimmed = keyword.trim();
     if (trimmed) {
-      // Chuyển đến URL dạng /tim-kiem/keyword
       navigate(`/tim-kiem/${encodeURIComponent(trimmed)}`);
       setIsFocused(false);
     }
@@ -73,7 +70,7 @@ const Header = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await danhMucService.getAll();
+        const res = await danhMucService.getAllCategory();
         setCategories(res.data.data || []);
       } catch (error) {
         console.error("Lỗi lấy danh mục:", error);

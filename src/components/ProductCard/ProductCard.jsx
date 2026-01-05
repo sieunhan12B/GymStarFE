@@ -198,7 +198,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
                         {product.discount ? (
                             <>
                                 <span className="text-sm font-bold">
-                                    {formatPrice(product.product_variants[0].final_price)}
+                                    {product.product_variants[0].final_price ? formatPrice(product.product_variants[0].final_price) : formatPrice(product.product_variants[0].price - (product.product_variants[0].price * product.discount) / 100)}
                                 </span>
                                 <span className="text-sm text-gray-400 line-through">
                                     {formatPrice(product.product_variants[0].price)}

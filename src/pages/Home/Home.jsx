@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import useEmblaCarousel from 'embla-carousel-react';
 
 import ProductCard from '../../components/ProductCard/ProductCard';
-import { buildCategoryUrl, generateSlug } from '../../utils/generateSlug';
 import { productService } from '../../services/product.service';
 import Banner from '../../components/Banner/Banner';
 import banner from '@/assets/images/banner.avif';

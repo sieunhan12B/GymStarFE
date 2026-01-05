@@ -267,11 +267,11 @@ const Product = () => {
                 </span>
               </>
             ) : (
-              <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
+              <span className="text-3xl font-bold">{formatPrice(selectedVariant.final_price)}</span>
             )}
           </div>
 
-          <p className="text-sm text-gray-600 mt-2">{product.description}</p>
+          <p className="text-sm text-gray-600 mt-2">{product.description?.slice(0, 120)}...</p>
         </div>
 
         {/* Color Selection */}
