@@ -1,17 +1,25 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Slider, Button, message, Tooltip, Select } from "antd";
 import ProductCard from "@/components/ProductCard/ProductCard";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { productService } from "../../../services/product.service";
 import { formatPrice } from "../../../utils/utils";
 import { getCategoryId } from "../../../utils/generateSlug";
 import { danhMucService } from "../../../services/category.service";
+import useDebounce from "../../../hooks/useDebounce";
+import { COLOR_OPTIONS } from "../../../constants/color";
 
 const { Option } = Select;
 
 const Category = () => {
   const { "*": splat, keyword } = useParams();
   const categoryId = getCategoryId(splat);
+  const location = useLocation();
+  const isNewestPage = location.pathname === "/san-pham-moi"; // <--- check
+  const isBestSellerPage = location.pathname === "/san-pham-ban-chay"; // trang bán chạy
+  const isSalePage = location.pathname === "/san-pham-giam-gia"; // trang giảm giá
+
+
 
   const [filters, setFilters] = useState({
     categories: [],
@@ -19,6 +27,8 @@ const Category = () => {
     sizes: [],
     priceRange: [40000, 1000000],
   });
+  const debouncedPriceRange = useDebounce(filters.priceRange, 150);
+
   const [sortBy, setSortBy] = useState("featured");
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState();
@@ -37,40 +47,33 @@ const Category = () => {
 
 
 
-  // Color options
-  const colorOptions = [
-    { name: "Đen", hex: "#000000" },
-    { name: "Trắng", hex: "#FFFFFF" },
-    { name: "Xám", hex: "#808080" },
-    { name: "Xanh", hex: "#0000FF" },
-    { name: "Đỏ", hex: "#FF0000" },
-    { name: "Nâu", hex: "#8B4513" },
-    { name: "Hồng", hex: "#FFC0CB" },
-
-  ];
-
-  const normalizeColor = (color) => {
-    if (!color) return "";
-    return color.split(" ")[0];
-  };
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [filters, sortBy]);
-
+    if (listRef.current) {
+      listRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [categoryId, keyword]);
 
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        let res;
         setLoading(true);
-        if (keyword) {
+        let res;
+
+        if (isNewestPage) {
+          res = await productService.getNewestProducts();
+        } else if (isBestSellerPage) {
+          res = await productService.getBestSellingProducts();
+        } else if (isSalePage) {
+          res = await productService.getDiscountedProducts();
+        } else if (keyword) {
           res = await productService.getAllForUserWithKeyWord(keyword);
         } else {
           res = await productService.getProductByCategoryId(categoryId);
           setCategory(res.data.category);
         }
+
         const sellingProducts = filterSellingProducts(res.data.data || []);
         setProducts(sellingProducts);
       } catch (error) {
@@ -80,8 +83,12 @@ const Category = () => {
         setLoading(false);
       }
     };
+
     fetchProducts();
-  }, [categoryId]);
+  }, [categoryId, keyword, isNewestPage, isBestSellerPage, isSalePage]);
+
+
+
 
   useEffect(() => {
     setFilters({
@@ -90,13 +97,14 @@ const Category = () => {
       sizes: [],
       priceRange: [40000, 1000000],
     });
-  }, [categoryId]);
+    setSortBy("featured"); // optional: reset sort
+  }, [categoryId, keyword]); // ← thêm keyword
 
 
   // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
-      if (!categoryId) return;
+      if (!categoryId || keyword) return; // ← thêm keyword
       try {
         const res = await danhMucService.getLvl3Category(categoryId);
         setCategoryFilter(res.data.data || []);
@@ -106,7 +114,7 @@ const Category = () => {
       }
     };
     fetchCategories();
-  }, [categoryId]);
+  }, [categoryId, keyword]); // ← thêm keyword
 
   // Handlers
   const handleColorChange = (color) => {
@@ -139,41 +147,66 @@ const Category = () => {
       filters.categories.length === 0 ||
       filters.categories.includes(product.category_id);
 
+    const removeAccents = (str) => {
+      if (!str) return "";
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .trim();
+    };
+
     const matchesColor =
       filters.colors.length === 0 ||
-      product.product_variants.some((variant) =>
-        filters.colors.includes(normalizeColor(variant.color))
-      );
+      product.product_variants.some((variant) => {
+        const variantColorClean = removeAccents(variant.color.toLowerCase());
 
+        return filters.colors.some((filterColor) => {
+          const filterClean = removeAccents(filterColor.toLowerCase());
+
+          // Nếu chọn "Nâu" → hiện tất cả màu bắt đầu bằng "nâu" (không phân biệt dấu, hoa thường)
+          return variantColorClean.startsWith(filterClean);
+        });
+      });
     const matchesSize =
       filters.sizes.length === 0 ||
       product.product_variants.some((variant) =>
         filters.sizes.includes(variant.size)
       );
 
-    // ===== SỬA PHẦN GIÁ Ở ĐÂY =====
     const prices = product.product_variants
       .map(v => Number(v.price))
       .filter(p => !isNaN(p) && p > 0);
 
-    if (prices.length === 0) return false; // không có giá → ẩn
+    if (prices.length === 0) return false;
 
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
 
-    // Nếu các variant có giá khác nhau → kiểm tra khoảng
-    // Nhưng thường giá giống nhau → dùng minPrice
-    const matchesPrice =
-      minPrice >= filters.priceRange[0] && maxPrice <= filters.priceRange[1];
+    // Filter products - sửa phần matchesPrice
+    const matchesPrice = product.product_variants.some((variant) => {
+      const originalPrice = Number(variant.price);
+      if (isNaN(originalPrice)) return false;
+
+      // Tính giá sau giảm giá (nếu có discount)
+      const discountPercent = product.discount || 0;
+      const finalPrice = originalPrice * (1 - discountPercent / 100);
+
+      return finalPrice >= debouncedPriceRange[0] && finalPrice <= debouncedPriceRange[1];
+    });
 
     return matchesCategory && matchesColor && matchesSize && matchesPrice;
   });
 
   const getProductMinPrice = (product) => {
+    const discountPercent = product.discount || 0;
     const prices = product.product_variants
       .map(v => Number(v.price))
-      .filter(p => !isNaN(p));
-    return prices.length > 0 ? Math.min(...prices) : Infinity;
+      .filter(p => !isNaN(p) && p > 0);
+
+    if (prices.length === 0) return Infinity;
+
+    const minOriginal = Math.min(...prices);
+    return minOriginal * (1 - discountPercent / 100);
   };
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -209,6 +242,19 @@ const Category = () => {
   const hasSizeFilter = filteredProducts.some(
     (product) => product.product_variants.some((variant) => variant.size)
   );
+
+  const getBadgeContext = (product) => {
+    const badges = [];
+    if (isNewestPage) badges.push("new");
+    if (product.discount > 0) badges.push("sale");
+    // giả sử bạn muốn đánh dấu tất cả sản phẩm trong trang danh mục:
+    if (categoryId && !keyword) badges.push("category");
+    // nếu bạn có thông tin bestseller từ product, thêm: 
+    if (product.is_bestseller) badges.push("bestseller");
+
+    return badges;
+  };
+
 
 
 
@@ -256,7 +302,7 @@ const Category = () => {
             <div>
               <h3 className="font-bold text-sm mb-2 uppercase">Màu</h3>
               <div className="grid grid-cols-4 gap-3">
-                {colorOptions.map((color) => (
+                {COLOR_OPTIONS.map((color) => (
                   <Tooltip key={color.name} title={color.name} placement="top">
                     <button
                       onClick={() => handleColorChange(color.name)}
@@ -330,17 +376,17 @@ const Category = () => {
   const renderContentRight = () => {
 
     const hasActiveFilters =
-      filters.categories.length ||
-      filters.colors.length ||
-      filters.sizes.length ||
-      filters.priceRange[0] !== 40000 ||
-      filters.priceRange[1] !== 1000000;
+      filters.categories.length > 0 ||
+      filters.colors.length > 0 ||
+      filters.sizes.length > 0 ||
+      debouncedPriceRange[0] !== 40000 ||
+      debouncedPriceRange[1] !== 1000000;
 
     return (
       <div className="flex-1">
         {/* Filter chips */}
         <div className="mb-4 min-h-[100px]">
-          <div className="flex flex-wrap gap-2 min-h-[40px] transition-all duration-200">
+          <div className="flex flex-wrap gap-2  transition-all duration-200">
             {hasActiveFilters && (
               <>
                 {/* Categories */}
@@ -407,9 +453,9 @@ const Category = () => {
                 ))}
 
                 {/* Price */}
-                {(filters.priceRange[0] !== 40000 || filters.priceRange[1] !== 1000000) && (
+                {(debouncedPriceRange[0] !== 40000 || debouncedPriceRange[1] !== 1000000) && (
                   <span className="flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
-                    {formatPrice(filters.priceRange[0])} – {formatPrice(filters.priceRange[1])}
+                    {formatPrice(debouncedPriceRange[0])} – {formatPrice(debouncedPriceRange[1])}
                     <button
                       onClick={() =>
                         setFilters({ ...filters, priceRange: [40000, 1000000] })
@@ -446,7 +492,7 @@ const Category = () => {
         </div>
 
         {/* Sort */}
-        <div className="hidden lg:flex justify-end mb-4 gap-4 items-center">
+        <div className="hidden lg:flex justify-end mb-4 gap-4 items-center" >
           <span className="text-sm font-medium">Sắp xếp:</span>
           <Select
             value={sortBy}
@@ -462,16 +508,18 @@ const Category = () => {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" ref={listRef}>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" ref={listRef} >
           {loading ? (
             <p>Đang tải sản phẩm...</p>
           ) : sortedProducts.length > 0 ? (
             sortedProducts.map((product) => (
               <ProductCard
                 key={product.id}
-                hoverSize={product?.product_variants[0]?.size != null}
+                hoverSize={!!product?.product_variants?.some(v => v.size)}
                 product={product}
+                badgeContext={getBadgeContext(product)}
               />
+
             ))
           ) : (
             <div className="col-span-full text-center py-10 text-gray-500">
@@ -500,17 +548,25 @@ const Category = () => {
     );
   };
 
-
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className={`font-bold mb-10 ${keyword ? "text-3xl" : "text-5xl"}`}>
-          {!keyword
-            ? category?.name
-              ? `${category.name} (${sortedProducts.length})`
-              : "Không có sản phẩm nào"
-            : `Kết quả tìm kiếm: "${keyword}" (${sortedProducts.length} sản phẩm)`}
+          {isNewestPage
+            ? `Sản phẩm mới (${sortedProducts.length})`
+            : isBestSellerPage
+              ? `Sản phẩm hot/bán chạy (${sortedProducts.length})`
+              : isSalePage
+                ? `Sản phẩm giảm giá (${sortedProducts.length})`
+                : !keyword
+                  ? category?.name
+                    ? `${category.name} (${sortedProducts.length})`
+                    : "Không có sản phẩm nào"
+                  : `Kết quả tìm kiếm: "${keyword}" (${sortedProducts.length} sản phẩm)`
+          }
         </h1>
+
+
 
 
 

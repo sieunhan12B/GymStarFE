@@ -121,26 +121,68 @@ const Header = () => {
               {/* LEFT MENU */}
               <div
                 className="flex items-center h-full w-1/3"
-                onMouseLeave={(e) => {
-                  const related = e.relatedTarget;
-                  if (related && related.closest('.mega-menu-wrapper')) return;
-                  setActiveMenu(null);
-                }}
-              >
-                <nav className="space-x-8">
-                  {categories.map((parent) => (
-                    <Link
-                      key={parent.category_id}
-                      to={buildCategoryUrl(parent)}
 
-                      onMouseEnter={() => setActiveMenu(parent)}
-                      className="relative text-sm cursor-pointer font-semibold group inline-block"
-                    >
-                      {parent.name}
-                      <span className="absolute left-0 -bottom-0.5 w-full h-[2px] bg-black scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
-                    </Link>
-                  ))}
+              >
+                <nav className="space-x-6 h-full flex items-center">
+
+                  {/* New */}
+                  <Link
+                    to={path.newest}
+                    className="relative inline-block font-bold text-gray-900 group"
+                  >
+                    <span className="bg-gradient-to-r from-red-500 to-pink-400 text-transparent bg-clip-text">
+                      NEW
+                    </span>
+                    <span className="absolute left-0 -bottom-0.5 w-full h-[2px] bg-red-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
+                  </Link>
+
+                  <Link
+                    to={path.bestSeller}
+                    className="relative inline-block font-bold text-gray-900 group"
+                  >
+                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-transparent bg-clip-text">
+                      BÁN CHẠY
+                    </span>
+                    <span className="absolute left-0 -bottom-0.5 w-full h-[2px] bg-orange-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
+                  </Link>
+
+
+
+                  <div
+                    onMouseLeave={(e) => {
+                      const related = e.relatedTarget;
+                      if (related && related.closest('.mega-menu-wrapper')) return;
+                      setActiveMenu(null);
+                    }}
+                    className="h-full flex gap-6 items-center ">
+                    {categories.map((parent) => (
+                      <Link
+                        key={parent.category_id}
+                        to={buildCategoryUrl(parent)}
+                        onMouseEnter={() => setActiveMenu(parent)}
+                        className="relative inline-block text-gray-900 font-semibold group hover:text-red-500"
+                      >
+                        {parent.name}
+                        <span className="absolute left-0 -bottom-0.5 w-full h-[2px] bg-red-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
+                      </Link>
+                    ))}
+                  </div>  {/* Danh mục chính */}
+
+
+                  {/* Sale */}
+                  <Link
+                    to={path.sale}
+                    className="relative inline-block font-bold text-gray-900 group"
+                  >
+                    <span className="bg-gradient-to-r from-red-500 to-orange-400 text-transparent bg-clip-text">
+                      SALE
+                    </span>
+                    <span className="absolute left-0 -bottom-0.5 w-full h-[2px] bg-red-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
+                  </Link>
+
                 </nav>
+
+
               </div>
 
               {/* LOGO */}

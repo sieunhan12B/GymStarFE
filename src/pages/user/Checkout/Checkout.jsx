@@ -82,7 +82,7 @@ const Checkout = () => {
         }
     };
     const finalPrice = buyNowItem
-        ? buyNowItem.product.price *
+        ? buyNowItem.product_variant.price *
         (1 - (buyNowItem.product.discount || 0) / 100)
         : 0;
 
@@ -109,6 +109,22 @@ const Checkout = () => {
         }
     }, [selectedVoucher]);
 
+    const getFinalPrice = (item) => {
+        console.log(item);
+        // từ giỏ hàng
+        if (item.product_variant?.product?.final_price) {
+            return item.product_variant.product.final_price;
+        }
+
+        // mua ngay
+        if (item.final_price) {
+            return item.final_price;
+        }
+
+        return 0;
+    };
+
+
 
 
     // Tính tổng tiền hàng
@@ -117,7 +133,7 @@ const Checkout = () => {
             return selectedCartItems.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0);
         }
         if (buyNowItem) {
-            return buyNowItem.product.price * buyNowItem.quantity;
+            return buyNowItem.product_variant.price * buyNowItem.quantity;
         }
         return 0;
     };
@@ -131,7 +147,7 @@ const Checkout = () => {
             );
         }
         if (buyNowItem) {
-            return (buyNowItem.product.price * buyNowItem.quantity) - (finalPrice * buyNowItem.quantity);
+            return (buyNowItem.product_variant.price * buyNowItem.quantity) - (finalPrice * buyNowItem.quantity);
         }
         return 0;
     };
@@ -270,6 +286,7 @@ const Checkout = () => {
                     note: orderNote,
                     address_id: selectedAddressId,
                     method: paymentMethod.toUpperCase(),
+                    promotion_code: voucherCode,
                 };
                 res = await orderService.orderNow(payload);
                 showNotification(res.data.message, "success");
@@ -606,7 +623,8 @@ const Checkout = () => {
 
                             {/* Đơn giá */}
                             <div className="col-span-2 text-center text-sm">
-                                {formatPrice(item.product_variant?.product?.final_price)}
+                                {formatPrice(getFinalPrice(item))}
+
                             </div>
 
                             {/* Số lượng */}
@@ -614,7 +632,8 @@ const Checkout = () => {
 
                             {/* Thành tiền */}
                             <div className="col-span-3 text-center font-medium text-red-600">
-                                {(item.quantity * item.product_variant?.product?.final_price).toLocaleString()}₫
+                                {formatPrice(item.quantity * getFinalPrice(item))}
+
                             </div>
                         </div>
                     ))

@@ -1,67 +1,39 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến giỏ hàng
+ */
 export const cartService = {
+    // ================== CART ==================
 
-
-
-    //xem giỏ hàng
-    getCart: async () => {
-        try {
-            return await http.get("/QuanLyGioHang/XemGioHang/");
-        } catch (error) {
-            console.error("Lỗi trong cartService:", error);
-            throw error;
-        }
+    /** Xem giỏ hàng của người dùng */
+    getCart: () => {
+        return http.get("/QuanLyGioHang/XemGioHang/");
     },
 
-
-
-    // Thêm vào giỏ hàng
-    addToCart: async (data) => {
-        try {
-            return await http.post("/QuanLyGioHang/ThemSanPhamVaoGioHang", data);
-        } catch (error) {
-            console.error("Lỗi trong cartService:", error);
-            throw error;
-        }
+    /** Thêm sản phẩm vào giỏ hàng */
+    addToCart: (data) => {
+        return http.post("/QuanLyGioHang/ThemSanPhamVaoGioHang", data);
     },
 
-    //Cập nhật số lượng 
-    updateCart: async (data) => {
-        try {
-            return await http.put("/QuanLyGioHang/CapNhatSoLuongGioHang2/", data);
-        } catch (error) {
-            console.error("Lỗi trong cartService:", error);
-            throw error;
-        }
+    /** Cập nhật số lượng sản phẩm trong giỏ hàng */
+    updateCart: (data) => {
+        return http.put("/QuanLyGioHang/CapNhatSoLuongGioHang2/", data);
     },
 
-    //Xóa một sản phẩm 
-    deleteCartItem: async (data) => {
-        try {
-            return await http.delete("/QuanLyGioHang/XoaSanPhamKhoiGioHang/", {
-                data: data  // ⚡ phải bọc trong "data"
-            });
-        } catch (error) {
-            console.error("Lỗi trong cartService:", error);
-            throw error;
-        }
+    /** Xóa một sản phẩm khỏi giỏ hàng */
+    deleteCartItem: (data) => {
+        return http.delete("/QuanLyGioHang/XoaSanPhamKhoiGioHang/", {
+            data
+        });
     },
 
-
-    //Xóa nhiều sản phẩm
-    deleteCartItems: async (data) => {
-        try {
-            return await http.delete("/QuanLyGioHang/XoaNhieuSanPhamKhoiGioHang/", {
-                data // data = { cart_detail_ids: [...] }
-            });
-        } catch (error) {
-            console.error("Lỗi trong cartService:", error);
-            throw error;
-        }
+    /** Xóa nhiều sản phẩm khỏi giỏ hàng */
+    deleteCartItems: (data) => {
+        return http.delete("/QuanLyGioHang/XoaNhieuSanPhamKhoiGioHang/", {
+            data
+        });
     },
-
-
 
 
 

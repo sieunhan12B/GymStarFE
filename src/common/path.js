@@ -16,7 +16,10 @@ export const path = {
   orderHistory: "lich-su-don-hang",
   checkout: "dat-hang",
   voucher: "ma-giam-gia",
-
+  newest: "san-pham-moi",
+  bestSeller: "san-pham-ban-chay",
+  sale:"san-pham-giam-gia",
+  
 
 
   signUp: "/dang-ki",

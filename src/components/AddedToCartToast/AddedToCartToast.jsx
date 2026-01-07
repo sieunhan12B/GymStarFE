@@ -32,8 +32,12 @@ const AddedToCartToast = ({ product, product_variant, quantity = 1, message }) =
 
                     <p className="text-xs text-gray-600 mt-1">
                         Màu: <span className="font-medium">{product_variant.color}</span>
-                        {product_variant.size && <>&nbsp;/&nbsp;Size: <span className="font-medium">{product_variant.size}</span>&nbsp;/&nbsp;Số lượng: <span className="text-xs  text-gray-500">x{quantity}
-                        </span> </>}
+                        {product_variant.size && (
+                            <>
+                                &nbsp;/&nbsp;Size: <span className="font-medium">{product_variant.size}</span>
+                            </>
+                        )}
+                        &nbsp;/&nbsp;Số lượng: <span className="text-xs text-gray-500">x{quantity}</span>
                     </p>
 
 

@@ -8,7 +8,8 @@ import { setCart } from "@/redux/cartSlice";
 import AddedToCartToast from "@/components/AddedToCartToast/AddedToCartToast";
 import { formatPrice } from "../../utils/utils";
 
-const ProductCard = ({ product, hoverSize = true }) => {
+const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // new | sale | bestseller | category | recommend
+}) => {
     const [isHovered, setIsHovered] = useState(false);
     const [selectedSize, setSelectedSize] = useState("");
     const { showNotification } = useContext(NotificationContext);
@@ -30,6 +31,7 @@ const ProductCard = ({ product, hoverSize = true }) => {
     // LẤY VARIANT ĐẦU TIÊN CÒN HÀNG
     // ===============================
     const firstVariant = product.product_variants?.find(v => v.stock > 0);
+
 
     if (!firstVariant) {
         return (
@@ -72,6 +74,47 @@ const ProductCard = ({ product, hoverSize = true }) => {
     );
 
     const availableSizes = variantsOfSelectedColor.map(v => v.size);
+    const totalStock = product.product_variants?.reduce(
+        (sum, v) => sum + v.stock,
+        0
+    );
+
+
+    const isNewProduct = (() => {
+        if (!product.createdAt) return false;
+        const created = new Date(product.createdAt);
+        const now = new Date();
+        const diffDays = (now - created) / (1000 * 60 * 60 * 24);
+        return diffDays <= 30;
+    })();
+
+    const isLowStock =
+        totalStock > 0 && totalStock <= 10;
+    const badgesToShow = (() => {
+        if (!product || !Array.isArray(badgeContext)) return [];
+
+        const badges = [];
+
+        if (badgeContext.includes("bestseller")) {
+            badges.push("bestseller");
+        }
+
+        if (badgeContext.includes("sale") && product.discount > 0) {
+            badges.push("sale");
+        }
+
+        if (badgeContext.includes("new") && isNewProduct) {
+            badges.push("new");
+        }
+
+        if (badgeContext.includes("lowStock") && isLowStock) {
+            badges.push("lowStock");
+        }
+
+        return badges;
+    })();
+
+
 
     // ===============================
     // ADD TO CART
@@ -128,6 +171,34 @@ const ProductCard = ({ product, hoverSize = true }) => {
                 to={productLink}
                 className="relative overflow-hidden bg-gray-100 h-80 sm:h-96 block rounded-lg"
             >
+                {/* BADGES */}
+                <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
+                    {badgesToShow.includes("bestseller") && (
+                        <span className="bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-full shadow opacity-60 group-hover:opacity-100 transition-opacity duration-200">
+                            ⭐ BÁN CHẠY
+                        </span>
+                    )}
+
+                    {badgesToShow.includes("sale") && (
+                        <span className="bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow opacity-60 group-hover:opacity-100 transition-opacity duration-200">
+                            -{product.discount}%
+                        </span>
+                    )}
+
+                    {badgesToShow.includes("new") && (
+                        <span className="bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full shadow opacity-60 group-hover:opacity-100 transition-opacity duration-200">
+                            NEW
+                        </span>
+                    )}
+
+                    {badgesToShow.includes("lowStock") && (
+                        <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow opacity-60 group-hover:opacity-100 transition-opacity duration-200">
+                            🔥 Còn ít
+                        </span>
+                    )}
+                </div>
+
+
                 <img
                     src={images[0]}
                     alt={product.name}
@@ -195,18 +266,29 @@ const ProductCard = ({ product, hoverSize = true }) => {
                     </p>
 
                     <div className="flex items-baseline gap-2">
-                        {product.discount ? (
-                            <>
+                        <div className="flex items-baseline gap-2">
+                            {product.discount ? (
+                                <>
+                                    <span className="text-sm font-bold">
+                                        {firstVariant.final_price
+                                            ? formatPrice(firstVariant.final_price)
+                                            : formatPrice(
+                                                firstVariant.price -
+                                                (firstVariant.price * product.discount) / 100
+                                            )}
+                                    </span>
+
+                                    <span className="text-sm text-gray-400 line-through">
+                                        {formatPrice(firstVariant.price)}
+                                    </span>
+                                </>
+                            ) : (
                                 <span className="text-sm font-bold">
-                                    {product.product_variants[0].final_price ? formatPrice(product.product_variants[0].final_price) : formatPrice(product.product_variants[0].price - (product.product_variants[0].price * product.discount) / 100)}
+                                    {formatPrice(firstVariant.price)}
                                 </span>
-                                <span className="text-sm text-gray-400 line-through">
-                                    {formatPrice(product.product_variants[0].price)}
-                                </span>
-                            </>
-                        ) : (
-                            <span className="text-sm font-bold">{formatPrice(product.product_variants[0].price)}</span>
-                        )}
+                            )}
+                        </div>
+
                     </div>
                 </div>
             </Link>

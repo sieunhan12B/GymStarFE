@@ -351,7 +351,7 @@ const ProductManager = () => {
     const handleUpdateStatus = async () => {
         if (!selectedProductForStatus) return;
         try {
-            const res = await productService.updateStatus(selectedProductForStatus.product_id);
+            const res = await productService.updateProductStatus(selectedProductForStatus.product_id);
             showNotification(res.data.message, "success");
             setStatusModalOpen(false);
             fetchProducts();

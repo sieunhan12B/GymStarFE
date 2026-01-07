@@ -98,9 +98,23 @@ export const AppRouter = [
                 element: <Category />
             },
             {
+                path: path.newest,
+                element: <Category />
+            },
+
+            {
+                path: path.bestSeller,
+                element: <Category />
+            },
+            {
+                path: path.sale,
+                element: <Category />
+            },
+            {
                 path: path.product,
                 element: <Product />,
             },
+
             {
                 path: path.cart,
                 element: <Cart />,

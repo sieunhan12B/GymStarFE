@@ -357,7 +357,7 @@ const ProductAddEditModal = ({
     // Xử lý cập nhật sản phẩm
     const handleUpdateProductInfo = async (values) => {
         const formData = buildFormData(values);
-        await productService.updateInfo(product.product_id, formData);
+        await productService.updateProductInfo(product.product_id, formData);
     };
 
     // Xử lý tạo sản phẩm mới

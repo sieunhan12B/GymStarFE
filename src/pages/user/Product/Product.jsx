@@ -84,8 +84,42 @@ const Product = () => {
     }
   };
   //=================XỬ LÝ MUA NGAY ======================
-  const handleBuyNow = (selectedVariant, quantity, product) => {
-    console.log(product);
+  const handleBuyNow = () => {
+    if (!user?.user_id) {
+      showNotification('Bạn cần đăng nhập trước!', 'error');
+      return;
+    }
+
+    if (!selectedColor) {
+      showNotification('Vui lòng chọn màu!', 'warning');
+      return;
+    }
+
+    if (hasSize && !selectedSize) {
+      showNotification('Vui lòng chọn kích thước!', 'warning');
+      return;
+    }
+
+    if (!selectedVariant) {
+      showNotification('Không tìm thấy biến thể sản phẩm!', 'error');
+      return;
+    }
+
+    if (selectedVariant.stock <= 0) {
+      showNotification('Sản phẩm đã hết hàng!', 'error');
+      return;
+    }
+
+    if (quantity > selectedVariant.stock) {
+      showNotification(`Chỉ còn ${selectedVariant.stock} sản phẩm trong kho`, 'warning');
+      return;
+    }
+    if (product.status !== 'đang bán') {
+      showNotification('Sản phẩm này không còn bán nữa', 'warning');
+      return;
+    }
+
+console.log(selectedVariant)
     navigate('/dat-hang', {
       state: {
         buyNowItem: {
