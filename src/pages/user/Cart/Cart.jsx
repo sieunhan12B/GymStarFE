@@ -33,7 +33,6 @@ const Cart = () => {
     const [discountAmount, setDiscountAmount] = useState(0); // số tiền giảm theo voucher
     const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false); // trạng thái mở modal chọn voucher
     const [voucherList, setVoucherList] = useState([]); // danh sách voucher của user
-    console.log(voucherList)
 
 
 
@@ -95,7 +94,6 @@ const Cart = () => {
         const fetchVouchers = async () => {
             try {
                 const res = await promotionService.getUserPromotions();
-                console.log(res);
                 setVoucherList(res.data.data || []);
             } catch (error) {
                 console.error(error);
@@ -217,7 +215,6 @@ const Cart = () => {
         const itemsToCheckout = cartItems.filter(item =>
             selectedCartItems.includes(item.cart_detail_id)
         );
-console.log(itemsToCheckout);
         navigate('/dat-hang', {
             state: {
                 selectedCartItems: itemsToCheckout,

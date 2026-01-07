@@ -357,12 +357,18 @@ const OrderHistory = () => {
                                 {/* Footer */}
                                 <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
                                     <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => navigate(`/chi-tiet-don-hang/${order.order_id}`)}
-                                            className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100"
+                                        <Tooltip
+                                            title={order.status === "đã giao" ? "⭐ Bạn có thể đánh giá sản phẩm" : ""}
                                         >
-                                            Chi tiết
-                                        </button>
+                                            <button
+                                                onClick={() => navigate(`/chi-tiet-don-hang/${order.order_id}`)}
+                                                className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100"
+                                            >
+                                                Chi tiết
+                                            </button>
+                                        </Tooltip>
+
+
                                         {order.status === "đã giao" && (
                                             <Tooltip title="Hướng dẫn đổi hàng">
                                                 <button
@@ -389,6 +395,7 @@ const OrderHistory = () => {
                                                     Hủy đơn
                                                 </button>
                                             </Tooltip>
+
 
 
                                         )}
@@ -425,6 +432,8 @@ const OrderHistory = () => {
 
                                     </div>
 
+
+
                                     <div className="text-right">
                                         <p className="text-sm text-gray-500">Tổng tiền</p>
                                         <p className="text-xl font-bold">
@@ -440,18 +449,20 @@ const OrderHistory = () => {
             </div>
 
             {/* Pagination */}
-            {filteredOrders.length > pageSize && (
-                <div className="flex justify-center pb-6">
-                    <Pagination
-                        current={currentPage}
-                        pageSize={pageSize}
-                        total={filteredOrders.length}
-                        onChange={(page) => setCurrentPage(page)}
-                        showSizeChanger={false}
-                    />
-                </div>
-            )}
-        </div>
+            {
+                filteredOrders.length > pageSize && (
+                    <div className="flex justify-center pb-6">
+                        <Pagination
+                            current={currentPage}
+                            pageSize={pageSize}
+                            total={filteredOrders.length}
+                            onChange={(page) => setCurrentPage(page)}
+                            showSizeChanger={false}
+                        />
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

@@ -178,9 +178,8 @@ const OrderManager = () => {
       title: "Ngày tạo",
       dataIndex: "order_date",
       render: (d) =>
-        dayjs(d, "HH:mm:ss DD/MM/YYYY").isValid()
-          ? dayjs(d, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
-          : "—",
+           <p>{d}</p>,
+
     },
     {
       title: "Phương thức TT",
@@ -408,6 +407,59 @@ const OrderManager = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Chi tiết giá */}
+            <div className="border p-3 rounded-md">
+              <h3 className="font-semibold text-lg mb-3">Chi tiết giá</h3>
+
+              {selectedOrder && (
+                <div className="space-y-3 text-sm">
+
+                  {/* Số lượng sản phẩm */}
+                  <div className="flex justify-between">
+                    <span>Tổng số sản phẩm:</span>
+                    <span>{selectedOrder.items.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tổng số lượng:</span>
+                    <span>{selectedOrder.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                  </div>
+
+                  <hr />
+
+                  {/* Chi tiết giảm giá */}
+                  <div className="flex justify-between text-gray-600">
+                    <span>Tổng giá gốc:</span>
+                    <span className="text-right">{formatPrice(selectedOrder.items.reduce((sum, item) => sum + item.price_original * item.quantity, 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-red-600">
+                    <span>Tổng giảm sản phẩm:</span>
+                    <span className="text-right">-{formatPrice(selectedOrder.items.reduce((sum, item) => sum + (item.price_original - item.final_price) * item.quantity, 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-red-600">
+                    <span>Giảm voucher:</span>
+                    <span className="text-right">-{formatPrice(selectedOrder.discount_amount || 0)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Phí vận chuyển:</span>
+                    <span className="text-right">{formatPrice(0)}</span>
+                  </div>
+
+                  <hr />
+
+                  {/* Thành tiền */}
+                  <div className="flex justify-between font-semibold text-lg">
+                    <span>Thành tiền:</span>
+                    <span className="text-right">{formatPrice(selectedOrder.total)}</span>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+
+
+
 
           </div>
         )}

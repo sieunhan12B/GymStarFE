@@ -1,64 +1,36 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến phản hồi / góp ý
+ */
 export const feedbackService = {
+    // ================== ADMIN ==================
 
-
-
-
-    addFeedback: async (data) => {
-        try {
-            return await http.post(
-                "/QuanLyGopY/VietGopY", data
-            );
-        } catch (error) {
-            console.error("Lỗi trong feedbackService:", error);
-            throw error;
-        }
+    /** Lấy tất cả góp ý (Admin) */
+    getAllFeedback: (page = 1, limit = 9999) => {
+        return http.get(`/QuanLyGopY/LayDanhSachTatCaGopY?page=${page}&limit=${limit}`);
     },
 
-    getAll: async () => {
-        try {
-            return await http.get(
-                "/QuanLyGopY/LayDanhSachTatCaGopY?page=1&limit=9999"
-            );
-        } catch (error) {
-            console.error("Lỗi trong feedbackService:", error);
-            throw error;
-        }
-    },
-    reply:async (data,feedback_id) => {
-        try {
-            return await http.post(
-                `/QuanLyGopY/TraLoiGopY/${feedback_id}`,data
-            );
-        } catch (error) {
-            console.error("Lỗi trong feedbackService:", error);
-            throw error;
-        }
-    },
-    deleteFeedback:async (feedback_id) => {
-        try {
-            return await http.delete(
-                `/QuanLyGopY/XoaGopY/${feedback_id}`
-            );
-        } catch (error) {
-            console.error("Lỗi trong feedbackService:", error);
-            throw error;
-        }
+    /** Xóa góp ý theo feedback_id */
+    deleteFeedback: (feedback_id) => {
+        return http.delete(`/QuanLyGopY/XoaGopY/${feedback_id}`);
     },
 
-    getFeedbackUser:async () => {
-        try {
-            return await http.get(
-                "/QuanLyGopY/LayDanhSachGopYUser?page=1&limit=9999"
-            );
-        } catch (error) {
-            console.error("Lỗi trong feedbackService:", error);
-            throw error;
-        }
+    /** Trả lời góp ý theo feedback_id */
+    replyFeedback: (feedback_id, data) => {
+        return http.post(`/QuanLyGopY/TraLoiGopY/${feedback_id}`, data);
     },
 
+    // ================== USER ==================
 
+    /** Thêm góp ý mới (User) */
+    addFeedback: (data) => {
+        return http.post("/QuanLyGopY/VietGopY", data);
+    },
 
+    /** Lấy danh sách góp ý của user hiện tại */
+    getFeedbackUser: (page = 1, limit = 9999) => {
+        return http.get(`/QuanLyGopY/LayDanhSachGopYUser?page=${page}&limit=${limit}`);
+    },
 
 };

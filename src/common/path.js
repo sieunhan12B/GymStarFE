@@ -19,7 +19,7 @@ export const path = {
   newest: "san-pham-moi",
   bestSeller: "san-pham-ban-chay",
   sale:"san-pham-giam-gia",
-  
+
 
 
   signUp: "/dang-ki",
@@ -49,5 +49,6 @@ export const path = {
   paymentManager: "quan-ly-thanh-toan",
   roleManager: "quan-ly-loai-nguoi-dung",
   promotionManager: "quan-ly-khuyen-mai",
+  addressManager:"quan-ly-dia-chi",
 
 };

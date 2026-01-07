@@ -58,6 +58,14 @@ export const reviewService = {
             throw error;
         }
     },
+    getReviewDetail: async (order_detail_id) => {
+        try {
+            return await http.get(`/QuanLyDanhGia/LayDanhGiaCuaChiTietDonHang/${order_detail_id}`);
+        } catch (error) {
+            console.error("Lỗi lấy chi tiết đánh giá:", error);
+            throw error;
+        }
+    },
 
 
 

@@ -55,7 +55,7 @@ const FeedbackManager = () => {
     const fetchFeedbacks = async () => {
         setLoading(true);
         try {
-            const res = await feedbackService.getAll();
+            const res = await feedbackService.getAllFeedback();
             setFeedbacks(res?.data?.data || []);
         } catch {
             showNotification("Tải danh sách góp ý thất bại!", "error");
@@ -102,9 +102,10 @@ const FeedbackManager = () => {
         }
 
         try {
-            await feedbackService.reply(
+            await feedbackService.replyFeedback(
+                selectedFeedback.feedback.feedback_id,
                 { message: replyMessage },
-                selectedFeedback.feedback.feedback_id
+
             );
 
             showNotification("Trả lời góp ý thành công", "success");

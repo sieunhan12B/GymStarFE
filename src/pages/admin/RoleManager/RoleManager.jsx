@@ -64,7 +64,6 @@ const RoleManager = () => {
 
     /* ===== HANDLERS ===== */
     const openCreateModal = () => {
-        console.log("OPEN MODAL");
         setEditingRole(null);
         form.resetFields();
         setIsModalOpen(true);

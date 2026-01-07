@@ -7,8 +7,8 @@ export const userService = {
     // ================== ADMIN ==================
 
     /** Lấy danh sách tất cả người dùng (Admin) */
-    getAllUsers: () => {
-        return http.get("/QuanLyNguoiDung/LayDanhSachNguoiDung?page=1&limit=99999");
+    getAllUsers: (page=1,limit=9999) => {
+        return http.get(`/QuanLyNguoiDung/LayDanhSachNguoiDung?page=${page}&limit=${limit}`);
     },
 
     /** Cập nhật trạng thái người dùng (kích hoạt / vô hiệu hóa) */

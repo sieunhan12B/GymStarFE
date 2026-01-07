@@ -80,7 +80,6 @@ const SuggestionSize = ({ isOpen, onClose, sizeChart }) => {
             width={1100}
             closeIcon={false}
             centered
-            bodyStyle={{ padding: 0 }}
         >
             <div className="bg-white rounded-2xl max-h-[90vh] overflow-hidden flex flex-col">
 

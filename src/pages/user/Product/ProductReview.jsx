@@ -32,7 +32,6 @@ const ProductReview = ({ productId }) => {
             try {
                 setLoading(true);
                 const res = await reviewService.getReviewByProductId(productId);
-                console.log(res)
 
                 setReviewResponse(res.data);
             } catch (error) {

@@ -51,7 +51,6 @@ const Product = () => {
   const navigate = useNavigate();
   const { showNotification } = useContext(NotificationContext);
   const hasSize = product?.product_variants?.some(v => v.size != null);
-  console.log(hasSize)
 
   const isVideo = (url = "") =>
     url.match(/\.(mp4|webm|ogg)$/i);
@@ -70,11 +69,9 @@ const Product = () => {
       product_variant_id: selectedVariant.product_variant_id,
       quantity
     };
-    console.log(data);
 
     try {
       const res = await cartService.addToCart(data);
-      console.log(res);
       const cartRes = await cartService.getCart();
       dispatch(setCart(cartRes.data.data));
       showNotification(<AddedToCartToast product={product} quantity={quantity} product_variant={selectedVariant} message={res.data.message} />, 'success');
@@ -119,7 +116,6 @@ const Product = () => {
       return;
     }
 
-console.log(selectedVariant)
     navigate('/dat-hang', {
       state: {
         buyNowItem: {
@@ -139,7 +135,6 @@ console.log(selectedVariant)
     const fetchProduct = async () => {
       try {
         const res = await productService.getProductById(productId);
-        console.log(res)
         const data = res.data.data;
         setProduct(data);
         if (data.colors?.length > 0) setSelectedColor(data.colors[0].color);
@@ -156,12 +151,10 @@ console.log(selectedVariant)
     const fetchRelativeProducts = async () => {
       try {
         const res = await productService.getProductByCategoryId(product?.category_id);
-        console.log(res);
         const data = res.data.data;
 
         // Lọc bỏ sản phẩm hiện tại
         const filteredData = data.filter(p => p.product_id != productId);
-        console.log(productId, data, filteredData)
 
         setRelativeProducts(filteredData);
       } catch (error) {
@@ -425,7 +418,6 @@ console.log(selectedVariant)
   )
 
   const renderRelatedProducts = () => {
-    console.log(relativeProducts)
     return (
       relativeProducts.length != 0 ? (
         <section className="max-w-7xl mx-auto px-4 py-16">
@@ -457,7 +449,6 @@ console.log(selectedVariant)
             <div className="flex gap-4">
               {(relativeProducts?.length ? relativeProducts : Array(5).fill(null)).map(
                 (item, idx) => {
-                  console.log(item)
                   return (
                     <div key={idx} className="w-72 flex-shrink-0">
                       <ProductCard product={item} hoverSize={item?.product_variants[0].size == null ? false : true} />

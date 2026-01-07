@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import ProductCard from "@/components/ProductCard/ProductCard";
 
 const ProductSection = ({ title, link, data, scrollRef, scrollProducts }) => {
-  console.log(data)
   return(
   <section className="max-w-7xl mx-auto px-4 py-16">
     <div className="flex items-end justify-between mb-8">

@@ -131,7 +131,6 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // n
 
         const variant = variantsOfSelectedColor.find(v => v.size === size);
         if (!variant) return;
-        console.log(variant);
         try {
             const res = await cartService.addToCart({
                 product_variant_id: variant.product_variant_id,

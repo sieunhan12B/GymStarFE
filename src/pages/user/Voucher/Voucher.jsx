@@ -24,9 +24,9 @@ const Voucher = () => {
         }
     };
 
-     
 
-  
+
+
     useEffect(() => {
         fetchVouchers();
     }, []);
@@ -143,19 +143,18 @@ const Voucher = () => {
                                     <div className="flex">
                                         {/* Left side - Discount info */}
                                         <div
-                                            className={`w-32 flex flex-col items-center justify-center ${available
-                                                ? "bg-gradient-to-br from-red-500 to-pink-500 text-white"
-                                                : "bg-gray-200 text-gray-500"
+                                            className={`w-32 flex flex-col items-center justify-center text-white ${available
+                                                    ? voucher.discount_type === "percent"
+                                                        ? "bg-gradient-to-br from-red-500 to-pink-500"
+                                                        : "bg-gradient-to-br from-blue-500 to-cyan-400"
+                                                    : "bg-gray-200 text-gray-500"
                                                 }`}
                                         >
                                             <GiftOutlined className="text-3xl mb-2" />
-                                            <span className="text-2xl font-bold">
-                                                {getDiscountDisplay(voucher)}
-                                            </span>
-                                            {voucher.discount_type === "fixed" && (
-                                                <span className="text-xs">GIẢM</span>
-                                            )}
+                                            <span className="text-2xl font-bold">{getDiscountDisplay(voucher)}</span>
+                                          
                                         </div>
+
 
                                         {/* Right side - Details */}
                                         <div className="flex-1 p-4 relative">

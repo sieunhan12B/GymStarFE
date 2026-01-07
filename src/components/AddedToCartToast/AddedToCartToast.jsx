@@ -3,7 +3,6 @@ import { Image } from "antd";
 import { formatPrice } from "../../utils/utils";
 
 const AddedToCartToast = ({ product, product_variant, quantity = 1, message }) => {
-    console.log(product);
     return (
         <div className="w-full max-w-sm bg-white ">
 

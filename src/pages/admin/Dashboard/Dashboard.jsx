@@ -215,8 +215,13 @@ const DashboardGym = () => {
               <RangePicker
                 format="DD/MM/YYYY"
                 onChange={(dates) => setDateRange(dates)}
-                allowClear
+                value={dateRange}
+                disabledDate={(current) => {
+                  // Không cho chọn ngày sau hôm nay
+                  return current && current > dayjs().endOf('day');
+                }}
               />
+
             }
             bordered={false}
             className="shadow-md"

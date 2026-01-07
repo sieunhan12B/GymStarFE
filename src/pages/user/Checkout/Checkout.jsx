@@ -21,12 +21,11 @@ const Checkout = () => {
     const selectedCartItems = location.state?.selectedCartItems || [];
     const selectedVoucherFromCart = location.state?.selectedVoucher || null;
     const buyNowItem = location.state?.buyNowItem;
-    console.log(buyNowItem)
-    console.log(selectedCartItems)
+  
     const [addresses, setAddresses] = useState([]);
     const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [openAddressModal, setOpenAddressModal] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('cod');
+    const [paymentMethod, setPaymentMethod] = useState('COD');
     const [orderNote, setOrderNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,7 +35,6 @@ const Checkout = () => {
     const [selectedVoucher, setSelectedVoucher] = useState(null);
     const [openVoucherModal, setOpenVoucherModal] = useState(false);
     const [voucherCode, setVoucherCode] = useState("");
-    console.log(voucherCode);
 
 
 
@@ -110,7 +108,6 @@ const Checkout = () => {
     }, [selectedVoucher]);
 
     const getFinalPrice = (item) => {
-        console.log(item);
         // từ giỏ hàng
         if (item.product_variant?.product?.final_price) {
             return item.product_variant.product.final_price;
@@ -266,41 +263,60 @@ const Checkout = () => {
         setIsSubmitting(true);
         try {
             let res;
-            if (selectedCartItems.length != 0) {
+            if (selectedCartItems.length > 0) {
                 const payload = {
                     cart_detail_ids: selectedCartItems.map(item => item.cart_detail_id),
                     note: orderNote,
                     address_id: selectedAddressId,
                     method: paymentMethod.toUpperCase(),
-                    promotion_code: voucherCode,
+                    promotion_code: voucherCode || undefined,
                 };
                 res = await orderService.createOrder(payload);
-                showNotification(res.data.message, "success");
                 fetchCart();
-            }
-
-            if (buyNowItem) {
+            } else if (buyNowItem) {
                 const payload = {
                     product_variant_id: buyNowItem.product_variant.product_variant_id,
                     quantity: buyNowItem.quantity,
                     note: orderNote,
                     address_id: selectedAddressId,
                     method: paymentMethod.toUpperCase(),
-                    promotion_code: voucherCode,
+                    promotion_code: voucherCode || undefined,
                 };
                 res = await orderService.orderNow(payload);
-                showNotification(res.data.message, "success");
             }
 
-            if (paymentMethod === "momo" && res.data.payUrl) {
-                setLocalStorage("tempCart", selectedCartItems);
-                window.location.href = res.data.payUrl;
-            } else {
-                navigate(`/ket-qua-thanh-toan/${res.data.order_id}`);
+            const orderId = res.data.order_id;
+            const payUrl = res.data.payUrl;
+
+            // Trường hợp thanh toán MoMo
+            if (paymentMethod === "MOMO") {
+                if (payUrl) {
+                    // Lưu tạm giỏ hàng nếu cần quay lại
+                    if (selectedCartItems.length > 0) {
+                        setLocalStorage("tempCart", selectedCartItems);
+                    }
+
+                    showNotification("Đặt hàng thành công! Đang chuyển sang MoMo để thanh toán...", "success");
+
+                    // Chuyển hướng sau 3-4 giây để người dùng thấy thông báo
+                    setTimeout(() => {
+                        window.location.href = payUrl;
+                    }, 2000);
+                } else {
+                    // Backend không trả payUrl → coi như thất bại
+                    showNotification("Không thể tạo link thanh toán MoMo. Vui lòng thử lại hoặc chọn COD.", "error");
+                    // Có thể navigate về giỏ hàng hoặc để người dùng thử lại
+                }
+            }
+            // Trường hợp COD hoặc các phương thức khác (không cần payUrl)
+            else {
+                showNotification(res.data.message || "Đặt hàng thành công!", "success");
+                navigate(`/ket-qua-thanh-toan/${orderId}`);
             }
         } catch (error) {
-            console.log(error)
-            showNotification(error?.response?.data?.message || "Có lỗi xảy ra", "error");
+            console.error(error);
+            const message = error?.response?.data?.message || "Có lỗi xảy ra khi đặt hàng";
+            showNotification(message, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -563,33 +579,6 @@ const Checkout = () => {
                     </Form>
                 </Modal>
 
-                {/* Modal Thêm / Chỉnh sửa địa chỉ */}
-                <Modal
-                    title={addressModalMode === "add" ? "Thêm địa chỉ mới" : "Cập nhật địa chỉ"}
-                    open={openAddEditModal}
-                    onCancel={() => { setOpenAddEditModal(false); form.resetFields(); }}
-                    onOk={() => form.submit()}
-                >
-                    <Form layout="vertical" form={form} onFinish={handleSubmitAddress}>
-                        <Form.Item
-                            label="Tên người nhận"
-                            name="receiver_name"
-                            rules={[{ required: true, message: "Tên người nhận không được để trống" }]}
-                        >
-                            <Input />
-                        </Form.Item>
-                        <Form.Item
-                            label="Số điện thoại"
-                            name="phone"
-                            rules={[{ required: true, message: "Số điện thoại không được để trống" }]}
-                        >
-                            <Input />
-                        </Form.Item>
-
-                        {/* Dùng luôn AddressSelector */}
-                        <AddressSelector form={form} />
-                    </Form>
-                </Modal>
 
 
 
@@ -723,13 +712,13 @@ const Checkout = () => {
                 <h2 className="text-xl font-bold mb-4">Hình thức thanh toán</h2>
                 <div className="space-y-3">
                     <label className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
-                        <Radio checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
+                        <Radio checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} />
                         <CarOutlined style={{ fontSize: 24 }} />
                         <span className="font-medium flex-1">Thanh toán khi nhận hàng</span>
                     </label>
 
                     <label className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
-                        <Radio checked={paymentMethod === 'momo'} onChange={() => setPaymentMethod('momo')} />
+                        <Radio checked={paymentMethod === 'MOMO'} onChange={() => setPaymentMethod('MOMO')} />
                         <img src={momo} width={32} height={32} alt="Momo" />
                         <span className="font-medium flex-1">Ví Momo</span>
                     </label>
@@ -744,7 +733,7 @@ const Checkout = () => {
                     <div className="w-1/3 flex justify-between items-center">
                         <div className="w-1/2 flex flex-col items-start gap-5">
                             <p>Tổng tiền hàng ({selectedCartItems.length != 0 ? selectedCartItems.reduce((sum, item) => sum + item.quantity, 0) : buyNowItem ? buyNowItem.quantity : 0} sản phẩm):</p>
-                            <p>Giảm giá:</p>
+                            <p>Giảm giá sản phẩm:</p>
                             {selectedVoucher && <p className="text-orange-600 font-medium">Giảm voucher:</p>}
                             <p>Phí vận chuyển:</p>
                             <p className='font-bold text-lg text-red-600 '>Tổng thanh toán:</p>

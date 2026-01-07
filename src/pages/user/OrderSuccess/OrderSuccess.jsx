@@ -13,6 +13,7 @@ import { getLocalStorage } from '../../../utils/utils'
 import { setUser } from '../../../redux/userSlice'
 import { setCart } from '../../../redux/cartSlice'
 import { paymentService } from '../../../services/payment.service'
+import dayjs from 'dayjs'
 
 const OrderSuccess = () => {
     const { orderId } = useParams()
@@ -45,7 +46,6 @@ const OrderSuccess = () => {
             }
 
             const res = await paymentService.reTryPayment(data);
-            console.log(res);
 
             const payUrl = res.data.payUrl
 
@@ -151,28 +151,56 @@ const OrderSuccess = () => {
                     <p className="text-2xl font-mono font-bold">
                         #{order.order_id}
                     </p>
+                    <div className="flex justify-between gap-2">
+                        <span className="text-gray-600">Thời gian đặt hàng:</span>
+                        <span className="font-medium">{dayjs(order.order_date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")}</span>
+                    </div>
                 </div>
+
+
+
             </div>
 
             {/* CONTENT */}
             <div className="max-w-3xl mx-auto px-4 py-12 space-y-8">
                 {/* ORDER SUMMARY */}
                 <div className="bg-white border rounded-lg p-6 space-y-4">
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Sản phẩm</span>
-                        <span className="font-medium text-right">
-                            {order.items[0].product.name}
-                            {order.items.length > 1 &&
-                                ` và ${order.items.length - 1} sản phẩm khác`}
-                        </span>
+                    <div className="space-y-2">
+                        <p className="text-gray-600">Sản phẩm</p>
+
+                        {order.items.map(item => (
+                            <div
+                                key={item.order_detail_id}
+                                className="flex justify-between text-sm"
+                            >
+                                <span>
+                                    {item.product.name}
+                                    {item.variant &&
+                                        ` (${item.variant.color} - ${item.variant.size})`}
+                                    {' '}× {item.quantity}
+                                </span>
+                                <span className="font-medium">
+                                    {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                                </span>
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Tổng thanh toán</span>
+
+                    {order.discount_amount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                            <span>Giảm giá voucher</span>
+                            <span>-{order.discount_amount.toLocaleString('vi-VN')}đ</span>
+                        </div>
+                    )}
+
+                    <div className="flex justify-between border-t pt-3">
+                        <span className="text-gray-800 font-semibold">Tổng thanh toán</span>
                         <span className="font-bold text-lg">
                             {order.total.toLocaleString('vi-VN')}đ
                         </span>
                     </div>
+
 
                     <div className="flex justify-between">
                         <span className="text-gray-600">
@@ -222,6 +250,18 @@ const OrderSuccess = () => {
                         {order.address_detail}
                     </p>
                 </div>
+                {/* CUSTOMER NOTE */}
+                {order.note && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                        <h2 className="font-semibold mb-2">
+                            📝 Ghi chú của bạn
+                        </h2>
+                        <p className="text-gray-700 italic">
+                            “{order.note}”
+                        </p>
+                    </div>
+                )}
+
 
                 {/* CTA */}
                 <div className="space-y-3">
@@ -268,6 +308,10 @@ const OrderSuccess = () => {
                         <PhoneOutlined />
                         Cần hỗ trợ? Liên hệ 1900-xxxx
                     </p>
+                    <p>
+                        Đặt hàng bởi {order.user.full_name} ({order.user.email})
+                    </p>
+
                 </div>
             </div>
         </div>

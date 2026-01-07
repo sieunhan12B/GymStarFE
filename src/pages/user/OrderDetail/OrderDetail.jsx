@@ -60,6 +60,15 @@ const OrderDetail = () => {
         'giao thất bại',
         'đã giao'
     ];
+    const statusColor = {
+        "chờ xác nhận": "text-yellow-300",
+        "đã xác nhận": "text-blue-300",
+        "đang xử lý": "text-indigo-300",
+        "đang giao": "text-orange-300",
+        "đã giao": "text-green-300",
+        "đã hủy": "text-red-300",
+    };
+
 
     const cancelReasons = [
         "Đổi ý không muốn mua nữa",
@@ -111,6 +120,10 @@ const OrderDetail = () => {
     const voucherDiscount = orderData.discount_amount || 0;
 
     const finalTotal = orderData.total;
+    const totalQuantity = orderData.items.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+    );
 
 
     /* ================== CANCEL ORDER ================== */
@@ -156,14 +169,17 @@ const OrderDetail = () => {
             dispatch(setCart(cartRes.data.data));
 
             const { product_name, color, size, quantity, thumbnail } = res.data.data;
-            console.log(res.data.data)
             const product = {
                 thumbnail,
                 name: product_name
             }
+            const produc_variant = {
+                color,
+                size,
+            }
 
 
-            showNotification(<AddedToCartToast product={product} color={color} quantity={quantity} size={size} message={"Đã thêm sản phẩm vào giờ hàng"} />, 'success');
+            showNotification(<AddedToCartToast product={product} product_variant={produc_variant} quantity={quantity} message={"Đã thêm sản phẩm vào giờ hàng"} />, 'success');
 
         } catch (error) {
             console.error(error);
@@ -228,39 +244,38 @@ const OrderDetail = () => {
             onCancel={() => setIsReviewModalOpen(false)}
             footer={null}
             width={520}
-            destroyOnHidden
+            destroyOnClose
         >
             {reviewItem && (
                 <div className="space-y-4">
                     <h2 className="text-lg font-bold text-center">
-                        Đánh giá sản phẩm
+                        {reviewItem.review_id ? "Chi tiết đánh giá" : "Đánh giá sản phẩm"}
                     </h2>
 
-                    {/* Product info */}
-                    <div className="flex gap-3 items-center">
-                        <Image
-                            src={reviewItem.product.thumbnail}
-                            width={64}
-                            height={64}
-                            className="rounded"
-                        />
-                        <div>
-                            <p className="font-semibold">
-                                {reviewItem.product.name}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                                Size {reviewItem.variant.size} | {reviewItem.variant.color}
-                            </p>
+                    {/* Thông tin sản phẩm */}
+                    {reviewItem.product && (
+                        <div className="flex gap-3 items-center">
+                            <Image
+                                src={reviewItem.product?.thumbnail}
+                                width={64}
+                                className="rounded"
+                            />
+                            <div>
+                                <p className="font-semibold">{reviewItem.product?.name}</p>
+                                <p className="text-sm text-gray-500">
+                                    Size {reviewItem.variant?.size} | {reviewItem.variant?.color}
+                                </p>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
 
                     {/* Rating */}
                     <div>
-                        <p className="font-medium mb-1">
-                            Chất lượng sản phẩm
-                        </p>
+                        <p className="font-medium mb-1">Chất lượng sản phẩm</p>
                         <Rate
-                            value={rating}
+                            value={reviewItem.review_id ? reviewItem.rating : rating}
+                            disabled={!!reviewItem.review_id}
                             onChange={setRating}
                             className="text-amber-500"
                         />
@@ -271,50 +286,49 @@ const OrderDetail = () => {
                         <p className="font-medium mb-1">Nhận xét</p>
                         <Input.TextArea
                             rows={4}
-                            placeholder="Chia sẻ cảm nhận của bạn (tối thiểu 10 ký tự)"
-                            value={comment}
+                            value={reviewItem.review_id ? reviewItem.comment : comment}
                             onChange={(e) => setComment(e.target.value)}
+                            disabled={!!reviewItem.review_id}
+                            placeholder="Chia sẻ cảm nhận của bạn (tối thiểu 10 ký tự)"
                         />
                     </div>
 
                     {/* Images */}
-                    <div>
-                        <p className="font-medium mb-1">
-                            Hình ảnh (không bắt buộc)
-                        </p>
-                        <Input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={(e) =>
-                                setReviewImages([...e.target.files])
-                            }
-                        />
-                    </div>
+                    {reviewItem.review_id ? (
+                        reviewItem.images?.length > 0 && (
+                            <div className="flex gap-2 flex-wrap">
+                                {reviewItem.images.map((img, idx) => (
+                                    <Image key={idx} src={img} width={80} height={80} className="rounded" />
+                                ))}
+                            </div>
+                        )
+                    ) : (
+                        <div>
+                            <p className="font-medium mb-1">Hình ảnh (không bắt buộc)</p>
+                            <Input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={(e) => setReviewImages([...e.target.files])}
+                            />
+                        </div>
+                    )}
 
-                    {/* Submit */}
-                    <Button
-                        block
-                        loading={submittingReview}
-                        className="
-                            bg-amber-500
-                            hover:bg-amber-600
-                            disabled:bg-amber-300
-                            border-none
-                            text-white
-                            font-semibold
-                            rounded-lg
-                        "
-                        onClick={handleSubmitReview}
-                    >
-                        Gửi đánh giá
-                    </Button>
-
-
-
+                    {/* Submit chỉ hiện khi tạo review mới */}
+                    {!reviewItem.review_id && (
+                        <Button
+                            block
+                            loading={submittingReview}
+                            className="bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg"
+                            onClick={handleSubmitReview}
+                        >
+                            Gửi đánh giá
+                        </Button>
+                    )}
                 </div>
             )}
         </Modal>
+
     );
 
     /* ================== RENDER ================== */
@@ -325,8 +339,12 @@ const OrderDetail = () => {
                 <h1 className="text-2xl font-bold">Chi tiết đơn hàng</h1>
                 <p>Mã đơn: {orderData.order_id}</p>
                 <p className="mt-1">
-                    Trạng thái: <b>{orderData.status}</b>
+                    Trạng thái:{" "}
+                    <b className={statusColor[orderData.status]}>
+                        {orderData.status}
+                    </b>
                 </p>
+
             </div>
 
             <div className="max-w-7xl mx-auto p-6 grid lg:grid-cols-3 gap-6">
@@ -373,32 +391,45 @@ const OrderDetail = () => {
                                         <p className="text-sm text-gray-500">
                                             Size {item.variant.size} | {item.variant.color} | x{item.quantity}
                                         </p>
+                                        <p className="text-xs text-gray-400">
+                                            SKU: {item.variant.sku}
+                                        </p>
 
-                                        <div className="flex max-w-64  gap-2 mt-14">
-                                            {/* Nút đánh giá */}
+
+                                        <div className="flex max-w-64 gap-2 mt-4">
                                             {orderData.status === "đã giao" && (
-                                                item.is_review ? (
-                                                    <Button disabled className=" bg-gray-300 w-1/2 text-gray-700 rounded-lg">
-                                                        ✅ Đã đánh giá
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        className=" bg-amber-500 w-1/2 hover:bg-amber-600 text-white rounded-lg font-semibold"
-                                                        onClick={() => {
+                                                <Button
+                                                    className={item.is_review
+                                                        ? "bg-gray-300 w-1/2 text-gray-700 rounded-lg"
+                                                        : "bg-amber-500 w-1/2 hover:bg-amber-600 text-white rounded-lg font-semibold"}
+                                                    onClick={async () => {
+                                                        if (item.is_review) {
+                                                            // Lấy chi tiết review từ API
+                                                            try {
+                                                                const res = await reviewService.getReviewDetail(item.order_detail_id);
+                                                                setReviewItem(res.data.data); // dữ liệu review từ API
+                                                                setIsReviewModalOpen(true);
+                                                            } catch (error) {
+                                                                showNotification("Không lấy được chi tiết đánh giá", "error");
+                                                            }
+                                                        } else {
+                                                            // Tạo review mới
                                                             setReviewItem(item);
+                                                            setRating(5);
+                                                            setComment("");
+                                                            setReviewImages([]);
                                                             setIsReviewModalOpen(true);
-                                                        }}
-                                                    >
-                                                        ⭐ Đánh giá
-                                                    </Button>
-                                                )
+                                                        }
+                                                    }}
+                                                >
+                                                    {item.is_review ? "✅ Xem đánh giá" : "⭐ Đánh giá"}
+                                                </Button>
                                             )}
 
-                                            {/* Nút mua lại */}
                                             {["đã giao", "giao thất bại", "đã hủy", "đổi hàng"].includes(orderData.status) && (
                                                 <Button
-                                                    className=" bg-green-500 w-1/2 hover:bg-green-600 text-white rounded-lg font-semibold"
-                                                    onClick={() => { handleBuyAgain(item.order_detail_id) }}
+                                                    className="bg-green-500 w-1/2 hover:bg-green-600 text-white rounded-lg font-semibold"
+                                                    onClick={() => handleBuyAgain(item.order_detail_id)}
                                                 >
                                                     🔁 Mua lại
                                                 </Button>
@@ -406,11 +437,26 @@ const OrderDetail = () => {
                                         </div>
 
 
+
                                     </div>
 
-                                    <div className="font-bold">
-                                        {item.price.toLocaleString('vi-VN')}đ
+                                    <div className="text-right">
+                                        {item.original_price > item.price && (
+                                            <p className="text-sm line-through text-gray-400">
+                                                {(item.original_price * item.quantity).toLocaleString('vi-VN')}đ
+                                            </p>
+                                        )}
+
+                                        <p className="font-bold text-red-500">
+                                            {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                                        </p>
+
+                                        <p className="text-xs text-gray-500">
+                                            {item.price.toLocaleString('vi-VN')}đ x {item.quantity}
+                                        </p>
                                     </div>
+
+
                                 </div>
                             ))}
                         </div>
@@ -479,6 +525,14 @@ const OrderDetail = () => {
                                     ? dayjs(orderData.received_date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
                                     : "Đang cập nhật"}
                             </div>
+                            {orderData.note && (
+                                <div className="flex items-start gap-2">
+                                    <FileTextOutlined />
+                                    <span className="font-medium">Ghi chú:</span>
+                                    <span>{orderData.note}</span>
+                                </div>
+                            )}
+
 
                         </div>
                     )}
@@ -516,9 +570,15 @@ const OrderDetail = () => {
                     )}
                     <div className="border-t pt-4 space-y-2 text-gray-300 text-sm">
                         <div className="flex justify-between">
-                            <span>Tạm tính</span>
+                            <span>Tổng số lượng</span>
+                            <span>{totalQuantity}</span>
+                        </div>
+
+                        <div className="flex justify-between">
+                            <span>Tạm tính ({orderData.items.length} sản phẩm)</span>
                             <span>{subtotal.toLocaleString('vi-VN')}đ</span>
                         </div>
+
 
                         {productDiscount > 0 && (
                             <div className="flex justify-between text-orange-400">
@@ -551,6 +611,14 @@ const OrderDetail = () => {
                             </button>
                         </PDFDownloadLink>
                     )}
+                    {/* Hiển thị nút Đã hủy nếu đơn bị hủy */}
+                    {orderData.status === "đã hủy" && (
+                        <button disabled className="w-full bg-red-500 text-white font-bold py-2 rounded mt-3 cursor-not-allowed hover:bg-red-500 whitespace-nowrap text-center">
+                            ❌ Đơn hàng đã hủy
+                        </button>
+                    )}
+
+
 
                     {/* Cancel */}
                     {["chờ xác nhận", "đã xác nhận", "đang xử lý"].includes(orderData.status) && (
@@ -561,6 +629,8 @@ const OrderDetail = () => {
                             Huỷ đơn
                         </button>
                     )}
+
+
 
                     <Modal
                         title="Huỷ đơn hàng"

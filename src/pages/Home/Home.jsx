@@ -189,7 +189,6 @@ const Home = () => {
 
 
     const sellingSale = filterSellingProducts(discounted).slice(0, 10);
-    console.log(sellingSale)
 
 
     return (

@@ -501,11 +501,19 @@ const PromotionManager = () => {
                         >
                             <InputNumber
                                 min={1}
-                                formatter={value => value ? formatPrice(value) : ""}
-                                parser={value => value.replace(/₫|\./g, '')} // convert về số
+                                max={discountType === "percent" ? 99 : undefined} // giới hạn 100% nếu là %
                                 style={{ width: "100%" }}
+                                formatter={(value) => {
+                                    if (!value) return "";
+                                    return discountType === "percent"
+                                        ? `${value} %`
+                                        : formatPrice(value);
+                                }}
+                                parser={(value) => value.replace(/\D/g, "")} // loại bỏ ký tự không phải số
                             />
                         </Form.Item>
+
+
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

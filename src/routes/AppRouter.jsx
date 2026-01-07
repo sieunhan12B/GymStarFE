@@ -32,6 +32,7 @@ import PromotionManager from "../pages/admin/PromotionManager/PromotionManager";
 
 
 
+
 // ------------------ USER ------------------
 import Home from "../pages/Home/Home";
 import Account from "../pages/user/Account/Account";
@@ -47,6 +48,7 @@ import AddressBook from "../pages/user/AddressBook/AddressBook";
 import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
 import Checkout from "../pages/user/Checkout/Checkout";
 import Voucher from "../pages/user/Voucher/Voucher";
+import AddressManager from "../pages/admin/AddressManager/AddressManager";
 
 
 
@@ -265,6 +267,14 @@ export const AppRouter = [
                 element: (
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.PRODUCT_MANAGER]}>
                         <PromotionManager />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: path.addressManager,
+                element: (
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                        <AddressManager />
                     </ProtectedRoute>
                 ),
             },
