@@ -73,8 +73,7 @@ const OrderHistory = () => {
     }, []);
 
     const handleCancelOrder = async (orderId) => {
-        console.log(orderId);
-        console.log(cancelReason);
+
         if (!cancelReason) {
             showNotification("Vui lòng chọn lý do huỷ", "error");
             return;
@@ -86,7 +85,7 @@ const OrderHistory = () => {
                 reason: cancelReason,
             }
             const res = await orderService.deleteOrder(orderId, payload);
-            console.log(res)
+    
             showNotification(res.data.message || "Huỷ đơn thành công", "success");
 
             // Cập nhật trạng thái orderData

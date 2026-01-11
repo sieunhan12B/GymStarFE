@@ -120,6 +120,25 @@ const ReviewManager = () => {
     // ===== COLUMNS =====
     const reviewColumns = [
         {
+            title: "Sản phẩm",
+            key: "product",
+            width: 200,
+            render: (_, record) => (
+                <div className="flex items-center gap-2">
+                    <Image
+                        src={record.product.thumbnail}
+                        width={40}
+                        height={40}
+                        className="rounded object-cover"
+                        preview={false}
+                    />
+                    <span className="text-sm">{record.product.product_name}</span>
+                </div>
+            ),
+            // Có thể thêm filter hoặc sorter nếu muốn
+        },
+
+        {
             title: "⭐ Đánh giá",
             dataIndex: "rating",
             key: "rating",

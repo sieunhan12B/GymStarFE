@@ -22,13 +22,13 @@ import Dashboard from "../pages/admin/Dashboard/Dashboard";
 import UserManager from "../pages/admin/UserManager/UserManager";
 import ProductManager from "../pages/admin/ProductManager/ProductManager";
 import CategoryManager from "../pages/admin/CategoryManager/CategoryManager";
-import Error from "../pages/Error/Error";
 import OrderManager from "../pages/admin/OrderManager/OrderManager";
 import ReviewManager from "../pages/admin/ReviewManager/ReviewManager";
 import FeedbackManager from "../pages/admin/FeedbackManager/FeedbackManager";
 import PaymentManager from "../pages/admin/PaymentManager/PaymentManager";
 import RoleManager from "../pages/admin/RoleManager/RoleManager";
 import PromotionManager from "../pages/admin/PromotionManager/PromotionManager";
+import AddressManager from "../pages/admin/AddressManager/AddressManager";
 
 
 
@@ -48,7 +48,7 @@ import AddressBook from "../pages/user/AddressBook/AddressBook";
 import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
 import Checkout from "../pages/user/Checkout/Checkout";
 import Voucher from "../pages/user/Voucher/Voucher";
-import AddressManager from "../pages/admin/AddressManager/AddressManager";
+import Error from "../pages/Error/Error";
 
 
 
@@ -249,7 +249,7 @@ export const AppRouter = [
             {
                 path: path.paymentManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.ORDER_MANAGER]}>
                         <PaymentManager />
                     </ProtectedRoute>
                 ),
@@ -265,7 +265,7 @@ export const AppRouter = [
             {
                 path: path.promotionManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.PRODUCT_MANAGER]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
                         <PromotionManager />
                     </ProtectedRoute>
                 ),
@@ -273,7 +273,7 @@ export const AppRouter = [
             {
                 path: path.addressManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.ORDER_MANAGER]}>
                         <AddressManager />
                     </ProtectedRoute>
                 ),

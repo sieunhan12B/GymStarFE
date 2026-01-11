@@ -221,7 +221,7 @@ const Header = () => {
                         {suggestions.slice(0, 4).map((product) => {
                           const hoverStatus = product?.product_variants[0]?.size;
                           return (
-                            <ProductCard product={product} hoverSize={hoverStatus == null ? false : true} />
+                            <ProductCard product={product} badgeContext={["sale"]} hoverSize={hoverStatus == null ? false : true} />
                           );
                         })}
                       </div>

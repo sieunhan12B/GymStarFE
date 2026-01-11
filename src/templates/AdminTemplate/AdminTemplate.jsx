@@ -44,13 +44,13 @@ const AdminTemplate = () => {
       { key: path.userManager, icon: <UserOutlined />, label: 'Người dùng', roles: [ROLES.ADMIN] },
       { key: path.productManager, icon: <ProductOutlined />, label: 'Sản phẩm', roles: [ROLES.ADMIN, ROLES.PRODUCT_MANAGER] },
       { key: path.categoryManager, icon: <TagOutlined />, label: 'Danh mục', roles: [ROLES.ADMIN, ROLES.PRODUCT_MANAGER] },
-      { key: path.promotionManager, icon: <UploadOutlined />, label: 'Khuyến mãi', roles: [ROLES.ADMIN, ROLES.PRODUCT_MANAGER] },
+      { key: path.promotionManager, icon: <UploadOutlined />, label: 'Khuyến mãi', roles: [ROLES.ADMIN] },
       { key: path.orderManager, icon: <ShopOutlined />, label: 'Đơn hàng', roles: [ROLES.ADMIN, ROLES.ORDER_MANAGER] },
-      { key: path.paymentManager, icon: <DollarOutlined />, label: 'Thanh toán', roles: [ROLES.ADMIN] },
+      { key: path.paymentManager, icon: <DollarOutlined />, label: 'Thanh toán', roles: [ROLES.ADMIN, ROLES.ORDER_MANAGER] },
       { key: path.feedbackManager, icon: <FormOutlined />, label: 'Góp ý', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
       { key: path.reviewManager, icon: <StarOutlined />, label: 'Đánh giá', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
       { key: path.roleManager, icon: <AppstoreOutlined />, label: 'Loại người dùng', roles: [ROLES.ADMIN] },
-      { key: path.addressManager, icon: <HomeOutlined />, label: 'Địa chỉ', roles: [ROLES.ADMIN] },
+      { key: path.addressManager, icon: <HomeOutlined />, label: 'Địa chỉ', roles: [ROLES.ADMIN, ROLES.ORDER_MANAGER] },
 
     ];
 

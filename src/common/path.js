@@ -1,39 +1,36 @@
 
 export const path = {
 
+  // ------------------ AUTH ------------------
+  signUp: "/dang-ki",
+  logIn: "/dang-nhap",
+  forgotPassword: "/quen-mat-khau",
+  resetPassword: "/dat-lai-mat-khau",
+  verifyEmail: "/xac-thuc-email",
+
 
   // ------------------ USER ------------------
 
   home: "/",
-  // category:":category",
+
   category: "danh-muc/*",
-  product: "san-pham/:subcategory/:productId",
-  cart: "gio-hang",
-  checkout: "checkout",
-  orderStatus: "ket-qua-thanh-toan/:orderId",
-  orderSuccess: "dat-hang-thanh-cong/:orderId",
-  orderDetail: "chi-tiet-don-hang/:orderId",
-  orderHistory: "lich-su-don-hang",
-  checkout: "dat-hang",
-  voucher: "ma-giam-gia",
+  searchPage: "tim-kiem/:keyword",
   newest: "san-pham-moi",
   bestSeller: "san-pham-ban-chay",
-  sale:"san-pham-giam-gia",
+  sale: "san-pham-giam-gia",
 
+  product: "san-pham/:subcategory/:productId",
+  cart: "gio-hang",
+  orderStatus: "ket-qua-thanh-toan/:orderId",
+  orderDetail: "chi-tiet-don-hang/:orderId",
+  checkout: "dat-hang",
 
-
-  signUp: "/dang-ki",
-  logIn: "/dang-nhap",
-  feedback: "/dong-gop-y-kien",
-  // product:":category/:productId",
-  forgotPassword: "/quen-mat-khau",
-  resetPassword: "/dat-lai-mat-khau",
-  verifyEmail: "/xac-thuc-email",
   account: "/tai-khoan",
-  addressBook: "so-dia-chi",
   accountInfo: "thong-tin-tai-khoan",
+  orderHistory: "lich-su-don-hang",
+  voucher: "ma-giam-gia",
+  addressBook: "so-dia-chi",
   reviewFeedback: "dong-gop-y-kien-va-danh-gia",
-  searchPage: "tim-kiem/:keyword",
 
 
 
@@ -49,6 +46,6 @@ export const path = {
   paymentManager: "quan-ly-thanh-toan",
   roleManager: "quan-ly-loai-nguoi-dung",
   promotionManager: "quan-ly-khuyen-mai",
-  addressManager:"quan-ly-dia-chi",
+  addressManager: "quan-ly-dia-chi",
 
 };
