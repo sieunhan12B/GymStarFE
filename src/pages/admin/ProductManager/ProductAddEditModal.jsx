@@ -21,6 +21,8 @@ import { normalizeText } from "../../../utils/normalizeText";
 import { formatPrice } from "@/utils/utils";
 import { productService } from "@/services/product.service";
 
+const COMMON_SPECS = ["Chất liệu", "Kiểu dáng", "Xuất xứ"];
+
 
 const ProductAddEditModal = ({
     open,
@@ -536,7 +538,17 @@ const ProductAddEditModal = ({
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Giảm giá (%)">
                                         <Form.Item name="discount" noStyle>
-                                            <InputNumber min={0} max={99} style={{ width: "100%" }} />
+                                            <InputNumber
+                                                min={1}
+                                                max={99} // giới hạn 100% nếu là %
+                                                style={{ width: "100%" }}
+                                                formatter={(value) => {
+                                                    if (!value) return "";
+                                                    return `${value} %`;
+
+                                                }}
+                                                parser={(value) => value.replace(/\D/g, "")} // loại bỏ ký tự không phải số
+                                            />
                                         </Form.Item>
                                     </Descriptions.Item>
                                 </Descriptions>
@@ -545,10 +557,40 @@ const ProductAddEditModal = ({
                     </Card>
 
                     {/* === THÔNG SỐ KỸ THUẬT === */}
+                    {/* === THÔNG SỐ KỸ THUẬT === */}
                     <Card title="Thông số kỹ thuật" size="small" className="mb-6">
                         <Form.List name="spec">
                             {(fields, { add, remove }) => (
                                 <>
+                                    {/* Toggle spec phổ biến */}
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {COMMON_SPECS.map((specName) => {
+                                            const isSelected = fields.some(
+                                                ({ name }) => form.getFieldValue(["spec", name, "label"]) === specName
+                                            );
+                                            return (
+                                                <Button
+                                                    key={specName}
+                                                    type={isSelected ? "primary" : "default"}
+                                                    onClick={() => {
+                                                        if (isSelected) {
+                                                            // bỏ spec nếu đã chọn
+                                                            const idx = fields.find(
+                                                                ({ name }) => form.getFieldValue(["spec", name, "label"]) === specName
+                                                            )?.name;
+                                                            if (idx !== undefined) remove(idx);
+                                                        } else {
+                                                            add({ label: specName, value: "" });
+                                                        }
+                                                    }}
+                                                >
+                                                    {specName}
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Render các spec đang có */}
                                     {fields.map(({ key, name, ...restField }) => (
                                         <Card
                                             key={key}
@@ -556,7 +598,7 @@ const ProductAddEditModal = ({
                                             className="mb-3 border rounded bg-gray-50"
                                             title={
                                                 <div className="flex justify-between items-center">
-                                                    <span>Thông số #{key + 1}</span>
+                                                    <span>{form.getFieldValue(["spec", name, "label"]) || `Thông số #${key + 1}`}</span>
                                                     <Button danger size="small" onClick={() => remove(name)}>
                                                         X
                                                     </Button>
@@ -565,29 +607,32 @@ const ProductAddEditModal = ({
                                         >
                                             <Form.Item
                                                 {...restField}
+                                                label="Tên thông số"
                                                 name={[name, "label"]}
-                                                label="Tên"
                                                 rules={[{ required: true, message: "Vui lòng nhập tên thông số" }]}
                                             >
                                                 <Input placeholder="Ví dụ: Chất liệu" />
                                             </Form.Item>
                                             <Form.Item
                                                 {...restField}
-                                                name={[name, "value"]}
                                                 label="Giá trị"
+                                                name={[name, "value"]}
                                                 rules={[{ required: true, message: "Vui lòng nhập giá trị" }]}
                                             >
                                                 <Input placeholder="Ví dụ: Cotton 100%" />
                                             </Form.Item>
                                         </Card>
                                     ))}
-                                    <Button type="dashed" onClick={() => add()} block>
-                                        + Thêm thông số
+
+                                    {/* Thêm spec mới tự do */}
+                                    <Button type="dashed" onClick={() => add({ label: "", value: "" })} block>
+                                        + Thêm thông số mới
                                     </Button>
                                 </>
                             )}
                         </Form.List>
                     </Card>
+
 
                     {/* === BIẾN THỂ === */}
                     <Card title={<><span style={{ color: "red" }}>*</span> Biến thể sản phẩm</>} size="small">
@@ -673,13 +718,26 @@ const ProductAddEditModal = ({
                                                 label="Ảnh / Video theo màu"
                                                 name={[name, "images"]}
                                                 valuePropName="fileList"
-                                                getValueFromEvent={(e) => e?.fileList || []}
+                                                getValueFromEvent={(e) => {
+                                                    const files = e?.fileList || [];
+
+                                                    // Lọc ra các file mới (originFileObj) → chỉ giữ các file mới, bỏ file cũ
+                                                    const newFiles = files.filter(f => f.originFileObj);
+
+                                                    if (newFiles.length > 0) {
+                                                        // replace hoàn toàn file cũ bằng file mới
+                                                        return newFiles;
+                                                    }
+
+                                                    // Nếu không có file mới, giữ lại file cũ (nếu muốn)
+                                                    return files;
+                                                }}
                                             >
                                                 <Upload
                                                     listType="picture-card"
                                                     accept="image/*,video/*"
                                                     multiple
-                                                    beforeUpload={() => false}
+                                                    beforeUpload={() => false} // không auto upload
                                                     itemRender={(originNode, file) =>
                                                         file.type?.startsWith("video") ? (
                                                             <video
@@ -693,6 +751,7 @@ const ProductAddEditModal = ({
                                                     + Upload
                                                 </Upload>
                                             </Form.Item>
+
 
                                             {/* Chọn size */}
                                             <Form.Item shouldUpdate>
@@ -721,8 +780,8 @@ const ProductAddEditModal = ({
                                                                         form.setFieldValue(["variants", name, "stocks"], { null: 0 });
                                                                     }}
                                                                     className={`min-w-[72px] rounded-full font-medium transition-all ${selectedSizes.includes(null)
-                                                                            ? "bg-purple-600 text-white border-purple-600"
-                                                                            : "bg-white text-gray-700 border-gray-300"
+                                                                        ? "bg-purple-600 text-white border-purple-600"
+                                                                        : "bg-white text-gray-700 border-gray-300"
                                                                         }`}
                                                                 >
                                                                     No size
@@ -760,8 +819,8 @@ const ProductAddEditModal = ({
                                                                                 }
                                                                             }}
                                                                             className={`min-w-[48px] rounded-full font-medium transition-all ${active
-                                                                                    ? "bg-blue-600 text-white border-blue-600"
-                                                                                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+                                                                                ? "bg-blue-600 text-white border-blue-600"
+                                                                                : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
                                                                                 }`}
                                                                         >
                                                                             {size}

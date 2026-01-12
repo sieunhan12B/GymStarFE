@@ -139,7 +139,7 @@ const ReviewManager = () => {
         },
 
         {
-            title: "⭐ Đánh giá",
+            title: "⭐ Số sao",
             dataIndex: "rating",
             key: "rating",
             width: 150,
@@ -156,6 +156,16 @@ const ReviewManager = () => {
             dataIndex: "comment",
             key: "comment",
             width: 350,
+             filters: [
+                { text: "Có nội dung", value: "comment" },
+                { text: "Chưa có nội dung", value: "not_comment" },
+            ],
+
+            onFilter: (value, record) => {
+                if (value === "comment") return !!record.comment;
+                if (value === "not_comment") return !record.comment;
+                return true;
+            },
             render: (text) => (
                 <div className="max-w-80">
                     <Typography.Text

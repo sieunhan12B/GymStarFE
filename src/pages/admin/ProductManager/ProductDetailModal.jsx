@@ -65,7 +65,6 @@ const ProductDetailModal = ({ open, product, onClose }) => {
             key: "price",
             render: (price, record) => {
                 const discount = Number(product.discount || 0);
-                const finalPrice = price * (1 - discount / 100);
                 return (
                     <div>
                         {discount > 0 && (
@@ -74,7 +73,7 @@ const ProductDetailModal = ({ open, product, onClose }) => {
                             </div>
                         )}
                         <div className="text-green-600 font-bold">
-                            {formatPrice(finalPrice)}
+                            {formatPrice(record.final_price)}
                         </div>
                     </div>
                 );
