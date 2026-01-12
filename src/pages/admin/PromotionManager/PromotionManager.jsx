@@ -89,8 +89,8 @@ const PromotionManager = () => {
             setIsCreateModalOpen(false);
             form.resetFields();
             fetchPromotions(); // reload table
-        } catch {
-            showNotification("Tạo khuyến mãi thất bại!", "error");
+        } catch (error) {
+            showNotification(error.response.data.message || "Tạo khuyến mãi thất bại!", "error");
         } finally {
             setCreateLoading(false);
         }
@@ -707,13 +707,20 @@ const PromotionManager = () => {
     return (
         <div className="bg-white rounded-lg shadow-sm">
             <Header
+                itemName="khuyến mãi"
                 searchText={searchText}
                 setSearchText={setSearchText}
-                itemName="khuyến mãi"
-                categoryFilterOn={false}
-                addItemOn={true}
+
+                showCategoryFilter={false}
+                showAddButton={true}
+                showReload={true}
+
                 onAddItem={() => setIsCreateModalOpen(true)}
+                onReload={fetchPromotions}
+                reloading={loading}
             />
+
+
 
 
             <DataTable

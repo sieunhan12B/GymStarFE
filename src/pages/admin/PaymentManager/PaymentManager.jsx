@@ -155,14 +155,14 @@ const PaymentManager = () => {
     // ===== RENDER HEADER =====
     const renderHeader = () => (
         <Header
-            searchText={searchText}
-            setSearchText={setSearchText}
             itemName="thanh toán"
-            categoryFilterOn={false}
-            addItemOn={false}
-            searchTextOn={false}
-                
+            onReload={fetchPayments}
+            reloading={loading}
+            showSearch={false}
+            showCategoryFilter={false}
+            showAddButton={false}
         />
+
     );
 
     // ===== RENDER TABLE =====

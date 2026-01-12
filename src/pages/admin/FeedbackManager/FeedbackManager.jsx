@@ -276,11 +276,19 @@ const FeedbackManager = () => {
     return (
         <div className="bg-white rounded-lg shadow-sm">
             <Header
-                setSearchText={setSearchText}
                 itemName="góp ý"
-                categoryFilterOn={false}
-                addItemOn={false}
+
+                searchText={searchText}
+                setSearchText={setSearchText}
+
+                showCategoryFilter={false}
+                showAddButton={false}
+                showReload={true}
+
+                onReload={fetchFeedbacks}
+                reloading={loading}
             />
+
 
             <Table
                 columns={columns}

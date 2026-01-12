@@ -384,12 +384,15 @@ const ReviewManager = () => {
     // ===== HEADER =====
     const renderHeader = () => (
         <Header
-
-            setSearchText={setSearchText}
             itemName="đánh giá"
-            categoryFilterOn={false}
-            addItemOn={false}
+            searchText={searchText}
+            setSearchText={setSearchText}
+            onReload={fetchReviews}
+            reloading={loading}
+            showCategoryFilter={false}
+            showAddButton={false}
         />
+
     );
 
 

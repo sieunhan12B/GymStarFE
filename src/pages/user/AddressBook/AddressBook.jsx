@@ -4,7 +4,6 @@ import { Button, Tooltip, Spin } from "antd";
 import { addressService } from "@/services/address.service";
 import { NotificationContext } from "@/App";
 import AddEditAddressModal from "../../../components/AddEditAddressModal/AddEditAddressModal";
-import GoongMap from "./GoongMap";
 
 
 const AddressBook = () => {

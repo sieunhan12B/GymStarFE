@@ -35,20 +35,28 @@ function App() {
   /* ================= AUTH BOOTSTRAP ================= */
   useEffect(() => {
     const token = Cookies.get("access_token");
-    if (!token || user) return;
+
+    // ❌ Không có token → chắc chắn là chưa login
+    if (!token) {
+      dispatch(logout()); // logout đã set loading = false
+      return;
+    }
+
+    if (user) return;
 
     const getInfoUser = async () => {
       try {
         const res = await userService.getCurrentUser();
-        dispatch(setUser(res.data.data));
+        dispatch(setUser(res.data.data)); // set loading = false
       } catch (error) {
-        dispatch(logout());
+        dispatch(logout()); // set loading = false
         Cookies.remove("access_token");
       }
     };
 
     getInfoUser();
   }, [user, dispatch]);
+
 
   /* ================= CART FETCH ================= */
   useEffect(() => {

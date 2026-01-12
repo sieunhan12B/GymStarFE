@@ -433,15 +433,17 @@ const ProductManager = () => {
     return (
         <div className="bg-white rounded-lg shadow-sm">
             <Header
+                itemName="sản phẩm"
                 searchText={searchText}
                 setSearchText={setSearchText}
                 categoryFilter={categoryFilter}
                 setCategoryFilter={setCategoryFilter}
                 categories={categoryForHeader}
                 onAddItem={openAddModal}
-                itemName="sản phẩm"
-                addItemOn={true}
+                onReload={fetchProducts}
+                reloading={loading}
             />
+
 
             <DataTable
                 columns={productColumns}

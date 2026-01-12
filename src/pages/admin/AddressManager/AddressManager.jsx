@@ -29,7 +29,7 @@ const AddressManager = () => {
 
 
     // Fetch dữ liệu
-    const fetchData = async () => {
+    const fetchAddress = async () => {
         setLoading(true);
         try {
             const res = await addressService.getAllAddressUser(0, 10);
@@ -42,7 +42,7 @@ const AddressManager = () => {
     };
 
     useEffect(() => {
-        fetchData();
+        fetchAddress();
     }, []);
 
     // Flatten dữ liệu cho table
@@ -130,12 +130,20 @@ const AddressManager = () => {
     return (
         <div className="bg-white rounded-lg shadow-sm p-4">
             <Header
+                itemName="địa chỉ"
+
                 searchText={searchText}
                 setSearchText={setSearchText}
-                itemName="địa chỉ"
-                categoryFilterOn={false}
-                addItemOn={false}
+
+                showCategoryFilter={false}
+                showAddButton={false}
+                showReload={true}
+
+                onReload={fetchAddress}
+                reloading={loading}
             />
+
+
             <DataTable
                 columns={columns}
                 dataSource={filterAddress}

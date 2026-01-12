@@ -225,9 +225,16 @@ const CategoryManager = () => {
         <div className="bg-white rounded-lg shadow-sm">
             <Header
                 itemName="danh mục"
-                filterOn={false}
+
+                showFilter={false}
+                showReload={true}
+                showAddButton={true}
+
                 onAddItem={openAddModal}
+                onReload={fetchCategories}
+                reloading={loading}
             />
+
 
             <DataTable
                 columns={columns}

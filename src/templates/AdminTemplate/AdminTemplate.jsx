@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import './AdminTemplate.css';
 import logo from '@/assets/images/logo.svg';
 import {
@@ -16,13 +16,19 @@ import {
   FormOutlined,
   DollarOutlined,
   HomeOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Image, Layout, Menu } from 'antd';
+import { Avatar, Button, Image, Layout, Menu, Dropdown, Modal } from 'antd';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { path } from '@/common/path';
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ROLES } from '@/constants/role';
+import { logout } from '../../redux/userSlice';
 
+import { NotificationContext } from '@/App';
+
+import Cookies from "js-cookie";
+import { clearCart } from '../../redux/cartSlice';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -32,6 +38,8 @@ const AdminTemplate = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { showNotification } = useContext(NotificationContext);
 
   // Lấy phần sau "/admin/"
   const currentKey = location.pathname.replace("/admin/", "");
@@ -56,6 +64,28 @@ const AdminTemplate = () => {
 
     return allItems.filter(item => item.roles.includes(role_id));
   };
+
+  const handleLogout = () => {
+    Cookies.remove("access_token");
+    dispatch(clearCart());
+    dispatch(logout());
+    showNotification("Đăng xuất thành công!", "success");
+    navigate(path.logIn);
+  };
+
+  const userMenuItems = [
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      label: "Đăng xuất",
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
+
+
+
+
 
 
 
@@ -100,18 +130,23 @@ const AdminTemplate = () => {
           </div>
 
           {/* BÊN PHẢI - USER INFO */}
-          <div className="flex items-center gap-3 cursor-pointer">
-            <Avatar icon={<UserOutlined />} />
+          <Dropdown menu={{ items: userMenuItems }}
+            placement="bottomRight"
+            trigger={["click"]}>
+            <div className="flex items-center gap-3 cursor-pointer">
+              <Avatar icon={<UserOutlined />} />
 
-            <div className="flex flex-col leading-tight">
-              <span className="font-semibold text-sm text-gray-800">
-                {user?.full_name}
-              </span>
-              <span className="text-xs text-gray-500">
-                {user?.email}
-              </span>
+              <div className="flex flex-col leading-tight">
+                <span className="font-semibold text-sm text-gray-800">
+                  {user?.full_name}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {user?.email}
+                </span>
+              </div>
             </div>
-          </div>
+          </Dropdown>
+
 
         </Header>
 

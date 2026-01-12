@@ -158,13 +158,15 @@ const RoleManager = () => {
     return (
         <div className="bg-white rounded-lg shadow-sm">
             <Header
+                itemName="role"
                 searchText={searchText}
                 setSearchText={setSearchText}
-                itemName="role"
-                addItemOn
-                onAddItem={openCreateModal} // ✅ ĐÚNG PROP
-                categoryFilterOn={false}
+                onAddItem={openCreateModal}
+                onReload={fetchRoles}
+                reloading={loading}
+                showCategoryFilter={false}
             />
+
 
 
             <DataTable

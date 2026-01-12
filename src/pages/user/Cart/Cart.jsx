@@ -356,6 +356,11 @@ const Cart = () => {
                                             showNotification("Đơn hàng chưa đủ điều kiện áp dụng voucher", "warning");
                                             return;
                                         }
+                                        if (foundVoucher.remaining_usage !== null && foundVoucher.remaining_usage <= 0) {
+                                            showNotification("Voucher đã hết lượt sử dụng", "error");
+                                            return;
+                                        }
+
 
                                         setSelectedVoucher(foundVoucher);
 
@@ -391,7 +396,9 @@ const Cart = () => {
 
                                 const isExpired = now < startDate || now > endDate;
                                 const isNotEnoughOrder = totalSelectedAmount < minOrderValue;
-                                const isDisabled = isNotEnoughOrder || isExpired;
+                                const isOutOfUsage = voucher.remaining_usage !== null && voucher.remaining_usage <= 0;
+                                const isDisabled = isNotEnoughOrder || isExpired || isOutOfUsage;
+
                                 const isChecked = selectedVoucher?.promotion_id === voucher.promotion_id;
 
                                 return (
@@ -505,16 +512,17 @@ const Cart = () => {
                                                 {isDisabled && (
                                                     <div className="mt-2">
                                                         {isExpired ? (
-                                                            <Tag color="red" className="text-xs">
-                                                                ⏰ Đã hết hạn
-                                                            </Tag>
+                                                            <Tag color="red">⏰ Đã hết hạn</Tag>
+                                                        ) : isOutOfUsage ? (
+                                                            <Tag color="volcano">🚫 Đã hết lượt sử dụng</Tag>
                                                         ) : isNotEnoughOrder ? (
-                                                            <Tag color="orange" className="text-xs">
+                                                            <Tag color="orange">
                                                                 ⚠️ Đơn hàng chưa đủ {parseFloat(voucher.min_order_value).toLocaleString()}đ
                                                             </Tag>
                                                         ) : null}
                                                     </div>
                                                 )}
+
                                             </div>
 
                                             {/* Radio button bên phải */}
@@ -676,7 +684,10 @@ const Cart = () => {
                                 {/* 4. Thành tiền (gốc + sau giảm) */}
                                 <div className="col-span-2 flex flex-col items-center">
                                     <span className="line-through text-sm text-gray-400">{formatPrice(item.product_variant?.price * item.quantity)}</span>
-                                    <span className="font-bold">{formatPrice((item.product_variant?.product?.final_price || item.product_variant?.product?.price) * item.quantity)}</span>
+                                    <span className="font-bold">
+                                    {formatPrice((item.product_variant?.product?.final_price || item.product_variant?.product?.price) * item.quantity)}
+                                    
+                                    </span>
                                 </div>
 
                                 {/* 5. Nút xóa */}

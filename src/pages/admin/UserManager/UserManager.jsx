@@ -275,12 +275,20 @@ const UserManager = () => {
   return (
     <div className="bg-white rounded-lg shadow-sm">
       <Header
+        itemName="người dùng"
+
         searchText={searchText}
         setSearchText={setSearchText}
-        itemName="người dùng"
-        categoryFilterOn={false}
-        addItemOn={false}
+
+        showCategoryFilter={false}
+        showAddButton={false}
+        showReload={true}
+
+        onReload={fetchUsers}
+        reloading={loading}
       />
+
+
 
       <DataTable
         columns={userColumns}

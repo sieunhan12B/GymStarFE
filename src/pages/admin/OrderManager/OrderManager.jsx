@@ -178,7 +178,7 @@ const OrderManager = () => {
       title: "Ngày tạo",
       dataIndex: "order_date",
       render: (d) =>
-           <p>{d}</p>,
+        <p>{d}</p>,
 
     },
     {
@@ -229,8 +229,9 @@ const OrderManager = () => {
       render: (_, r) => {
         const canChange =
           ALLOWED_TRANSITIONS[r.status]?.length > 0 &&
-          r.payment?.method?.toLowerCase() === "momo" &&
-          r.payment?.status?.toLowerCase() === "thành công";
+          (r.payment?.method !== "MOMO" || r.payment?.status === "thành công");
+
+
         return (
           <Space>
             <Tooltip title="Xem chi tiết">
@@ -262,11 +263,17 @@ const OrderManager = () => {
   return (
     <div className="bg-white rounded-lg shadow-sm">
       <Header
-        setSearchText={setSearchText}
         itemName="đơn hàng"
-        addItemOn={false}
-        categoryFilterOn={false}
+        searchText={searchText}
+        setSearchText={setSearchText}
+
+        showAddButton={false}
+        showCategoryFilter={false}
+
+        onReload={fetchOrders}
+        reloading={loading}
       />
+
 
       <Table
         columns={columns}
