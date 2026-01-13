@@ -29,10 +29,10 @@ const Cart = () => {
     const [isApplyingCode, setIsApplyingCode] = useState(false);
 
 
-    const [selectedVoucher, setSelectedVoucher] = useState(null); // voucher đang được áp dụng
-    const [discountAmount, setDiscountAmount] = useState(0); // số tiền giảm theo voucher
-    const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false); // trạng thái mở modal chọn voucher
-    const [voucherList, setVoucherList] = useState([]); // danh sách voucher của user
+    const [selectedVoucher, setSelectedVoucher] = useState(null);
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+    const [voucherList, setVoucherList] = useState([]);
 
 
 
@@ -129,7 +129,6 @@ const Cart = () => {
 
 
     // ========= Hàm tăng giảm số lượng =========
-    // Hàm tăng giảm số lượng - cập nhật UI ngay lập tức
     const handleQuantityChange = (cart_detail_id, newQuantity) => {
         setCartItems(prev =>
             prev.map(item => {
@@ -137,25 +136,21 @@ const Cart = () => {
 
                 const stock = item.product_variant?.stock ?? 0;
 
-                // ❌ Hết hàng
                 if (stock === 0) {
                     showNotification("Sản phẩm đã hết hàng", "error");
                     return item;
                 }
 
-                // ❌ Dưới 1
                 if (newQuantity < 1) {
                     showNotification("Số lượng tối thiểu là 1", "warning");
                     return item;
                 }
 
-                // ❌ Vượt tồn kho
                 if (newQuantity > stock) {
                     showNotification(`Chỉ còn ${stock} sản phẩm trong kho`, "warning");
                     return item;
                 }
 
-                // ❌ Vượt giới hạn business
                 if (newQuantity > 10) {
                     showNotification("Mỗi sản phẩm chỉ được mua tối đa 10 cái", "warning");
                     return item;
@@ -183,7 +178,6 @@ const Cart = () => {
 
             setCartItems(newCart);
 
-            // ✅ dispatch SAU
             dispatch(setCart(newCart));
 
             setSelectedCartItems([]);
@@ -232,18 +226,14 @@ const Cart = () => {
                 cart_detail_id: item.cart_detail_id
             });
 
-            // 1️⃣ TÍNH newCart TỪ STATE HIỆN TẠI
             const newCart = cartItems.filter(
                 i => i.cart_detail_id !== item.cart_detail_id
             );
 
-            // 2️⃣ UPDATE LOCAL STATE
             setCartItems(newCart);
 
-            // 3️⃣ SYNC REDUX (SAU render)
             dispatch(setCart(newCart));
 
-            // 4️⃣ UPDATE SELECTED
             setSelectedCartItems(prev =>
                 prev.filter(id => id !== item.cart_detail_id)
             );
@@ -685,8 +675,8 @@ const Cart = () => {
                                 <div className="col-span-2 flex flex-col items-center">
                                     <span className="line-through text-sm text-gray-400">{formatPrice(item.product_variant?.price * item.quantity)}</span>
                                     <span className="font-bold">
-                                    {formatPrice((item.product_variant?.product?.final_price || item.product_variant?.product?.price) * item.quantity)}
-                                    
+                                        {formatPrice((item.product_variant?.product?.final_price || item.product_variant?.product?.price) * item.quantity)}
+
                                     </span>
                                 </div>
 

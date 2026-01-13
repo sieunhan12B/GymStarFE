@@ -41,7 +41,7 @@ const ManagerAccount = () => {
     {
       key: '2',
       icon: <ShoppingCartOutlined />,
-      label: 'Lịch sử đơn hàng',
+      label: 'Đơn hàng của tôi',
       path: path.orderHistory,
 
     },

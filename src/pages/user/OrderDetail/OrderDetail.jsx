@@ -31,6 +31,7 @@ import { cartService } from '../../../services/cart.service';
 import { useDispatch } from 'react-redux';
 import { setCart } from '@/redux/cartSlice';
 import AddedToCartToast from '../../../components/AddedToCartToast/AddedToCartToast';
+import { paymentService } from '../../../services/payment.service';
 
 const OrderDetail = () => {
     const { orderId } = useParams();
@@ -106,6 +107,10 @@ const OrderDetail = () => {
     }
 
     const isPaid = orderData.payments[0]?.status === "thành công";
+
+    const isPendingMomoPayment =
+        orderData.payments[0]?.method === "MOMO" &&
+        orderData.payments[0]?.status === "đang chờ";
     const subtotal = orderData.items.reduce(
         (sum, item) => sum + item.original_price * item.quantity,
         0
@@ -124,6 +129,30 @@ const OrderDetail = () => {
         (sum, item) => sum + item.quantity,
         0
     );
+    /* ================== PAYMENT ================== */
+
+    const handlePayment = async () => {
+        try {
+            const res = await paymentService.reTryPayment({
+                order_id: orderData.order_id
+            });
+
+            showNotification("Đang chuyển đến cổng thanh toán...", "success");
+
+            // Nếu API trả về link thanh toán
+            if (res.data?.payUrl) {
+                window.location.href = res.data?.payUrl;
+            }
+
+        } catch (error) {
+            console.error(error);
+            showNotification(
+                error?.response?.data?.message || "Thanh toán lại thất bại",
+                "error"
+            );
+        }
+    };
+
 
 
     /* ================== CANCEL ORDER ================== */
@@ -619,6 +648,16 @@ const OrderDetail = () => {
                     )}
 
 
+
+                    {/* Thanh toán lại */}
+                    {isPendingMomoPayment && (
+                        <button
+                            onClick={handlePayment}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white mt-3 py-2 rounded font-semibold"
+                        >
+                            💳 Thanh toán ngay
+                        </button>
+                    )}
 
                     {/* Cancel */}
                     {["chờ xác nhận", "đã xác nhận", "đang xử lý"].includes(orderData.status) && (

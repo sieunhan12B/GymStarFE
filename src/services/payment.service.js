@@ -7,7 +7,7 @@ export const paymentService = {
 
 
     // Lấy danh sách tất cả người dùng
-    getAll: async (page = 1, limit = 999) => {
+    getAllPaymentsUser: async (page = 1, limit = 999) => {
         try {
             return await http.get(
                 `/QuanLyThanhToan/LayDanhSachTatCaThanhToan?page=${page}&limit=${limit}`

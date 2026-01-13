@@ -20,7 +20,7 @@ const PaymentManager = () => {
     const fetchPayments = async () => {
         setLoading(true);
         try {
-            const res = await paymentService.getAll(1, 999);
+            const res = await paymentService.getAllPaymentsUser();
             setData(res.data.data);
             showNotification(res.data.message, "success");
         } catch (error) {
