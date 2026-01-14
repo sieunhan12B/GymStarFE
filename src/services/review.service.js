@@ -1,75 +1,54 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến đánh giá (review)
+ */
 export const reviewService = {
+    // ================== USER ==================
 
-
-    createReviewByUser: async (data) => {
-        try {
-            return await http.post("/QuanLyDanhGia/VietDanhGia", data);
-        } catch (error) {
-            console.error("Lỗi Review Services:", error);
-            throw error;
-        }
+    /** User viết đánh giá */
+    createReviewByUser: (data) => {
+        return http.post("/QuanLyDanhGia/VietDanhGia", data);
     },
 
-    getAllReview: async () => {
-        try {
-            return await http.get("/QuanLyDanhGia/LayDanhSachTatCaDanhGia");
-        } catch (error) {
-            console.error("Lỗi Review Services:", error);
-            throw error;
-        }
+    /** Lấy danh sách đánh giá của user */
+    getReviewUser: (page = 1, limit = 9999) => {
+        return http.get(
+            `/QuanLyDanhGia/LayDanhGiaCuaNguoiDung?page=${page}&limit=${limit}`
+        );
     },
 
-    getReviewUser: async () => {
-        try {
-            return await http.get(
-                "/QuanLyDanhGia/LayDanhGiaCuaNguoiDung?page=1&limit=9999"
-            );
-        } catch (error) {
-            console.error("Lỗi trong Review Services:", error);
-            throw error;
-        }
+    /** Lấy chi tiết đánh giá theo order detail */
+    getReviewOrderDetail: (order_detail_id) => {
+        return http.get(
+            `/QuanLyDanhGia/LayDanhGiaCuaChiTietDonHang/${order_detail_id}`
+        );
     },
 
-
-    updateStatusReview: async (review_id) => {
-        try {
-            return await http.put(`/QuanLyDanhGia/CapNhatTrangThaiDanhGia/${review_id}`);
-        } catch (error) {
-            console.error("Lỗi Review Services:", error);
-            throw error;
-        }
-    },
-    replyReview: async (data) => {
-        try {
-            return await http.post("/QuanLyDanhGia/TraLoiDanhGia", data);
-        } catch (error) {
-            console.error("Lỗi Review Services:", error);
-            throw error;
-        }
+    /** Lấy danh sách đánh giá theo sản phẩm */
+    getReviewByProductId: (product_id) => {
+        return http.get(
+            `/QuanLyDanhGia/LayDanhSachDanhGiaCuaSanPham/${product_id}`
+        );
     },
 
-    getReviewByProductId: async (product_id) => {
-        try {
-            return await http.get(`/QuanLyDanhGia/LayDanhSachDanhGiaCuaSanPham/${product_id}`);
-        } catch (error) {
-            console.error("Lỗi Review Services:", error);
-            throw error;
-        }
-    },
-    getReviewDetail: async (order_detail_id) => {
-        try {
-            return await http.get(`/QuanLyDanhGia/LayDanhGiaCuaChiTietDonHang/${order_detail_id}`);
-        } catch (error) {
-            console.error("Lỗi lấy chi tiết đánh giá:", error);
-            throw error;
-        }
+    // ================== ADMIN ==================
+
+    /** Lấy tất cả đánh giá */
+    getAllReview: () => {
+        return http.get("/QuanLyDanhGia/LayDanhSachTatCaDanhGia");
     },
 
+    /** Cập nhật trạng thái đánh giá (duyệt / ẩn) */
+    updateStatusReview: (review_id) => {
+        return http.put(
+            `/QuanLyDanhGia/CapNhatTrangThaiDanhGia/${review_id}`
+        );
+    },
 
-
-
-
+    /** Trả lời đánh giá */
+    replyReview: (data) => {
+        return http.post("/QuanLyDanhGia/TraLoiDanhGia", data);
+    },
 
 };

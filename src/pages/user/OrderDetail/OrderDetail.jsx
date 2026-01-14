@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import {
     InboxOutlined,
     CarOutlined,
@@ -32,6 +32,7 @@ import { useDispatch } from 'react-redux';
 import { setCart } from '@/redux/cartSlice';
 import AddedToCartToast from '../../../components/AddedToCartToast/AddedToCartToast';
 import { paymentService } from '../../../services/payment.service';
+import { generateSlug } from '../../../utils/generateSlug';
 
 const OrderDetail = () => {
     const { orderId } = useParams();
@@ -403,91 +404,99 @@ const OrderDetail = () => {
                     {/* Products */}
                     {activeTab === 'products' && (
                         <div className="p-6">
-                            {orderData.items.map(item => (
-                                <div
-                                    key={item.order_detail_id}
-                                    className="flex gap-4 border-b pb-4 mb-4"
-                                >
-                                    <Image
-                                        src={item.product.thumbnail}
-                                        width={112}
-                                    />
+                            {orderData.items.map(item => {
+                                const productNameSlug = generateSlug(item.product.name).split("-").slice(0, 2).join("-");
+                                const productLink = `/san-pham/${productNameSlug}/${item.product.product_id}`;
+                                return (
+                                    <div
+                                        key={item.order_detail_id}
+                                        className="flex gap-4 border-b pb-4 mb-4"
+                                    >
+                                        <Image
+                                            src={item.product.thumbnail}
+                                            width={112}
+                                        />
 
-                                    <div className="flex-1">
-                                        <h3 className="font-bold">
-                                            {item.product.name}
-                                        </h3>
-                                        <p className="text-sm text-gray-500">
-                                            Size {item.variant.size} | {item.variant.color} | x{item.quantity}
-                                        </p>
-                                        <p className="text-xs text-gray-400">
-                                            SKU: {item.variant.sku}
-                                        </p>
+                                        <div className="flex-1">
+                                            <Link to={productLink}>
+                                                <h3 className="font-bold">
+                                                    {item.product.name}
+                                                </h3>
+                                            </Link>
+
+                                            <p className="text-sm text-gray-500">
+                                                Size {item.variant.size} | {item.variant.color} | x{item.quantity}
+                                            </p>
+                                            <p className="text-xs text-gray-400">
+                                                SKU: {item.variant.sku}
+                                            </p>
 
 
-                                        <div className="flex max-w-64 gap-2 mt-4">
-                                            {orderData.status === "đã giao" && (
-                                                <Button
-                                                    className={item.is_review
-                                                        ? "bg-gray-300 w-1/2 text-gray-700 rounded-lg"
-                                                        : "bg-amber-500 w-1/2 hover:bg-amber-600 text-white rounded-lg font-semibold"}
-                                                    onClick={async () => {
-                                                        if (item.is_review) {
-                                                            // Lấy chi tiết review từ API
-                                                            try {
-                                                                const res = await reviewService.getReviewDetail(item.order_detail_id);
-                                                                setReviewItem(res.data.data); // dữ liệu review từ API
+                                            <div className="flex max-w-64 gap-2 mt-4">
+                                                {orderData.status === "đã giao" && (
+                                                    <Button
+                                                        className={item.is_review
+                                                            ? "bg-gray-300 w-1/2 text-gray-700 rounded-lg"
+                                                            : "bg-amber-500 w-1/2 hover:bg-amber-600 text-white rounded-lg font-semibold"}
+                                                        onClick={async () => {
+                                                            if (item.is_review) {
+                                                                // Lấy chi tiết review từ API
+                                                                try {
+                                                                    const res = await reviewService.getReviewOrderDetail(item.order_detail_id);
+                                                                    setReviewItem(res.data.data); // dữ liệu review từ API
+                                                                    setIsReviewModalOpen(true);
+                                                                } catch (error) {
+                                                                    showNotification("Không lấy được chi tiết đánh giá", "error");
+                                                                }
+                                                            } else {
+                                                                // Tạo review mới
+                                                                setReviewItem(item);
+                                                                setRating(5);
+                                                                setComment("");
+                                                                setReviewImages([]);
                                                                 setIsReviewModalOpen(true);
-                                                            } catch (error) {
-                                                                showNotification("Không lấy được chi tiết đánh giá", "error");
                                                             }
-                                                        } else {
-                                                            // Tạo review mới
-                                                            setReviewItem(item);
-                                                            setRating(5);
-                                                            setComment("");
-                                                            setReviewImages([]);
-                                                            setIsReviewModalOpen(true);
-                                                        }
-                                                    }}
-                                                >
-                                                    {item.is_review ? "✅ Xem đánh giá" : "⭐ Đánh giá"}
-                                                </Button>
+                                                        }}
+                                                    >
+                                                        {item.is_review ? "✅ Xem đánh giá" : "⭐ Đánh giá"}
+                                                    </Button>
+                                                )}
+
+                                                {["đã giao", "giao thất bại", "đã hủy", "đổi hàng"].includes(orderData.status) && (
+                                                    <Button
+                                                        className="bg-green-500 w-1/2 hover:bg-green-600 text-white rounded-lg font-semibold"
+                                                        onClick={() => handleBuyAgain(item.order_detail_id)}
+                                                    >
+                                                        🔁 Mua lại
+                                                    </Button>
+                                                )}
+                                            </div>
+
+
+
+                                        </div>
+
+                                        <div className="text-right">
+                                            {item.original_price > item.price && (
+                                                <p className="text-sm line-through text-gray-400">
+                                                    {(item.original_price * item.quantity).toLocaleString('vi-VN')}đ
+                                                </p>
                                             )}
 
-                                            {["đã giao", "giao thất bại", "đã hủy", "đổi hàng"].includes(orderData.status) && (
-                                                <Button
-                                                    className="bg-green-500 w-1/2 hover:bg-green-600 text-white rounded-lg font-semibold"
-                                                    onClick={() => handleBuyAgain(item.order_detail_id)}
-                                                >
-                                                    🔁 Mua lại
-                                                </Button>
-                                            )}
+                                            <p className="font-bold text-red-500">
+                                                {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                                            </p>
+
+                                            <p className="text-xs text-gray-500">
+                                                {item.price.toLocaleString('vi-VN')}đ x {item.quantity}
+                                            </p>
                                         </div>
 
 
-
                                     </div>
+                                );
 
-                                    <div className="text-right">
-                                        {item.original_price > item.price && (
-                                            <p className="text-sm line-through text-gray-400">
-                                                {(item.original_price * item.quantity).toLocaleString('vi-VN')}đ
-                                            </p>
-                                        )}
-
-                                        <p className="font-bold text-red-500">
-                                            {(item.price * item.quantity).toLocaleString('vi-VN')}đ
-                                        </p>
-
-                                        <p className="text-xs text-gray-500">
-                                            {item.price.toLocaleString('vi-VN')}đ x {item.quantity}
-                                        </p>
-                                    </div>
-
-
-                                </div>
-                            ))}
+                            })}
                         </div>
                     )}
 

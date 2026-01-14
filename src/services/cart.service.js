@@ -16,7 +16,7 @@ export const cartService = {
         return http.post("/QuanLyGioHang/ThemSanPhamVaoGioHang", data);
     },
 
-    /** Cập nhật số lượng sản phẩm trong giỏ hàng */
+    /** Cập nhật số lượng sản phẩm trong giỏ hàng, data=product_variant_id */
     updateCart: (data) => {
         return http.put("/QuanLyGioHang/CapNhatSoLuongGioHang2/", data);
     },

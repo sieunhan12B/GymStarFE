@@ -1,78 +1,56 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến đơn hàng
+ */
 export const orderService = {
+    // ================== ORDER ==================
 
-    getAll: async () => {
-        try {
-            return await http.get("/QuanLyDonHang/LayDanhSachTatCaDonHang?page=1&limit=999");
-        } catch (error) {
-            console.error("Lỗi Order Services:", error);
-            throw error;
-        }
+    /** Lấy tất cả đơn hàng (admin) */
+    getAllOrder: (page = 1, limit = 999) => {
+        return http.get(
+            `/QuanLyDonHang/LayDanhSachTatCaDonHang?page=${page}&limit=${limit}`
+        );
     },
 
-    updateStatus: async (order_id, data) => {
-        try {
-            return await http.put(`/QuanLyDonHang/CapNhatTrangThaiDonHang/${order_id}`, data);
-        } catch (error) {
-            console.error("Lỗi Order Services:", error);
-            throw error;
-        }
+    /** Cập nhật trạng thái đơn hàng */
+    updateStatusOrder: (order_id, data) => {
+        return http.put(
+            `/QuanLyDonHang/CapNhatTrangThaiDonHang/${order_id}`,
+            data
+        );
     },
 
-
-    createOrder: async (data) => {
-        try {
-            return await http.post("/QuanLyDonHang/DatHangTuGioHang", data);
-        } catch (error) {
-            console.error("Lỗi Order Services", error);
-            throw error;
-        }
+    /** Đặt hàng từ giỏ hàng */
+    createOrder: (data) => {
+        return http.post("/QuanLyDonHang/DatHangTuGioHang", data);
     },
 
-    orderNow: async (data) => {
-        try {
-            return await http.post("/QuanLyDonHang/DatHangNgay", data);
-        } catch (error) {
-            console.error("Lỗi Order Services", error);
-            throw error;
-        }
+    /** Đặt hàng ngay */
+    orderNow: (data) => {
+        return http.post("/QuanLyDonHang/DatHangNgay", data);
     },
 
-    getDetailOrder: async (order_id) => {
-        try {
-            return await http.get(`/QuanLyDonHang/LayChiTietDonHang/${order_id}`);
-        } catch (error) {
-            console.error("Lỗi Order Services:", error);
-            throw error;
-        }
+    /** Lấy chi tiết đơn hàng */
+    getDetailOrder: (order_id) => {
+        return http.get(`/QuanLyDonHang/LayChiTietDonHang/${order_id}`);
     },
 
-    deleteOrder: async (order_id, data) => {
-        try {
-            return await http.post(`/QuanLyDonHang/HuyDonHang/${order_id}`, data);
-        } catch (error) {
-            console.error("Lỗi Order Services:", error);
-            throw error;
-        }
-    },
-    getOrderByUser: async (page = 1, limit = 999) => {
-        try {
-            return await http.get(`/QuanLyDonHang/LayDanhSachDonHangUser?page=${page}&limit=${limit}`);
-        } catch (error) {
-            console.error("Lỗi Order Services:", error);
-            throw error;
-        }
+    /** Hủy đơn hàng */
+    deleteOrder: (order_id, data) => {
+        return http.post(`/QuanLyDonHang/HuyDonHang/${order_id}`, data);
     },
 
-    buyAgain: async (order_detail_id) => {
-        try {
-            return await http.post(`/QuanLyDonHang/MuaLai/${order_detail_id}`);
-        } catch (error) {
-            console.error("Lỗi Order Services:", error);
-            throw error;
-        }
+    /** Lấy danh sách đơn hàng của user */
+    getOrderByUser: (page = 1, limit = 999) => {
+        return http.get(
+            `/QuanLyDonHang/LayDanhSachDonHangUser?page=${page}&limit=${limit}`
+        );
     },
 
+    /** Mua lại đơn hàng */
+    buyAgain: (order_detail_id) => {
+        return http.post(`/QuanLyDonHang/MuaLai/${order_detail_id}`);
+    },
 
 };

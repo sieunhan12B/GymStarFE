@@ -176,10 +176,10 @@ const PromotionManager = () => {
         if (!selectedPromotion) return;
 
         try {
-            await promotionService.togglePromotionStatus(
+            await promotionService.changePromotionStatus(
                 selectedPromotion.promotion_id
             );
-
+ 
             showNotification(
                 "Cập nhật trạng thái khuyến mãi thành công",
                 "success"

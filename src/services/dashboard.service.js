@@ -1,42 +1,28 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến dashboard
+ */
 export const dashboardService = {
+  // ================== DASHBOARD ==================
 
-
-    getDashboardDay: async () => {
-        try {
-            return await http.get("/ThongKeBaoCao/ThongKeBaoCaoTheoNgay");
-        } catch (error) {
-            console.error("Lỗi lấy thống kê báo cáo :", error);
-            throw error;
-        }
-    },
-
-    getTopProductMonth: async () => {
-        try {
-            return await http.get("/ThongKeBaoCao/ThongKeSanPhamBanChay");
-        } catch (error) {
-            console.error("Lỗi lấy top sản phẩm bán chạy :", error);
-            throw error;
-        }
-    },
-
-
-    getRevenueOrder:async (from, to) => {
-    try {
-      return await http.get(
-        "/ThongKeBaoCao/ThongKeTongDoanhThuTheoThang",
-        {
-          params: {
-            from,
-            to
-          }
-        }
-      );
-    } catch (error) {
-      console.error("Lỗi lấy thống kê theo ngày:", error);
-      throw error;
-    }
+  /** Thống kê báo cáo theo ngày */
+  getDashboardDay: () => {
+    return http.get("/ThongKeBaoCao/ThongKeBaoCaoTheoNgay");
   },
 
+  /** Lấy top sản phẩm bán chạy trong tháng */
+  getTopProductMonth: () => {
+    return http.get("/ThongKeBaoCao/ThongKeSanPhamBanChay");
+  },
+
+  /** Thống kê tổng doanh thu theo khoảng thời gian */
+  getRevenueOrder: (from, to) => {
+    return http.get("/ThongKeBaoCao/ThongKeTongDoanhThuTheoThang", {
+      params: {
+        from,
+        to,
+      },
+    });
+  },
 };

@@ -91,7 +91,7 @@ const OrderManager = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await orderService.getAll();
+      const res = await orderService.getAllOrder();
       setOrders(res?.data?.data || []);
       showNotification("Tải danh sách đơn hàng thành công!", "success");
     } catch {
@@ -126,7 +126,7 @@ const OrderManager = () => {
 
   const handleUpdateStatus = async () => {
     try {
-      await orderService.updateStatus(selectedOrder.order_id, {
+      await orderService.updateStatusOrder(selectedOrder.order_id, {
         status: newStatus,
       });
       showNotification("Cập nhật trạng thái thành công!", "success");

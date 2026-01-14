@@ -18,6 +18,7 @@ import ProductCard from '../../../components/ProductCard/ProductCard';
 import { generateSlug } from '../../../utils/generateSlug';
 import ProductReview from './ProductReview';
 import SuggestionSize from './SuggestionSize';
+import { normalizeText } from '../../../utils/normalizeText';
 
 dayjs.extend(relativeTime);
 
@@ -137,6 +138,7 @@ const Product = () => {
         const res = await productService.getProductById(productId);
         const data = res.data.data;
         setProduct(data);
+        console.log(data)
         if (data.colors?.length > 0) setSelectedColor(data.colors[0].color);
         if (data.product_variants?.length > 0) setSelectedSize(data.product_variants[0].size);
       } catch (error) {
@@ -168,9 +170,16 @@ const Product = () => {
 
   const selectedVariant = product
     ? hasSize
-      ? product.product_variants.find(v => v.color === selectedColor && v.size === selectedSize)
-      : product.product_variants.find(v => v.color === selectedColor) // chỉ cần màu
+      ? product.product_variants.find(
+        v =>
+          normalizeText(v.color) === normalizeText(selectedColor) &&
+          normalizeText(v.size) === normalizeText(selectedSize)
+      )
+      : product.product_variants.find(
+        v => normalizeText(v.color) === normalizeText(selectedColor)
+      )
     : null;
+
 
 
   const videoRef = useRef(null);
@@ -178,10 +187,6 @@ const Product = () => {
   useEffect(() => {
     videoRef.current?.play();
   }, [selectedImage, selectedColor]);
-
-
-
-
 
   useEffect(() => {
     const fetchReview = async () => {
@@ -287,10 +292,11 @@ const Product = () => {
             {product.discount ? (
               <>
                 <span className="text-3xl font-bold">
-                  {formatPrice(selectedVariant.final_price)}
+                  {console.log(selectedVariant)}
+                  {formatPrice(selectedVariant?.final_price)}
                 </span>
                 <span className="text-xl text-gray-400 line-through">
-                  {formatPrice(selectedVariant.price)}
+                  {formatPrice(selectedVariant?.price)}
                 </span>
               </>
             ) : (

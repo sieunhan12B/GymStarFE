@@ -1,31 +1,20 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến thanh toán
+ */
 export const paymentService = {
+    // ================== PAYMENT ==================
 
-
-    // ------------------ ADMIN ------------------
-
-
-    // Lấy danh sách tất cả người dùng
-    getAllPaymentsUser: async (page = 1, limit = 999) => {
-        try {
-            return await http.get(
-                `/QuanLyThanhToan/LayDanhSachTatCaThanhToan?page=${page}&limit=${limit}`
-            );
-
-        } catch (error) {
-            console.error("Lỗi trong paymentService:", error);
-            throw error;
-        }
+    /** Lấy danh sách tất cả giao dịch thanh toán (admin) */
+    getAllPaymentsUser: (page = 1, limit = 999) => {
+        return http.get(
+            `/QuanLyThanhToan/LayDanhSachTatCaThanhToan?page=${page}&limit=${limit}`
+        );
     },
 
-    reTryPayment: async (data) => {
-        try {
-            return await http.post("/MoMo/retry-checkout", data);
-        } catch (error) {
-            console.error("Lỗi trong paymentService:", error);
-            throw error;
-        }
-
+    /** Thanh toán lại (retry) */
+    reTryPayment: (data) => {
+        return http.post("/MoMo/retry-checkout", data);
     },
-}
+};
