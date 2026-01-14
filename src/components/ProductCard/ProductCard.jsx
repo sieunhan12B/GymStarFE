@@ -30,7 +30,9 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // n
     // ===============================
     // LẤY VARIANT ĐẦU TIÊN CÒN HÀNG
     // ===============================
-    const firstVariant = product.product_variants?.find(v => v.stock > 0);
+    const firstVariant = product.product_variants
+        ?.filter(v => v.stock > 0)
+        ?.sort((a, b) => a.product_variant_id - b.product_variant_id)[0];
 
 
     if (!firstVariant) {
