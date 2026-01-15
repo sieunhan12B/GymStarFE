@@ -32,28 +32,34 @@ function App() {
     });
   };
 
-  /* ================= AUTH BOOTSTRAP ================= */
+  /* ================= FETCH FUNCTION ================= */
+  const getInfoUser = async () => {
+    try {
+      const res = await userService.getCurrentUser();
+      dispatch(setUser(res.data.data));
+    } catch (error) {
+      dispatch(logout());
+      Cookies.remove("access_token");
+    }
+  };
+  
+  const fetchCart = async () => {
+    try {
+      const res = await cartService.getCart();
+      dispatch(setCart(res.data.data));
+    } catch (error) {
+      console.error("Lỗi lấy giỏ hàng:", error);
+    }
+  };
+
+  /* ================= EFFECTS ================= */
   useEffect(() => {
     const token = Cookies.get("access_token");
-
-    // ❌ Không có token → chắc chắn là chưa login
     if (!token) {
-      dispatch(logout()); // logout đã set loading = false
+      dispatch(logout());
       return;
     }
-
     if (user) return;
-
-    const getInfoUser = async () => {
-      try {
-        const res = await userService.getCurrentUser();
-        dispatch(setUser(res.data.data)); // set loading = false
-      } catch (error) {
-        dispatch(logout()); // set loading = false
-        Cookies.remove("access_token");
-      }
-    };
-
     getInfoUser();
   }, [user, dispatch]);
 
@@ -61,16 +67,6 @@ function App() {
   /* ================= CART FETCH ================= */
   useEffect(() => {
     if (!user?.user_id) return;
-
-    const fetchCart = async () => {
-      try {
-        const res = await cartService.getCart();
-        dispatch(setCart(res.data.data));
-      } catch (error) {
-        console.error("Lỗi lấy giỏ hàng:", error);
-      }
-    };
-
     fetchCart();
   }, [user, dispatch]);
 

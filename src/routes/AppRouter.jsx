@@ -12,6 +12,7 @@ import ForgotPassword from "../pages/auth/ForgotPassword/ForgotPassword";
 
 // ------------------ ADMIN ------------------
 import AdminTemplate from "../templates/AdminTemplate/AdminTemplate";
+
 import Dashboard from "../pages/admin/Dashboard/Dashboard";
 import UserManager from "../pages/admin/UserManager/UserManager";
 import ProductManager from "../pages/admin/ProductManager/ProductManager";
@@ -25,11 +26,11 @@ import PromotionManager from "../pages/admin/PromotionManager/PromotionManager";
 import AddressManager from "../pages/admin/AddressManager/AddressManager";
 
 // ------------------ USER ------------------
-import Home from "../pages/Home/Home";
 import ManagerAccount from "../layouts/ManagerAccount/ManagerAccount";
 import HomeTemplate from "../templates/HomeTemplate/HomeTemplate";
-import Error from "../pages/Error/Error";
 
+import Home from "../pages/user/Home/Home";
+import Error from "../pages/user/Error/Error";
 import Account from "../pages/user/Account/Account";
 import Product from "../pages/user/Product/Product";
 import Category from "../pages/user/Category/Category";
@@ -72,7 +73,6 @@ export const AppRouter = [
         element: <HomeTemplate />,
         children: [
             {
-
                 element: <Home />,
                 index: true,
             },
@@ -175,7 +175,6 @@ export const AppRouter = [
                     </ProtectedRoute>
                 ),
             },
-
             {
                 path: path.userManager,
                 element: (
@@ -202,8 +201,6 @@ export const AppRouter = [
                     </ProtectedRoute>
                 ),
             },
-
-            // Order Manager
             {
                 path: path.orderManager,
                 element: (
@@ -212,8 +209,6 @@ export const AppRouter = [
                     </ProtectedRoute>
                 ),
             },
-
-            // Feedback Manager
             {
                 path: path.feedbackManager,
                 element: (
@@ -265,8 +260,6 @@ export const AppRouter = [
         ],
     },
 
-    // ------------------ USER hoặc global sai đường dẫn ------------------
+    // ------------------ Sai đường dẫn ------------------
     { path: "*", element: <Error /> },
-
-
 ];

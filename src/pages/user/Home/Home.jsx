@@ -4,15 +4,15 @@ import { RightOutlined, LeftOutlined, ClockCircleOutlined, TagOutlined, WomanOut
 import { Link } from 'react-router-dom';
 import useEmblaCarousel from 'embla-carousel-react';
 
-import ProductCard from '../../components/ProductCard/ProductCard';
-import { productService } from '../../services/product.service';
-import Banner from '../../components/Banner/Banner';
+import ProductCard from '@/components/ProductCard/ProductCard';
+import { productService } from '@/services/product.service';
+import Banner from '@/components/Banner/Banner';
 import banner from '@/assets/images/banner.avif';
 import banner3 from '@/assets/images/banner3.avif';
 import womenCard from '@/assets/images/womenCard.avif';
 import menCard from '@/assets/images/menCard.avif';
 import accessoriesCard from '@/assets/images/accessoriesCard.avif';
-import { path } from '../../common/path';
+import { path } from '@/common/path';
 
 
 

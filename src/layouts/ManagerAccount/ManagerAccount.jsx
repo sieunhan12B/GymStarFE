@@ -1,18 +1,14 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { Layout } from 'antd';
 import {
   UserOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
   GiftOutlined,
-  HistoryOutlined,
-  LogoutOutlined,
-
-  CreditCardOutlined,
   HeartOutlined,
   FileTextOutlined
 } from '@ant-design/icons';
-import { Link, Outlet, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { path } from '../../common/path';
 import Cookies from "js-cookie";
 import { useDispatch } from 'react-redux';
@@ -20,67 +16,57 @@ import { clearCart } from '@/redux/cartSlice';
 import { logout } from '@/redux/userSlice';
 import { NotificationContext } from '@/App';
 
-
-
 const { Content } = Layout;
+const sidebarItems = [
+  {
+    key: '1',
+    icon: <UserOutlined />,
+    label: 'Thông tin tài khoản',
+    path: path.accountInfo,
+  },
+  {
+    key: '2',
+    icon: <ShoppingCartOutlined />,
+    label: 'Đơn hàng của tôi',
+    path: path.orderHistory,
+
+  },
+  {
+    key: '3',
+    icon: <GiftOutlined />,
+    label: 'Voucher của tôi',
+    path: path.voucher,
+  },
+
+  {
+    key: '4',
+    icon: <FileTextOutlined />,
+    label: 'Số địa chỉ',
+    path: path.addressBook,
+
+  },
+  {
+    key: '5',
+    icon: <HeartOutlined />,
+    label: 'Đánh giá, góp ý và phản hồi',
+    path: path.reviewFeedback,
+
+  },
+  {
+    key: '6',
+    icon: <SettingOutlined />,
+    label: 'Đăng xuất',
+    path: path.account,
+
+  }
+];
+
 
 const ManagerAccount = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { showNotification } = useContext(NotificationContext);
-
-
-  const sidebarItems = [
-    {
-      key: '1',
-      icon: <UserOutlined />,
-      label: 'Thông tin tài khoản',
-      path: path.accountInfo,
-    },
-    {
-      key: '2',
-      icon: <ShoppingCartOutlined />,
-      label: 'Đơn hàng của tôi',
-      path: path.orderHistory,
-
-    },
-    {
-      key: '3',
-      icon: <GiftOutlined />,
-      label: 'Voucher của tôi',
-      path: path.voucher,
-    },
-
-    {
-      key: '4',
-      icon: <FileTextOutlined />,
-      label: 'Số địa chỉ',
-      path: path.addressBook,
-
-    },
-    {
-      key: '5',
-      icon: <HeartOutlined />,
-      label: 'Đánh giá, góp ý và phản hồi',
-      path: path.reviewFeedback,
-
-    },
-    {
-      key: '6',
-      icon: <HistoryOutlined />,
-      label: 'Chính sách & Câu hỏi thường gặp',
-      path: "/chi",
-
-    },
-    {
-      key: '7',
-      icon: <SettingOutlined />,
-      label: 'Đăng xuất',
-      path: path.account,
-
-    }
-  ];
 
   const handleLogout = () => {
     Cookies.remove("access_token");
@@ -90,20 +76,14 @@ const ManagerAccount = () => {
     navigate(path.logIn);
   };
 
-
-
   return (
     <div className="bg-gray-100 min-h-screen pt-14">
       <Layout className="max-w-7xl  m-auto">
-
-
         <Layout className='flex flex-row'>
           {/* Sidebar */}
           <div className="w-64 bg-gray-50 p-6 space-y-2 sticky top-14 h-fit">
             {sidebarItems.map((item) => {
               const isActive = location.pathname.endsWith(item.path);
-
-              // 👉 Nếu là Đăng xuất
               if (item.label === 'Đăng xuất') {
                 return (
                   <div
@@ -125,7 +105,6 @@ const ManagerAccount = () => {
                 );
               }
 
-              // 👉 Các item bình thường
               return (
                 <Link
                   to={item.path}
@@ -147,7 +126,6 @@ const ManagerAccount = () => {
             })}
 
           </div>
-          {/* Content */}
           <Content className=" w-1/2 p-6 bg-gray-50">
             <Outlet />
           </Content>
