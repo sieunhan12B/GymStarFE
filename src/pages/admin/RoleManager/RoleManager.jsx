@@ -39,7 +39,7 @@ const RoleManager = () => {
     const fetchRoles = async () => {
         setLoading(true);
         try {
-            const res = await roleService.getAll();
+            const res = await roleService.getAllRoles();
             setRoles(res.data.data);
         } catch {
             showNotification("Tải danh sách role thất bại!", "error");

@@ -7,13 +7,6 @@ import Chatbot from '../../components/Chatbot/Chatbot'
 const HomeTemplate = () => {
   const { pathname } = useLocation()
 
-  // Ẩn header cho tất cả trang đặt hàng thành công
-  const hideHeader = pathname.startsWith()
-
-  // Footer vẫn hiện
-  const hideFooter = false
-
-
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -23,10 +16,10 @@ const HomeTemplate = () => {
 
   return (
     <>
-      {!hideHeader && <Header />}
+      <Header />
       <Outlet />
-      {!hideFooter && <Footer />}
-      <Chatbot/>
+      <Footer />
+      <Chatbot />
     </>
   )
 }

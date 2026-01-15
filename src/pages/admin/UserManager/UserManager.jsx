@@ -1,3 +1,5 @@
+/* ================= IMPORTS ================= */
+
 // React
 import { useState, useEffect, useContext, useMemo } from "react";
 
@@ -58,7 +60,7 @@ const UserManager = () => {
   /* ===== FETCH ROLES ===== */
   const fetchRoles = async () => {
     try {
-      const res = await roleService.getAll();
+      const res = await roleService.getAllRoles();
       setRoles(res.data.data);
     } catch {
       showNotification("Tải danh sách role thất bại!", "error");

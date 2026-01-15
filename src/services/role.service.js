@@ -1,48 +1,29 @@
 import { http } from "./config";
 
+/**
+ * Service quản lý API liên quan đến role
+ */
 export const roleService = {
+    // ================== ADMIN ==================
 
-
-    // ------------------ ADMIN ------------------
-
-
-    // Lấy danh sách tất cả người dùng
-    getAll: async () => {
-        try {
-            return await http.get(
-                "/QuanLyNguoiDung/LayDanhSachRole"
-            );
-        } catch (error) {
-            console.error("Lỗi trong roleService:", error);
-            throw error;
-        }
+    /** Lấy danh sách tất cả role */
+    getAllRoles: () => {
+        return http.get("/QuanLyNguoiDung/LayDanhSachRole");
     },
 
-    createRole: async (data) => {
-        try {
-            return await http.post("/QuanLyNguoiDung/TaoRole", data);
-        } catch (error) {
-            console.error("Lỗi cập bên roleService:", error);
-            throw error;
-        }
+    /** Tạo role mới */
+    createRole: (data) => {
+        return http.post("/QuanLyNguoiDung/TaoRole", data);
     },
 
-    deleteRole: async (role_id) => {
-        try {
-            return await http.delete(`/QuanLyNguoiDung/XoaRole/${role_id}`);
-        } catch (error) {
-            console.error("Lỗi bên roleService:", error);
-            throw error;
-        }
-
+    /** Xóa role */
+    deleteRole: (role_id) => {
+        return http.delete(`/QuanLyNguoiDung/XoaRole/${role_id}`);
     },
-    updateRole: async (role_id, data) => {
-        try {
-            return await http.put(`/QuanLyNguoiDung/CapNhatRole/${role_id}`, data);
-        } catch (error) {
-            console.error("Lỗi cập nhật loại người dùng:", error);
-            throw error;
-        }
+
+    /** Cập nhật role */
+    updateRole: (role_id, data) => {
+        return http.put(`/QuanLyNguoiDung/CapNhatRole/${role_id}`, data);
     },
 
 };
