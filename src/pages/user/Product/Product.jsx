@@ -17,19 +17,19 @@ import useEmblaCarousel from 'embla-carousel-react';
 
 // 3. Services
 import { productService } from '@/services/product.service';
-import { cartService } from '../../../services/cart.service';
+import { cartService } from '@/services/cart.service';
 
 // 4. Utils
 import { formatPrice } from '@/utils/utils';
-import { generateSlug } from '../../../utils/generateSlug';
-import { normalizeText } from '../../../utils/normalizeText';
+import { generateSlug } from '@/utils/generateSlug';
+import { normalizeText } from '@/utils/normalizeText';
 
 // 5. Redux
 import { setCart } from '@/redux/cartSlice';
 
 // 6. Components
 import AddedToCartToast from '@/components/AddedToCartToast/AddedToCartToast';
-import ProductCard from '../../../components/ProductCard/ProductCard';
+import ProductCard from '@/components/ProductCard/ProductCard';
 import ProductReview from './ProductReview';
 import SuggestionSize from './SuggestionSize';
 

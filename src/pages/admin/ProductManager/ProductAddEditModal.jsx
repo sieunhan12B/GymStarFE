@@ -16,12 +16,25 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 
 import { NotificationContext } from "@/App";
-import { BASIC_COLORS } from "../../../constants/color";
 import { normalizeText } from "../../../utils/normalizeText";
 import { formatPrice } from "@/utils/utils";
 import { productService } from "@/services/product.service";
 
 const COMMON_SPECS = ["Chất liệu", "Kiểu dáng", "Xuất xứ"];
+const BASIC_COLORS = [
+    "Đỏ",
+    "Xanh",
+    "Vàng",
+    "Cam",
+    "Tím",
+    "Hồng",
+    "Đen",
+    "Trắng",
+    "Xám",
+    "Nâu",
+
+];
+
 
 
 const ProductAddEditModal = ({

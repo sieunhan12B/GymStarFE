@@ -4,18 +4,18 @@ import { SearchOutlined, UserOutlined, ShoppingOutlined, CloseOutlined } from '@
 import { Link, useNavigate } from 'react-router-dom';
 import { path } from '@/common/path';
 import logo from '@/assets/images/logo.svg';
-import Announcement from '../Announcement/Announcement';
+import Announcement from '@/components/Announcement/Announcement';
 import { danhMucService } from '@/services/category.service';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '@/redux/userSlice';
 import { NotificationContext } from '@/App';
-import { cartService } from '../../services/cart.service';
-import { clearCart, setCart } from '../../redux/cartSlice';
+import { cartService } from '@/services/cart.service';
+import { clearCart, setCart } from '@/redux/cartSlice';
 import Cookies from "js-cookie";
-import { productService } from '../../services/product.service';
+import { productService } from '@/services/product.service';
 import './header.css';
-import ProductCard from '../ProductCard/ProductCard';
-import { buildCategoryUrl } from '../../utils/categoryUtils';
+import ProductCard from '@/components/ProductCard/ProductCard';
+import { buildCategoryUrl } from '@/utils/categoryUtils';
 
 const Header = () => {
   const [activeMenu, setActiveMenu] = useState(null);

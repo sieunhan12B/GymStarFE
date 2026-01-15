@@ -1,8 +1,0 @@
-export const ROLES = {
-  CUSTOMER: 1,
-  ADMIN: 2,
-  ORDER_MANAGER: 3,
-  PRODUCT_MANAGER: 4,
-  FEEDBACK_MANAGER: 5,
-};
-

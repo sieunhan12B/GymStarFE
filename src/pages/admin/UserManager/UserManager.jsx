@@ -13,9 +13,6 @@ import dayjs from "dayjs";
 import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
 import { normalizeText } from "@/utils/normalizeText";
 
-// Constants
-import { ROLE_COLOR_MAP, STATUS_COLOR_MAP, STATUS_FILTERS, BIRTHDAY_FILTERS, GENDER_FILTERS } from "../../../constants/userManager";
-
 // Services
 import { userService } from "@/services/user.service";
 
@@ -151,7 +148,10 @@ const UserManager = () => {
     {
       title: "Ngày sinh",
       dataIndex: "birth_date",
-      filters: BIRTHDAY_FILTERS,
+      filters: [
+        { text: "Có ngày sinh", value: "has_birthday" },
+        { text: "Đang cập nhật", value: "no_birthday" },
+      ],
       onFilter: (value, record) => {
         if (value === "has_birthday") {
           return !!record.birth_date;
@@ -167,7 +167,11 @@ const UserManager = () => {
     {
       title: "Giới tính",
       dataIndex: "gender",
-      filters: GENDER_FILTERS,
+      filters: [
+        { text: "Nam", value: "nam" },
+        { text: "Nữ", value: "nữ" },
+        { text: "Chưa cập nhật", value: "null" },
+      ],
       onFilter: (value, record) => {
         if (value === "null") {
           return !record.gender;
@@ -202,52 +206,66 @@ const UserManager = () => {
       onFilter: (value, record) =>
         normalizeText(record.role_name) === value,
 
-      render: (_, r) => (
-        <div className="flex justify-between items-center">
-          <Tag
-            color={ROLE_COLOR_MAP[r.role_id]}
-            className="rounded-full px-3"
-          >
-            {r.role_name}
-          </Tag>
+      render: (_, r) => {
+        let color = "default";
 
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            disabled={r.user_id === currentUser.user_id}
-            onClick={() => openRoleModal(r)}
-          />
-        </div>
-      ),
+        if (r.role_id === 1) color = "green";
+        else if (r.role_id === 2) color = "gold";
+        else if (r.role_id === 3) color = "purple";
+        else if (r.role_id === 4) color = "blue";
+        else if (r.role_id === 5) color = "cyan";
+
+        return (
+          <div className="flex justify-between items-center">
+            <Tag color={color} className="rounded-full px-3">
+              {r.role_name}
+            </Tag>
+
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              disabled={r.user_id === currentUser.user_id}
+              onClick={() => openRoleModal(r)}
+            />
+          </div>
+        );
+      },
     },
 
     {
       title: "Trạng thái",
       dataIndex: "status",
-      filters: STATUS_FILTERS,
+      filters: [
+        { text: "Đang hoạt động", value: "đang hoạt động" },
+        { text: "Bị cấm", value: "bị cấm" },
+        { text: "Chưa xác nhận", value: "chưa xác nhận" },
+      ],
       onFilter: (value, record) =>
         normalizeText(record.status) === value,
 
       render: (_, r) => {
-        const statusKey = normalizeText(r.status);
+        let color = "default";
+
+        if (r.status === "đang hoạt động") color = "green";
+        else if (r.status === "bị cấm") color = "red";
+        else if (r.status === "chưa xác nhận") color = "orange";
 
         return (
           <div className="flex justify-between items-center">
-            <Tag
-              color={STATUS_COLOR_MAP[statusKey]}
-              className="rounded-full"
-            >
+            <Tag color={color} className="rounded-full">
               {r.status}
             </Tag>
 
-            {statusKey !== "chưa xác nhận" && (
+            {r.status !== "chưa xác nhận" && (
               <Tooltip title="Thay đổi phân quyền">
                 <Button
                   type="text"
                   icon={
-                    statusKey === "đang hoạt động"
-                      ? <LockOutlined className="text-red-500" />
-                      : <UnlockOutlined className="text-green-500" />
+                    r.status === "đang hoạt động" ? (
+                      <LockOutlined className="text-red-500" />
+                    ) : (
+                      <UnlockOutlined className="text-green-500" />
+                    )
                   }
                   disabled={r.user_id === currentUser.user_id}
                   onClick={() => {

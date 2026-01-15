@@ -11,7 +11,6 @@ import { NotificationContext } from "@/App";
 // Redux
 import { useDispatch } from "react-redux";
 import { setUser } from "@/redux/userSlice";
-import { ROLES } from "../../../constants/role";
 
 const { Title, Text } = Typography;
 
@@ -33,23 +32,29 @@ const Login = () => {
 
       const response = await authService.logIn(payload);
 
-      dispatch(setUser(response.data.user));
+      const user = response.data.user;
+
+      dispatch(setUser(user));
 
       showNotification("Đăng nhập thành công!", "success");
 
-      switch (response.data.user.role_id) {
-        case ROLES.ADMIN:
-          navigate(`${AdminPath}/dashboard`);
+      switch (user.role_name) {
+        case "Quản trị viên":
+          navigate("/admin/dashboard");
           break;
-        case ROLES.PRODUCT_MANAGER:
-          navigate(`${AdminPath}/${path.productManager}`);
+
+        case "Quản lý sản phẩm":
+          navigate(`/admin/${path.productManager}`);
           break;
-        case ROLES.ORDER_MANAGER:
-          navigate(`${AdminPath}/${path.orderManager}`);
+
+        case "Quản lý đơn hàng":
+          navigate(`/admin/${path.orderManager}`);
           break;
-        case ROLES.FEEDBACK_MANAGER:
-          navigate(`${AdminPath}/${path.feedbackManager}`);
+
+        case "Quản lý phản hồi":
+          navigate(`/admin/${path.feedbackManager}`);
           break;
+
         default:
           navigate("/");
       }
@@ -62,6 +67,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">

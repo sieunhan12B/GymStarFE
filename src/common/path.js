@@ -8,9 +8,7 @@ export const path = {
   resetPassword: "/dat-lai-mat-khau",
   verifyEmail: "/xac-thuc-email",
 
-
   // ------------------ USER ------------------
-
   home: "/",
 
   category: "danh-muc/*",
@@ -31,8 +29,6 @@ export const path = {
   voucher: "ma-giam-gia",
   addressBook: "so-dia-chi",
   reviewFeedback: "dong-gop-y-kien-va-danh-gia",
-
-
 
   // ------------------ ADMIN ------------------
   admin: "/admin",

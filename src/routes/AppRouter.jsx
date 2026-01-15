@@ -1,7 +1,6 @@
 
 import { path } from "@/common/path";
 import ProtectedRoute from "@/routes/ProtectedRoute";
-import { ROLES } from "@/constants/role";
 import { Navigate } from "react-router-dom";
 
 // ------------------ AUTH ------------------
@@ -10,11 +9,6 @@ import Signup from "../pages/auth/Signup/Signup";
 import VerifyEmail from "../pages/auth/VerifyEmail/VerifyEmail";
 import ResetPassword from "../pages/auth/ResetPassword/ResetPassword";
 import ForgotPassword from "../pages/auth/ForgotPassword/ForgotPassword";
-
-
-
-
-
 
 // ------------------ ADMIN ------------------
 import AdminTemplate from "../templates/AdminTemplate/AdminTemplate";
@@ -30,15 +24,14 @@ import RoleManager from "../pages/admin/RoleManager/RoleManager";
 import PromotionManager from "../pages/admin/PromotionManager/PromotionManager";
 import AddressManager from "../pages/admin/AddressManager/AddressManager";
 
-
-
-
 // ------------------ USER ------------------
 import Home from "../pages/Home/Home";
-import Account from "../pages/user/Account/Account";
-import Product from "../pages/user/Product/Product";
 import ManagerAccount from "../layouts/ManagerAccount/ManagerAccount";
 import HomeTemplate from "../templates/HomeTemplate/HomeTemplate";
+import Error from "../pages/Error/Error";
+
+import Account from "../pages/user/Account/Account";
+import Product from "../pages/user/Product/Product";
 import Category from "../pages/user/Category/Category";
 import Cart from "../pages/user/Cart/Cart";
 import OrderSuccess from "../pages/user/OrderSuccess/OrderSuccess";
@@ -48,14 +41,6 @@ import AddressBook from "../pages/user/AddressBook/AddressBook";
 import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
 import Checkout from "../pages/user/Checkout/Checkout";
 import Voucher from "../pages/user/Voucher/Voucher";
-import Error from "../pages/Error/Error";
-
-
-
-
-
-
-
 
 export const AppRouter = [
     // ------------------ AUTH ------------------
@@ -167,15 +152,14 @@ export const AppRouter = [
 
 
     // ------------------ ADMIN ------------------
-
     {
         path: "/admin",
         element: (
             <ProtectedRoute allowedRoles={[
-                ROLES.ADMIN,
-                ROLES.PRODUCT_MANAGER,
-                ROLES.ORDER_MANAGER,
-                ROLES.FEEDBACK_MANAGER
+                "Quản trị viên",
+                "Quản lý sản phẩm",
+                "Quản lý đơn hàng",
+                "Quản lý phản hồi"
             ]}>
                 <AdminTemplate />
             </ProtectedRoute>
@@ -186,7 +170,7 @@ export const AppRouter = [
             {
                 path: path.dashboard,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên"]}>
                         <Dashboard />
                     </ProtectedRoute>
                 ),
@@ -195,7 +179,7 @@ export const AppRouter = [
             {
                 path: path.userManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên"]}>
                         <UserManager />
                     </ProtectedRoute>
                 ),
@@ -204,7 +188,7 @@ export const AppRouter = [
             {
                 path: path.productManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.PRODUCT_MANAGER]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên", "Quản lý sản phẩm"]}>
                         <ProductManager />
                     </ProtectedRoute>
                 ),
@@ -213,7 +197,7 @@ export const AppRouter = [
             {
                 path: path.categoryManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.PRODUCT_MANAGER]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên", "Quản lý sản phẩm"]}>
                         <CategoryManager />
                     </ProtectedRoute>
                 ),
@@ -223,7 +207,7 @@ export const AppRouter = [
             {
                 path: path.orderManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.ORDER_MANAGER]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên", "Quản lý đơn hàng"]}>
                         <OrderManager />
                     </ProtectedRoute>
                 ),
@@ -233,7 +217,7 @@ export const AppRouter = [
             {
                 path: path.feedbackManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FEEDBACK_MANAGER]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên", "Quản lý phản hồi"]}>
                         <FeedbackManager />
                     </ProtectedRoute>
                 ),
@@ -241,7 +225,7 @@ export const AppRouter = [
             {
                 path: path.reviewManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.FEEDBACK_MANAGER]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên", "Quản lý phản hồi"]}>
                         <ReviewManager />
                     </ProtectedRoute>
                 ),
@@ -249,7 +233,7 @@ export const AppRouter = [
             {
                 path: path.paymentManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.ORDER_MANAGER]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên", "Quản lý đơn hàng"]}>
                         <PaymentManager />
                     </ProtectedRoute>
                 ),
@@ -257,7 +241,7 @@ export const AppRouter = [
             {
                 path: path.roleManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên"]}>
                         <RoleManager />
                     </ProtectedRoute>
                 ),
@@ -265,7 +249,7 @@ export const AppRouter = [
             {
                 path: path.promotionManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên"]}>
                         <PromotionManager />
                     </ProtectedRoute>
                 ),
@@ -273,7 +257,7 @@ export const AppRouter = [
             {
                 path: path.addressManager,
                 element: (
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.ORDER_MANAGER]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên", "Quản lý đơn hàng"]}>
                         <AddressManager />
                     </ProtectedRoute>
                 ),

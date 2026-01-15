@@ -156,7 +156,7 @@ const ReviewManager = () => {
             dataIndex: "comment",
             key: "comment",
             width: 350,
-             filters: [
+            filters: [
                 { text: "Có nội dung", value: "comment" },
                 { text: "Chưa có nội dung", value: "not_comment" },
             ],

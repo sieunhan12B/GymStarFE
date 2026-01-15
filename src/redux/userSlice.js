@@ -1,9 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  user: null, // chứa thông tin user
+  user: null, 
   loading: true,
-
 };
 
 const userSlice = createSlice({
@@ -12,24 +11,20 @@ const userSlice = createSlice({
   reducers: {
 
     setUser: (state, action) => {
-      state.user = action.payload; // dùng khi gọi /me
+      state.user = action.payload; 
       state.loading = false;
 
     },
-
 
     logout: (state) => {
       state.user = null;
       state.loading = false;
 
     },
-    setLoading: (state, action) => {
-      state.loading = action.payload;
-    },
   },
 });
 
-export const { setUser, logout, setLoading } =
+export const { setUser, logout } =
   userSlice.actions;
 
 export default userSlice.reducer;

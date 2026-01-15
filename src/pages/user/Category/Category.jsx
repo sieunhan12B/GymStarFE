@@ -7,9 +7,23 @@ import { formatPrice } from "../../../utils/utils";
 import { getCategoryId } from "../../../utils/generateSlug";
 import { danhMucService } from "../../../services/category.service";
 import useDebounce from "../../../hooks/useDebounce";
-import { COLOR_OPTIONS } from "../../../constants/color";
 
 const { Option } = Select;
+
+// Color options
+const COLOR_OPTIONS = [
+  { name: "Đen", hex: "#000000" },
+  { name: "Trắng", hex: "#FFFFFF" },
+  { name: "Xám", hex: "#808080" },
+  { name: "Đỏ", hex: "#FF0000" },
+  { name: "Xanh", hex: "#0000FF" }, // xanh dương
+  { name: "Vàng", hex: "#FFFF00" },
+  { name: "Cam", hex: "#FFA500" },
+  { name: "Tím", hex: "#800080" },
+  { name: "Hồng", hex: "#FFC0CB" },
+  { name: "Nâu", hex: "#8B4513" },
+
+];
 
 const Category = () => {
   const { "*": splat, keyword } = useParams();

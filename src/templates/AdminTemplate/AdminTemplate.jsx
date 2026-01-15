@@ -7,7 +7,6 @@ import {
   ShopOutlined,
   UploadOutlined,
   UserOutlined,
-  VideoCameraOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   ProductOutlined,
@@ -22,7 +21,6 @@ import { Avatar, Button, Image, Layout, Menu, Dropdown, Modal } from 'antd';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { path } from '@/common/path';
 import { useDispatch, useSelector } from "react-redux";
-import { ROLES } from '@/constants/role';
 import { logout } from '../../redux/userSlice';
 
 import { NotificationContext } from '@/App';
@@ -46,23 +44,23 @@ const AdminTemplate = () => {
 
   const user = useSelector((state) => state.userSlice.user);
 
-  const getMenuItemsByRole = (role_id) => {
+  const getMenuItemsByRole = (role_name) => {
     const allItems = [
-      { key: path.dashboard, icon: <BarChartOutlined />, label: 'Dashboard', roles: [ROLES.ADMIN] },
-      { key: path.userManager, icon: <UserOutlined />, label: 'Người dùng', roles: [ROLES.ADMIN] },
-      { key: path.productManager, icon: <ProductOutlined />, label: 'Sản phẩm', roles: [ROLES.ADMIN, ROLES.PRODUCT_MANAGER] },
-      { key: path.categoryManager, icon: <TagOutlined />, label: 'Danh mục', roles: [ROLES.ADMIN, ROLES.PRODUCT_MANAGER] },
-      { key: path.promotionManager, icon: <UploadOutlined />, label: 'Khuyến mãi', roles: [ROLES.ADMIN] },
-      { key: path.orderManager, icon: <ShopOutlined />, label: 'Đơn hàng', roles: [ROLES.ADMIN, ROLES.ORDER_MANAGER] },
-      { key: path.paymentManager, icon: <DollarOutlined />, label: 'Thanh toán', roles: [ROLES.ADMIN, ROLES.ORDER_MANAGER] },
-      { key: path.feedbackManager, icon: <FormOutlined />, label: 'Góp ý', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
-      { key: path.reviewManager, icon: <StarOutlined />, label: 'Đánh giá', roles: [ROLES.ADMIN, ROLES.FEEDBACK_MANAGER] },
-      { key: path.roleManager, icon: <AppstoreOutlined />, label: 'Loại người dùng', roles: [ROLES.ADMIN] },
-      { key: path.addressManager, icon: <HomeOutlined />, label: 'Địa chỉ', roles: [ROLES.ADMIN, ROLES.ORDER_MANAGER] },
+      { key: path.dashboard, icon: <BarChartOutlined />, label: 'Dashboard', roles: ["Quản trị viên"] },
+      { key: path.userManager, icon: <UserOutlined />, label: 'Người dùng', roles: ["Quản trị viên"] },
+      { key: path.productManager, icon: <ProductOutlined />, label: 'Sản phẩm', roles: ["Quản trị viên", "Quản lý sản phẩm"] },
+      { key: path.categoryManager, icon: <TagOutlined />, label: 'Danh mục', roles: ["Quản trị viên", "Quản lý sản phẩm"] },
+      { key: path.promotionManager, icon: <UploadOutlined />, label: 'Khuyến mãi', roles: ["Quản trị viên"] },
+      { key: path.orderManager, icon: <ShopOutlined />, label: 'Đơn hàng', roles: ["Quản trị viên", "Quản lý đơn hàng"] },
+      { key: path.paymentManager, icon: <DollarOutlined />, label: 'Thanh toán', roles: ["Quản trị viên", "Quản lý đơn hàng"] },
+      { key: path.feedbackManager, icon: <FormOutlined />, label: 'Góp ý', roles: ["Quản trị viên", "Quản lý phản hồi"] },
+      { key: path.reviewManager, icon: <StarOutlined />, label: 'Đánh giá', roles: ["Quản trị viên", "Quản lý phản hồi"] },
+      { key: path.roleManager, icon: <AppstoreOutlined />, label: 'Loại người dùng', roles: ["Quản trị viên"] },
+      { key: path.addressManager, icon: <HomeOutlined />, label: 'Địa chỉ', roles: ["Quản trị viên", "Quản lý đơn hàng"] },
 
     ];
 
-    return allItems.filter(item => item.roles.includes(role_id));
+    return allItems.filter(item => item.roles.includes(role_name));
   };
 
   const handleLogout = () => {
@@ -101,7 +99,7 @@ const AdminTemplate = () => {
           theme="dark"
           mode="inline"
           selectedKeys={[currentKey]}
-          items={getMenuItemsByRole(user.role_id)}
+          items={getMenuItemsByRole(user.role_name)}
           className="bg-black border-r-0"
           onClick={({ key }) => navigate(`/admin/${key}`)}
         />
