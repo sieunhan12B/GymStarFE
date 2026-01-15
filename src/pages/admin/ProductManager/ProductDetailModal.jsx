@@ -10,7 +10,8 @@ import {
     Typography,
     Button,
 } from "antd";
-import { formatPrice } from "@/utils/formatPrice"; // giữ nguyên util format giá
+import { formatPrice } from "@/utils/formatPrice"; 
+import { isVideo } from "@/utils/isVideo";
 
 // Hàm map biến thể với hình ảnh theo màu (copy từ ProductManager)
 const mapVariantsWithImages = (product) => {
@@ -107,8 +108,8 @@ const ProductDetailModal = ({ open, product, onClose }) => {
                 return (
                     <div className="flex items-center gap-2">
                         {visibleItems.map((url, idx) => {
-                            const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
-                            return isVideo ? (
+
+                            return isVideo(url) ? (
                                 <video
                                     key={idx}
                                     src={url}
@@ -152,8 +153,7 @@ const ProductDetailModal = ({ open, product, onClose }) => {
         >
             <div className="flex flex-wrap gap-3">
                 {mediaModal.media.map((url, idx) => {
-                    const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
-                    return isVideo ? (
+                    return isVideo(url) ? (
                         <video
                             key={idx}
                             src={url}

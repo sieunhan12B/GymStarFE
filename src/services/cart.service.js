@@ -7,8 +7,8 @@ export const cartService = {
     // ================== CART ==================
 
     /** Xem giỏ hàng của người dùng */
-    getCart: () => {
-        return http.get("/QuanLyGioHang/XemGioHang/");
+    getCart: (page = 1, limit = 9999) => {
+        return http.get(`/QuanLyGioHang/XemGioHang?page=${page}&limit=${limit}`);
     },
 
     /** Thêm sản phẩm vào giỏ hàng */

@@ -314,7 +314,7 @@ const Checkout = () => {
                     // Chuyển hướng sau 3-4 giây để người dùng thấy thông báo
                     setTimeout(() => {
                         window.location.href = payUrl;
-                    }, 2000);
+                    }, 1500);
                 } else {
                     // Backend không trả payUrl → coi như thất bại
                     showNotification("Không thể tạo link thanh toán MoMo. Vui lòng thử lại hoặc chọn COD.", "error");

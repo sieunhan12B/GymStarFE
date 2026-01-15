@@ -23,6 +23,7 @@ import { cartService } from '@/services/cart.service';
 import { formatPrice } from '@/utils/formatPrice';
 import { generateSlug } from '@/utils/generateSlug';
 import { normalizeText } from '@/utils/normalizeText';
+import { isVideo } from '@/utils/isVideo';
 
 // 5. Redux
 import { setCart } from '@/redux/cartSlice';
@@ -124,8 +125,7 @@ const Product = () => {
   // ================= DERIVED VALUES =================
   const hasSize = product?.product_variants?.some(v => v.size);
 
-  const isVideo = (url = "") =>
-    url.match(/\.(mp4|webm|ogg)$/i);
+
 
   const colorImages =
     product?.colors

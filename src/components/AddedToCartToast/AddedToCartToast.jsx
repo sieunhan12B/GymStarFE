@@ -1,6 +1,6 @@
 import React from "react";
 import { Image } from "antd";
-import { formatPrice } from "../../utils/formatPrice";
+import { formatPrice } from "@/utils/formatPrice";
 
 const AddedToCartToast = ({ product, product_variant, quantity = 1, message }) => {
     return (

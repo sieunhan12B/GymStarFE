@@ -399,6 +399,10 @@ const Home = () => {
         imgSrc={banner}
         titleBanner={"KHÁM PHÁ SẢN PHẨM HOT"}
         desBanner={"Các mẫu quần áo và phụ kiện gym bán chạy nhất, cập nhật liên tục"}
+        categories={[
+          { label: "BÁN CHẠY", path: "/san-pham-ban-chay" },
+          { label: "GIẢM GIÁ", path: "/san-pham-giam-gia" },
+        ]}
       />
     );
   }
@@ -409,6 +413,10 @@ const Home = () => {
         imgSrc={banner3}
         titleBanner={"PHONG CÁCH CHO NAM & NỮ"}
         desBanner={"Khám phá bộ sưu tập quần áo thể thao và phụ kiện năng động"}
+        categories={[
+          { label: "SHOP NAM", path: "/danh-muc/nam" },
+          { label: "SHOP NỮ", path: "/danh-muc/nu" },
+        ]}
       />
     );
   }

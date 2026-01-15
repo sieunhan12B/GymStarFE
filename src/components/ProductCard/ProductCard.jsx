@@ -1,15 +1,34 @@
-import React, { useContext, useState } from "react";
-import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { generateSlug } from "@/utils/generateSlug";
-import { cartService } from "@/services/cart.service";
-import { NotificationContext } from "@/App";
-import { setCart } from "@/redux/cartSlice";
-import AddedToCartToast from "@/components/AddedToCartToast/AddedToCartToast";
-import { formatPrice } from "../../utils/formatPrice";
+/* ================= IMPORTS ================= */
 
-const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // new | sale | bestseller | category | recommend
-}) => {
+// React
+import React, { useContext, useState } from "react";
+
+// Redux
+import { useDispatch, useSelector } from "react-redux";
+import { setCart } from "@/redux/cartSlice";
+
+// Utils
+import { generateSlug } from "@/utils/generateSlug";
+import { formatPrice } from "@/utils/formatPrice";
+import { isVideo } from "@/utils/isVideo";
+
+// React router dom
+import { Link } from "react-router-dom";
+
+// Services
+import { cartService } from "@/services/cart.service";
+
+// Components
+import AddedToCartToast from "@/components/AddedToCartToast/AddedToCartToast";
+
+// Context
+import { NotificationContext } from "@/App";
+
+
+/* ================= COMPONENT ================= */
+const ProductCard = ({ product, hoverSize = true, badgeContext = [] }) => {
+
+    /* ===== STATE ===== */
     const [isHovered, setIsHovered] = useState(false);
     const [selectedSize, setSelectedSize] = useState("");
     const { showNotification } = useContext(NotificationContext);
@@ -17,23 +36,31 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // n
     const user = useSelector((state) => state.userSlice.user);
     const userId = user?.user_id;
 
-
-    // ===============================
-    // LOADING SKELETON
-    // ===============================
+    // ================LOADING SKELETON================
     if (!product) {
         return (
-            <div className="w-full h-80 sm:h-96 bg-gray-200 animate-pulse rounded-lg" />
+            <div className="animate-pulse">
+                {/* Ảnh */}
+                <div className="w-full h-80 sm:h-96 bg-gray-200 rounded-lg"></div>
+
+                {/* Text */}
+                <div className="mt-3 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                </div>
+            </div>
         );
     }
 
-    // ===============================
-    // LẤY VARIANT ĐẦU TIÊN CÒN HÀNG
-    // ===============================
-    const firstVariant = product.product_variants
+
+
+    /* ================= UTILS ================= */
+
+    // ========LẤY VARIANT ĐẦU TIÊN THEO ID BÉ NHẤT CÒN HÀNG==========
+    const firstVariant = product?.product_variants
         ?.filter(v => v.stock > 0)
         ?.sort((a, b) => a.product_variant_id - b.product_variant_id)[0];
-
 
     if (!firstVariant) {
         return (
@@ -43,22 +70,15 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // n
         );
     }
 
-    // ===============================
-    // MÀU & ẢNH THEO VARIANT ĐẦU TIÊN
-    // ===============================
+    // ========MÀU & ẢNH THEO VARIANT ĐẦU TIÊN=========
     const selectedColor = product.colors?.find(
         c => c.color === firstVariant.color
     );
-
-
-    const isVideo = (url = "") => {
-        return /\.(mp4|webm|ogg)$/i.test(url);
-    };
-
-    const colorImages = selectedColor?.images || [];
+    console.log(selectedColor)
 
     // chỉ lấy ảnh (không lấy video)
-    const validImages = colorImages.filter(img => !isVideo(img));
+    const validImages = selectedColor?.images || [].filter(img => !isVideo(img));
+    console.log(validImages)
 
     // lấy 2 ảnh đầu tiên hợp lệ
     const images = [
@@ -66,22 +86,25 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // n
         validImages[1] || validImages[0] || product.thumbnail || "/placeholder.png",
     ];
 
-    // ===============================
-    // SIZE THEO MÀU CỦA VARIANT ĐẦU TIÊN
-    // ===============================
+    // ========SIZE THEO MÀU CỦA VARIANT ĐẦU TIÊN=========
     const allSizes = ["S", "M", "L", "XL", "XXL"];
+    const productLink = `/san-pham/${generateSlug(product.category_name)}/${product.product_id}`;
 
+    // lọc ra tất cả các variant cùng màu với variant đang chọn ( xác định màu đó có mấy size và kiểm tra stock)
     const variantsOfSelectedColor = product.product_variants.filter(
         v => v.color === firstVariant.color && v.stock > 0
     );
 
+    // size còn hàng
     const availableSizes = variantsOfSelectedColor.map(v => v.size);
+
+    // tổng hàng tồn 
     const totalStock = product.product_variants?.reduce(
         (sum, v) => sum + v.stock,
         0
     );
 
-
+    // Xử lý để lấy badge
     const isNewProduct = (() => {
         if (!product.createdAt) return false;
         const created = new Date(product.createdAt);
@@ -92,6 +115,7 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // n
 
     const isLowStock =
         totalStock > 0 && totalStock <= 10;
+
     const badgesToShow = (() => {
         if (!product || !Array.isArray(badgeContext)) return [];
 
@@ -117,10 +141,7 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // n
     })();
 
 
-
-    // ===============================
-    // ADD TO CART
-    // ===============================
+    /* ================= HANDLERS ADD TO CART WITH SIZES ================= */
     const handleSelectSize = async (size) => {
         if (!availableSizes.includes(size)) return;
 
@@ -156,11 +177,11 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // n
                 err.response?.data?.message || "Có lỗi xảy ra",
                 "error"
             );
-        }
+        } 
     };
 
-    const productLink = `/san-pham/${generateSlug(product.category_name)}/${product.product_id}`;
 
+    /* ===== RENDER ===== */
     return (
         <div
             className="relative group cursor-pointer"

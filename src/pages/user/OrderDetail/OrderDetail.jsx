@@ -109,9 +109,30 @@ const OrderDetail = () => {
 
     const isPaid = orderData.payments[0]?.status === "thành công";
 
-    const isPendingMomoPayment =
+    // const isPendingMomoPayment =
+    //     orderData.payments[0]?.method === "MOMO" &&
+    //     orderData.payments[0]?.status === "đang chờ";
+
+    // const canPayment =
+    //     orderData.payments?.some(
+    //         p =>
+    //             p.method === "MOMO" &&
+    //             (
+    //                 (p.status === "thất bại" && orderData.status === "chờ xác nhận") ||
+    //                 p.status === "đang chờ"
+    //             )
+    //     );
+    const canPayment =
         orderData.payments[0]?.method === "MOMO" &&
-        orderData.payments[0]?.status === "đang chờ";
+        (
+            (
+                orderData.payments[0]?.status === "thất bại" && orderData.status === "chờ xác nhận"
+            ) ||
+            orderData.payments[0]?.status === "đang chờ"
+
+        )
+
+
     const subtotal = orderData.items.reduce(
         (sum, item) => sum + item.original_price * item.quantity,
         0
@@ -659,7 +680,7 @@ const OrderDetail = () => {
 
 
                     {/* Thanh toán lại */}
-                    {isPendingMomoPayment && (
+                    {canPayment && (
                         <button
                             onClick={handlePayment}
                             className="w-full bg-green-500 hover:bg-green-600 text-white mt-3 py-2 rounded font-semibold"

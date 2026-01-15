@@ -10,11 +10,9 @@ import {
     CommentOutlined,
     InfoCircleOutlined,
 } from "@ant-design/icons";
-import { chatbotService } from "../../services/chatbot.service";
+import { chatbotService } from "@/services/chatbot.service";
 import { useSelector } from "react-redux";
-import { Image } from "antd";
 import chatbot from '@/assets/images/chatbot.jpg';
-
 
 const QUICK_REPLIES = [
     "Hiện có khuyến mãi nào không?",

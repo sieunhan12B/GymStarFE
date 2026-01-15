@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Modal, Form, Input, Select, Spin, message, AutoComplete } from "antd";
-import { removeVietnameseTones } from "../../utils/removeVietnameseTones";
+import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
 import useDebounce from "@/hooks/useDebounce";
 
 // === KEYS ===
@@ -101,10 +101,14 @@ const AddEditAddressModal = ({ open, onCancel, onSubmit, addressData, mode }) =>
     // ================= Init map =================
     useEffect(() => {
         if (!open) {
-            map.current = null;
+            if (map.current) {
+                map.current.remove();
+                map.current = null;
+            }
             marker.current = null;
             return;
         }
+
 
         const timer = setTimeout(() => {
             if (!window.goongjs || !mapContainer.current || map.current) return;
@@ -222,7 +226,6 @@ const AddEditAddressModal = ({ open, onCancel, onSubmit, addressData, mode }) =>
             onOk={() => form.submit()}
             confirmLoading={submitting}
             width={800}
-            destroyOnClose
         >
             {loading ? (
                 <div className="flex justify-center py-16">

@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header/Header'
-import Footer from '../../components/Footer/Footer'
-import Chatbot from '../../components/Chatbot/Chatbot'
+import Footer from './Footer/Footer'
+import Chatbot from '@/components/Chatbot/Chatbot'
 
 const HomeTemplate = () => {
   const { pathname } = useLocation()

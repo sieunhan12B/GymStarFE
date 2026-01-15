@@ -1,7 +1,7 @@
 import { useContext, useState } from 'react';
-import { Modal, Input, Select, Button, message, Image } from 'antd';
+import { Modal, Input, Select, Button, Image } from 'antd';
 import logo from '@/assets/images/logo.svg';
-import { feedbackService } from '../../services/feedback.service';
+import { feedbackService } from '@/services/feedback.service';
 import { NotificationContext } from "@/App";
 import { SendOutlined } from '@ant-design/icons';
 import feebackBanner from '@/assets/Images/feedbackBanner.jpg'
@@ -11,41 +11,33 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const FeedbackModal = ({ visible, onClose }) => {
+    /* ===== STATE ===== */
     const [formData, setFormData] = useState({
-        feedbackType: '',
-        content: ''
-    });
+    type: '',
+    message: ''
+});
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const { showNotification } = useContext(NotificationContext);
     const [step, setStep] = useState('form');
 
-    // Map FE -> BE
-    const mapFeedbackType = (type) => ({
-        compliment: 'Khen ngợi',
-        suggestion: 'Đề xuất',
-        complaint: 'Khiếu nại',
-        question: 'Câu hỏi',
-        product: 'Góp ý về sản phẩm',
-        service: 'Góp ý về dịch vụ',
-        other: 'Khác'
-    })[type];
-
+    /* ===== UTILS ===== */
     const validateForm = () => {
         const newErrors = {};
 
-        if (!formData.feedbackType) {
-            newErrors.feedbackType = 'Vui lòng chọn loại góp ý!';
+        if (!formData.type) {
+            newErrors.type = 'Vui lòng chọn loại góp ý!';
         }
 
-        if (!formData.content || formData.content.length < 10) {
-            newErrors.content = 'Nội dung phải có ít nhất 10 ký tự!';
+        if (!formData.message || formData.message.length < 10) {
+            newErrors.message = 'Nội dung phải có ít nhất 10 ký tự!';
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
+    /* ===== HANDLERS LOGIC ===== */
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         if (errors[field]) {
@@ -53,27 +45,18 @@ const FeedbackModal = ({ visible, onClose }) => {
         }
     };
 
-    // ✅ SUBMIT JSON RAW
     const handleSubmit = async () => {
         if (!validateForm()) return;
 
         setLoading(true);
 
         try {
-            const payload = {
-                type: mapFeedbackType(formData.feedbackType),
-                message: formData.content
-            };
+            const res = await feedbackService.addFeedback(formData);
 
-            const res = await feedbackService.addFeedback(payload);
-
-            // ❌ không đóng modal liền
             setStep('success');
 
-            // optional: toast nhỏ
             showNotification(res.data.message, "success");
 
-            // auto close sau 1.8s
             setTimeout(() => {
                 setStep('form');
                 setFormData({ feedbackType: '', content: '' });
@@ -91,7 +74,7 @@ const FeedbackModal = ({ visible, onClose }) => {
         }
     };
 
-
+    /* ===== RENDER ===== */
     return (
         <Modal
             open={visible}
@@ -144,19 +127,20 @@ const FeedbackModal = ({ visible, onClose }) => {
                                 className="w-full"
                                 size="large"
                                 placeholder="Chọn loại góp ý"
-                                value={formData.feedbackType || undefined}
+                                value={formData.type || undefined}
                                 onChange={(v) =>
-                                    handleInputChange('feedbackType', v)
+                                    handleInputChange('type', v)
                                 }
                                 status={errors.feedbackType ? 'error' : ''}
                             >
-                                <Option value="compliment">Khen ngợi</Option>
-                                <Option value="suggestion">Đề xuất</Option>
-                                <Option value="complaint">Khiếu nại</Option>
-                                <Option value="question">Câu hỏi</Option>
-                                <Option value="product">Góp ý sản phẩm</Option>
-                                <Option value="service">Góp ý dịch vụ</Option>
-                                <Option value="other">Khác</Option>
+                                <Option value="Khen ngợi">Khen ngợi</Option>
+                                <Option value="Đề xuất">Đề xuất</Option>
+                                <Option value="Khiếu nại">Khiếu nại</Option>
+                                <Option value="Câu hỏi">Câu hỏi</Option>
+                                <Option value="Góp ý về sản phẩm">Góp ý về sản phẩm</Option>
+                                <Option value="Góp ý về dịch vụ">Góp ý về dịch vụ</Option>
+                                <Option value="Khác">Khác</Option>
+
                             </Select>
                             {errors.feedbackType && (
                                 <p className="text-red-500 text-sm">
@@ -174,9 +158,9 @@ const FeedbackModal = ({ visible, onClose }) => {
                                 rows={6}
                                 maxLength={500}
                                 showCount
-                                value={formData.content}
+                                value={formData.message}
                                 onChange={(e) =>
-                                    handleInputChange('content', e.target.value)
+                                    handleInputChange('message', e.target.value)
                                 }
                                 status={errors.content ? 'error' : ''}
                             />

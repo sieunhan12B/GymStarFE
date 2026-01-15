@@ -55,9 +55,15 @@ const Cart = () => {
         const startDate = new Date(v.start_date.split('/').reverse().join('-'));
         const endDate = new Date(v.end_date.split('/').reverse().join('-'));
         const isExpired = now < startDate || now > endDate;
+
         const minOrderValue = parseFloat(v.min_order_value || 0);
-        return !isExpired && totalSelectedAmount >= minOrderValue;
+        const isEnoughOrder = totalSelectedAmount >= minOrderValue;
+
+        const isOutOfUsage = v.remaining_usage !== null && v.remaining_usage <= 0;
+
+        return !isExpired && isEnoughOrder && !isOutOfUsage;
     }).length;
+
     const rawTotal = cartItems
         .filter(item => selectedCartItems.includes(item.cart_detail_id))
         .reduce(
@@ -623,11 +629,18 @@ const Cart = () => {
                                                     <span className="inline-block bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold px-3 py-1 rounded-md text-sm">
                                                         {voucher.code}
                                                     </span>
-                                                    {voucher.remaining_usage && (
-                                                        <span className="text-xs text-gray-500">
-                                                            Còn {voucher.remaining_usage} lượt
-                                                        </span>
-                                                    )}
+                                                    <p
+                                                        className={
+                                                            voucher.remaining_usage === 0
+                                                                ? "text-red-500 font-semibold"
+                                                                : "text-green-600"
+                                                        }
+                                                    >
+                                                        {voucher.remaining_usage === 0
+                                                            ? "Hết lượt"
+                                                            : `Còn ${voucher.remaining_usage} lượt`}
+                                                    </p>
+
                                                 </div>
 
                                                 {/* Mô tả */}

@@ -13,6 +13,37 @@ import { useNavigate } from "react-router-dom";
 import { NotificationContext } from "@/App";
 import { formatPrice } from "../../../utils/formatPrice";
 
+const PaymentBadge = ({ payment }) => {
+    if (!payment) {
+        return (
+            <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                Chưa thanh toán
+            </span>
+        );
+    }
+
+    let color = "bg-gray-100 text-gray-600";
+    let icon = "⏳";
+
+    if (payment.status === "thành công") {
+        color = "bg-green-100 text-green-700";
+        icon = "✅";
+    } else if (payment.status === "thất bại") {
+        color = "bg-red-100 text-red-700";
+        icon = "❌";
+    } else if (payment.status === "đang chờ") {
+        color = "bg-yellow-100 text-yellow-700";
+        icon = "⏳";
+    }
+
+    return (
+        <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full ${color}`}>
+            {icon} {payment.method} • {payment.status}
+        </span>
+    );
+};
+
+
 const OrderHistory = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -24,6 +55,9 @@ const OrderHistory = () => {
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [cancelLoading, setCancelLoading] = useState(false);
     const [isExchangeModalVisible, setIsExchangeModalVisible] = useState(false);
+    const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+    const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
+
 
 
     const { showNotification } = useContext(NotificationContext);
@@ -86,7 +120,7 @@ const OrderHistory = () => {
                 reason: cancelReason,
             }
             const res = await orderService.deleteOrder(orderId, payload);
-    
+
             showNotification(res.data.message || "Huỷ đơn thành công", "success");
 
             // Cập nhật trạng thái orderData
@@ -169,10 +203,33 @@ const OrderHistory = () => {
 
 
     /* ================== FILTER ================== */
-    const filteredOrders =
-        activeTab === "all"
-            ? orders
-            : orders.filter((order) => order.status === activeTab);
+    const filteredOrders = orders.filter((order) => {
+        // Filter theo tab status
+        if (activeTab !== "all" && order.status !== activeTab) return false;
+
+        // Filter theo trạng thái thanh toán
+        if (paymentStatusFilter !== "all") {
+            if (!order.payment) return false;
+
+            if (paymentStatusFilter === "paid" && order.payment.status !== "thành công")
+                return false;
+
+            if (paymentStatusFilter === "pending" && order.payment.status !== "đang chờ")
+                return false;
+
+            if (paymentStatusFilter === "failed" && order.payment.status !== "thất bại")
+                return false;
+        }
+
+        // Filter theo phương thức
+        if (paymentMethodFilter !== "all") {
+            if (!order.payment) return false;
+            if (order.payment.method !== paymentMethodFilter) return false;
+        }
+
+        return true;
+    });
+
 
     /* ================== PAGINATION ================== */
     const paginatedOrders = filteredOrders.slice(
@@ -227,7 +284,7 @@ const OrderHistory = () => {
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b min-h-[128px] ">
                 <div className="">
-                    <h2 className="text-2xl font-bold">Lịch sử đơn hàng</h2>
+                    <h2 className="text-2xl font-bold">Đơn hàng của tôi</h2>
                     <p className="text-sm text-gray-500 mt-1">
                         Theo dõi và quản lý các đơn hàng của bạn
                     </p>
@@ -271,6 +328,57 @@ const OrderHistory = () => {
                 </div>
             </div>
 
+            {/* Filter */}
+            <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-b">
+                {/* Bên trái: Filter */}
+                <div className="flex flex-wrap gap-4">
+                    <Select
+                        value={paymentStatusFilter}
+                        onChange={(value) => {
+                            setPaymentStatusFilter(value);
+                            setCurrentPage(1);
+                        }}
+                        className="w-48"
+                    >
+                        <Select.Option value="all">Tất cả thanh toán</Select.Option>
+                        <Select.Option value="paid">Đã thanh toán</Select.Option>
+                        <Select.Option value="pending">Chưa thanh toán</Select.Option>
+                        <Select.Option value="failed">Thất bại</Select.Option>
+                    </Select>
+
+                    <Select
+                        value={paymentMethodFilter}
+                        onChange={(value) => {
+                            setPaymentMethodFilter(value);
+                            setCurrentPage(1);
+                        }}
+                        className="w-48"
+                    >
+                        <Select.Option value="all">Tất cả phương thức</Select.Option>
+                        <Select.Option value="MOMO">MOMO</Select.Option>
+                        <Select.Option value="COD">COD</Select.Option>
+                    </Select>
+
+                    {(paymentStatusFilter !== "all" || paymentMethodFilter !== "all") && (
+                        <Button
+                            onClick={() => {
+                                setPaymentStatusFilter("all");
+                                setPaymentMethodFilter("all");
+                            }}
+                        >
+                            Xóa filter
+                        </Button>
+                    )}
+                </div>
+
+                {/* Bên phải: Số lượng */}
+                <div className="text-sm text-gray-500">
+                    Tìm thấy <strong>{filteredOrders.length}</strong> đơn
+                </div>
+            </div>
+
+
+
             {/* Orders */}
             <div className="p-6 space-y-4">
                 {loading ? (
@@ -303,6 +411,11 @@ const OrderHistory = () => {
                                         <p className="text-sm text-gray-500">
                                             Ngày đặt: {order.order_date}
                                         </p>
+
+                                        {/* Badge thanh toán */}
+                                        <div className="mt-1">
+                                            <PaymentBadge payment={order.payment} />
+                                        </div>
                                     </div>
 
                                     <div
@@ -314,6 +427,7 @@ const OrderHistory = () => {
                                         {order.status}
                                     </div>
                                 </div>
+
 
                                 {/* Item */}
                                 <div className="p-6 flex gap-4">

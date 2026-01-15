@@ -38,12 +38,8 @@ const Footer = () => {
                 'GYMSTAR 101',
                 'DVKH xuất sắc',
                 'Câu chuyện về GYMSTAR',
-                'Nhà máy',
-
             ],
         },
-
-
     ];
 
     const storeAddresses = [
@@ -51,10 +47,6 @@ const Footer = () => {
         'Trung tâm vận hành Hà Nội: Lô C8, KCN Lại Yên, Hoài Đức, Hà Nội',
         'Văn phòng & Trung tâm vận hành TP.HCM: Lô C3, KCN Cát Lái, Thủ Đức, TP.HCM',
         'Trung tâm R&D: Tầng 01, The Manhattan, Vinhomes Grand Park, Thủ Đức',
-    ];
-
-    const badges = [
-        
     ];
 
     const scrollToTop = () => {
@@ -72,7 +64,7 @@ const Footer = () => {
             </button>
 
             <div className="max-w-7xl mx-auto px-6 py-12">
-                {/* CTA + Contact */}
+                {/* Top Footer - Feedback + Contact */}
                 <div className="border-b border-gray-800 pb-12 grid grid-cols-1 lg:grid-cols-3 gap-10">
                     <div className="lg:col-span-2">
                         <h2 className="text-3xl font-bold mb-4"> GymStar lắng nghe bạn!</h2>
@@ -125,8 +117,8 @@ const Footer = () => {
                     </div>
                 </div>
 
+                {/* Middle Footer - Menu content */}
                 <div className="py-12 border-b border-gray-800 grid grid-cols-1 lg:grid-cols-10 gap-10">
-
                     {/* Link Sections — chiếm 7 phần */}
                     <div className="lg:col-span-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8">
                         {footerSections.map((section, idx) => (
@@ -153,19 +145,21 @@ const Footer = () => {
 
                 </div>
 
-                {/* Bottom row */}
-                <div className="pt-8 flex flex-col lg:flex-row justify-between gap-6 text-gray-400 text-xs">
+                {/* Bottom Footer - Student Information  */}
+                <div className="pt-8 flex flex-col lg:flex-row justify-between gap-6 text-gray-400 text-sm">
                     <div>
-                        <p className="text-white font-semibold">© CÔNG TY TNHH FASTECH ASIA</p>
-                        <p>Mã số doanh nghiệp: 0108667038 cấp ngày 20/02/2019 tại Hà Nội.</p>
+                        <p className="text-white font-semibold">Đồ án Web Bán Quần áo Thể Thao</p>
+                        <p>Luận văn tốt nghiệp</p>
+                        <p>Giảng viên hướng dẫn: Dương Văn Đeo</p>
                     </div>
 
-                    <div className="flex gap-3">
-                        {badges.map((src, i) => (
-                            <img key={i} src={src} className="h-12 object-contain" />
-                        ))}
+                    <div className="space-y-1">
+                        <p className="text-white font-semibold">Thành viên nhóm</p>
+                        <p>👤 Đặng Gia Bảo – MSSV: DH52108711</p>
+                        <p>👤 Hà Trần Hoàng Anh – MSSV: DH52108862</p>
                     </div>
                 </div>
+
             </div>
         </footer>
     );
