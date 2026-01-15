@@ -28,7 +28,7 @@ import { danhMucService } from "@/services/category.service";
 
 // Utils
 import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
-import { formatPrice } from "@/utils/utils";
+import { formatPrice } from "@/utils/formatPrice";
 
 // Context
 import { NotificationContext } from "@/App";

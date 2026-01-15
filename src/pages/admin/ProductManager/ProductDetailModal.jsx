@@ -10,7 +10,7 @@ import {
     Typography,
     Button,
 } from "antd";
-import { formatPrice } from "@/utils/utils"; // giữ nguyên util format giá
+import { formatPrice } from "@/utils/formatPrice"; // giữ nguyên util format giá
 
 // Hàm map biến thể với hình ảnh theo màu (copy từ ProductManager)
 const mapVariantsWithImages = (product) => {

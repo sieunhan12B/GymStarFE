@@ -17,7 +17,7 @@ import { PlusOutlined } from "@ant-design/icons";
 
 import { NotificationContext } from "@/App";
 import { normalizeText } from "../../../utils/normalizeText";
-import { formatPrice } from "@/utils/utils";
+import { formatPrice } from "@/utils/formatPrice";
 import { productService } from "@/services/product.service";
 
 const COMMON_SPECS = ["Chất liệu", "Kiểu dáng", "Xuất xứ"];

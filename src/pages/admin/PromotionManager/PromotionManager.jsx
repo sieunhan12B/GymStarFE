@@ -19,7 +19,7 @@ import Header from "@/templates/AdminTemplate/Header";
 
 // Context
 import { NotificationContext } from "@/App";
-import { formatPrice } from "../../../utils/utils";
+import { formatPrice } from "../../../utils/formatPrice";
 
 /* ================= COMPONENT ================= */
 const PromotionManager = () => {

@@ -9,11 +9,11 @@ import {
 import { useParams, useNavigate } from 'react-router-dom'
 import { orderService } from '@/services/order.service'
 import { useDispatch } from 'react-redux'
-import { getLocalStorage } from '../../../utils/utils'
 import { setUser } from '../../../redux/userSlice'
 import { setCart } from '../../../redux/cartSlice'
 import { paymentService } from '../../../services/payment.service'
 import dayjs from 'dayjs'
+import { getLocalStorage } from '../../../utils/storage'
 
 const OrderSuccess = () => {
     const { orderId } = useParams()

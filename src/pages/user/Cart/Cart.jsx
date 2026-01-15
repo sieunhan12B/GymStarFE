@@ -20,7 +20,7 @@ import { setCart } from '@/redux/cartSlice';
 
 // 6. Utils / constants / paths
 import { path } from '@/common/path';
-import { formatPrice } from '@/utils/utils';
+import { formatPrice } from '@/utils/formatPrice';
 
 // 7. Context
 import { NotificationContext } from "@/App";

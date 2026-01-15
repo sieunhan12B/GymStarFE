@@ -11,6 +11,7 @@ import { Button, Modal, Pagination, Select, Tooltip } from "antd";
 import { orderService } from "@/services/order.service";
 import { useNavigate } from "react-router-dom";
 import { NotificationContext } from "@/App";
+import { formatPrice } from "../../../utils/formatPrice";
 
 const OrderHistory = () => {
     const [orders, setOrders] = useState([]);
@@ -166,11 +167,6 @@ const OrderHistory = () => {
         }
     };
 
-    const formatPrice = (price) =>
-        new Intl.NumberFormat("vi-VN", {
-            style: "currency",
-            currency: "VND"
-        }).format(price);
 
     /* ================== FILTER ================== */
     const filteredOrders =

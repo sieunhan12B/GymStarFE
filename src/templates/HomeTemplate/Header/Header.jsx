@@ -33,8 +33,8 @@ import { cartService } from "@/services/cart.service";
 import { productService } from "@/services/product.service";
 
 // Utils
-import { buildCategoryUrl } from "@/utils/categoryUtils";
-import { formatPrice } from "@/utils/utils";
+import { generateSlug } from "@/utils/generateSlug";
+import { formatPrice } from "@/utils/formatPrice";
 
 // Constants
 import { path } from "@/common/path";
@@ -47,6 +47,21 @@ import Cookies from "js-cookie";
 
 // Styles
 import "./header.css";
+
+/* ================= UTILS ================= */
+const buildCategoryUrl = (category, parents = []) => {
+  const parentPath = parents
+    .map(p => generateSlug(p.name))
+    .join("/");
+
+  const self = `${generateSlug(category.name)}-${category.category_id}`;
+
+  return parentPath
+    ? `/danh-muc/${parentPath}/${self}`
+    : `/danh-muc/${self}`;
+};
+
+
 
 /* ================= COMPONENT ================= */
 const Header = () => {

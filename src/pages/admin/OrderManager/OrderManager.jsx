@@ -8,7 +8,7 @@ import { EditOutlined, SyncOutlined } from "@ant-design/icons";
 // Utils
 import dayjs from "dayjs";
 import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
-import { formatPrice } from "@/utils/utils";
+import { formatPrice } from "@/utils/formatPrice";
 
 // Components
 import Header from "@/templates/AdminTemplate/Header";

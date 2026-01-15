@@ -39,7 +39,8 @@ import { cartService } from '@/services/cart.service';
 import { promotionService } from '@/services/promotion.service';
 
 // ======================= UTILS =======================
-import { formatPrice, setLocalStorage } from '@/utils/utils';
+import { formatPrice } from '@/utils/formatPrice';
+import { setLocalStorage } from '@/utils/storage';
 
 // ======================= COMPONENTS =======================
 import AddEditAddressModal from '@/components/AddEditAddressModal/AddEditAddressModal';

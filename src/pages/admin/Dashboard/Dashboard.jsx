@@ -32,7 +32,7 @@ import dayjs from "dayjs";
 import Header from "../../../templates/AdminTemplate/Header";
 import { dashboardService } from "../../../services/dashboard.service";
 import { NotificationContext } from "@/App";
-import { formatPrice } from "../../../utils/utils";
+import { formatPrice } from "../../../utils/formatPrice";
 
 const { RangePicker } = DatePicker;
 

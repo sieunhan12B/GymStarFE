@@ -23,7 +23,6 @@ import {
 } from 'antd';
 import { NotificationContext } from "@/App";
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import InvoicePDF from '../../../utils/InvoicePDF';
 import { orderService } from '../../../services/order.service';
 import { reviewService } from '../../../services/review.service';
 import dayjs from 'dayjs';
@@ -33,6 +32,7 @@ import { setCart } from '@/redux/cartSlice';
 import AddedToCartToast from '../../../components/AddedToCartToast/AddedToCartToast';
 import { paymentService } from '../../../services/payment.service';
 import { generateSlug } from '../../../utils/generateSlug';
+import InvoicePDF from '../../../components/InvoicePDF/InvoicePDF';
 
 const OrderDetail = () => {
     const { orderId } = useParams();

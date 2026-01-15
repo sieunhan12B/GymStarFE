@@ -11,13 +11,3 @@ export function generateSlug(text) {
 
 
 
-
-export const getCategoryId = (splat) => {
-    if (!splat) return null;
-
-    const segments = splat.split("/").filter(Boolean);
-    const lastSegment = segments[segments.length - 1];
-
-    const match = lastSegment.match(/-(\d+)$/);
-    return match ? Number(match[1]) : null;
-  };

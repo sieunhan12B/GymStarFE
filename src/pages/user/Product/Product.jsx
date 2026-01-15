@@ -20,7 +20,7 @@ import { productService } from '@/services/product.service';
 import { cartService } from '@/services/cart.service';
 
 // 4. Utils
-import { formatPrice } from '@/utils/utils';
+import { formatPrice } from '@/utils/formatPrice';
 import { generateSlug } from '@/utils/generateSlug';
 import { normalizeText } from '@/utils/normalizeText';
 

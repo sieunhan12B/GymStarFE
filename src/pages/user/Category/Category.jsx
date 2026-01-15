@@ -3,8 +3,7 @@ import { Slider, Button, message, Tooltip, Select } from "antd";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import { useLocation, useParams } from "react-router-dom";
 import { productService } from "../../../services/product.service";
-import { formatPrice } from "../../../utils/utils";
-import { getCategoryId } from "../../../utils/generateSlug";
+import { formatPrice } from "../../../utils/formatPrice";
 import { danhMucService } from "../../../services/category.service";
 import useDebounce from "../../../hooks/useDebounce";
 
@@ -24,6 +23,18 @@ const COLOR_OPTIONS = [
   { name: "Nâu", hex: "#8B4513" },
 
 ];
+
+// Utils
+const getCategoryId = (splat) => {
+  if (!splat) return null;
+
+  const segments = splat.split("/").filter(Boolean);
+  const lastSegment = segments[segments.length - 1];
+
+  const match = lastSegment.match(/-(\d+)$/);
+  return match ? Number(match[1]) : null;
+};
+
 
 const Category = () => {
   const { "*": splat, keyword } = useParams();

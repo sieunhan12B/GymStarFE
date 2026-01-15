@@ -6,7 +6,7 @@ import { cartService } from "@/services/cart.service";
 import { NotificationContext } from "@/App";
 import { setCart } from "@/redux/cartSlice";
 import AddedToCartToast from "@/components/AddedToCartToast/AddedToCartToast";
-import { formatPrice } from "../../utils/utils";
+import { formatPrice } from "../../utils/formatPrice";
 
 const ProductCard = ({ product, hoverSize = true, badgeContext = "default", // new | sale | bestseller | category | recommend
 }) => {
