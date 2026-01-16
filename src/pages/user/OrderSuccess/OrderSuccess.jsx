@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import {
     CheckCircleFilled,
     CloseCircleFilled,
@@ -14,12 +14,14 @@ import { setCart } from '../../../redux/cartSlice'
 import { paymentService } from '../../../services/payment.service'
 import dayjs from 'dayjs'
 import { getLocalStorage } from '../../../utils/storage'
+import { NotificationContext } from "@/App";
 
 const OrderSuccess = () => {
     const { orderId } = useParams()
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const [retryLoading, setRetryLoading] = useState(false)
+    const { showNotification } = useContext(NotificationContext);
 
 
     const [order, setOrder] = useState(null)
@@ -55,7 +57,7 @@ const OrderSuccess = () => {
             }
         } catch (error) {
             console.error(error)
-            alert('Không thể tạo lại link thanh toán. Vui lòng thử lại!')
+            showNotification(error.response.data.message, "error")
         } finally {
             setRetryLoading(false)
         }

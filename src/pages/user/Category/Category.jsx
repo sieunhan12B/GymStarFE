@@ -1,15 +1,28 @@
+// ================= IMPORTS =================
+// React , hook
 import React, { useEffect, useRef, useState } from "react";
 import { Slider, Button, message, Tooltip, Select } from "antd";
-import ProductCard from "@/components/ProductCard/ProductCard";
+
+// Router
 import { useLocation, useParams } from "react-router-dom";
-import { productService } from "../../../services/product.service";
-import { formatPrice } from "../../../utils/formatPrice";
-import { danhMucService } from "../../../services/category.service";
-import useDebounce from "../../../hooks/useDebounce";
+
+//Components
+import ProductCard from "@/components/ProductCard/ProductCard";
+
+//Services
+import { productService } from "@/services/product.service";
+import { danhMucService } from "@/services/category.service";
+
+//Utils
+import { formatPrice } from "@/utils/formatPrice";
+
+//Hook
+import useDebounce from "@/hooks/useDebounce";
+
 
 const { Option } = Select;
 
-// Color options
+// ================= CONSTANTS =================
 const COLOR_OPTIONS = [
   { name: "Đen", hex: "#000000" },
   { name: "Trắng", hex: "#FFFFFF" },
@@ -24,28 +37,38 @@ const COLOR_OPTIONS = [
 
 ];
 
-// Utils
+// ================= UTILS =================
 const getCategoryId = (splat) => {
   if (!splat) return null;
-
   const segments = splat.split("/").filter(Boolean);
   const lastSegment = segments[segments.length - 1];
-
   const match = lastSegment.match(/-(\d+)$/);
   return match ? Number(match[1]) : null;
 };
 
+const removeAccents = (str) => {
+  if (!str) return "";
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .trim();
+};
+
 
 const Category = () => {
+  // ================= ROUTER / PARAMS =================
   const { "*": splat, keyword } = useParams();
-  const categoryId = getCategoryId(splat);
   const location = useLocation();
-  const isNewestPage = location.pathname === "/san-pham-moi"; // <--- check
-  const isBestSellerPage = location.pathname === "/san-pham-ban-chay"; // trang bán chạy
-  const isSalePage = location.pathname === "/san-pham-giam-gia"; // trang giảm giá
+  const categoryId = getCategoryId(splat);
 
+  // ================= PAGE TYPE FLAGS =================
+  const isNewestPage = location.pathname === "/san-pham-moi";
+  const isBestSellerPage = location.pathname === "/san-pham-ban-chay";
+  const isSalePage = location.pathname === "/san-pham-giam-gia";
 
-
+  // ================= STATE =================
   const [filters, setFilters] = useState({
     categories: [],
     colors: [],
@@ -53,13 +76,15 @@ const Category = () => {
     priceRange: [40000, 1000000],
   });
   const debouncedPriceRange = useDebounce(filters.priceRange, 150);
-
   const [sortBy, setSortBy] = useState("featured");
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState();
   const [categoryFilter, setCategoryFilter] = useState([]);
-  const listRef = useRef(null); // thêm ref
   const [loading, setLoading] = useState(false);
+
+  // ================= REFS =================
+  const listRef = useRef(null);
+
   const filterSellingProducts = (products = []) => {
     return products.filter(
       (p) =>
@@ -69,51 +94,57 @@ const Category = () => {
     );
   };
 
-
-
-
-
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [categoryId, keyword]);
 
-  // Fetch products
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        let res;
+  // ================= FETCH FUNCTION =================
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      let res;
 
-        if (isNewestPage) {
-          res = await productService.getNewestProducts();
-        } else if (isBestSellerPage) {
-          res = await productService.getBestSellingProducts();
-        } else if (isSalePage) {
-          res = await productService.getDiscountedProducts();
-        } else if (keyword) {
-          res = await productService.getAllForUserWithKeyWord(keyword);
-        } else {
-          res = await productService.getProductByCategoryId(categoryId);
-          setCategory(res.data.category);
-        }
-
-        const sellingProducts = filterSellingProducts(res.data.data || []);
-        setProducts(sellingProducts);
-      } catch (error) {
-        console.error(error);
-        message.error("Không thể tải sản phẩm!");
-      } finally {
-        setLoading(false);
+      if (isNewestPage) {
+        res = await productService.getNewestProducts();
+      } else if (isBestSellerPage) {
+        res = await productService.getBestSellingProducts();
+      } else if (isSalePage) {
+        res = await productService.getDiscountedProducts();
+      } else if (keyword) {
+        res = await productService.getAllForUserWithKeyWord(keyword);
+      } else {
+        res = await productService.getProductByCategoryId(categoryId);
+        setCategory(res.data.category);
       }
-    };
 
+      const sellingProducts = filterSellingProducts(res.data.data || []);
+      setProducts(sellingProducts);
+    } catch (error) {
+      console.error(error);
+      message.error("Không thể tải sản phẩm!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    if (!categoryId || keyword) return;
+    try {
+      const res = await danhMucService.getLvl3Category(categoryId);
+      setCategoryFilter(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+      message.error("Không thể tải danh mục!");
+    }
+  };
+
+  // ================= EFFECTS =================
+
+  useEffect(() => {
     fetchProducts();
   }, [categoryId, keyword, isNewestPage, isBestSellerPage, isSalePage]);
-
-
-
 
   useEffect(() => {
     setFilters({
@@ -122,26 +153,15 @@ const Category = () => {
       sizes: [],
       priceRange: [40000, 1000000],
     });
-    setSortBy("featured"); // optional: reset sort
-  }, [categoryId, keyword]); // ← thêm keyword
+    setSortBy("featured");
+  }, [categoryId, keyword]);
 
-
-  // Fetch categories
   useEffect(() => {
-    const fetchCategories = async () => {
-      if (!categoryId || keyword) return; // ← thêm keyword
-      try {
-        const res = await danhMucService.getLvl3Category(categoryId);
-        setCategoryFilter(res.data.data || []);
-      } catch (error) {
-        console.error(error);
-        message.error("Không thể tải danh mục!");
-      }
-    };
     fetchCategories();
-  }, [categoryId, keyword]); // ← thêm keyword
+  }, [categoryId, keyword]);
 
-  // Handlers
+
+  // ======================= HANDLE FILTER =======================
   const handleColorChange = (color) => {
     setFilters((prev) => ({
       ...prev,
@@ -172,15 +192,6 @@ const Category = () => {
       filters.categories.length === 0 ||
       filters.categories.includes(product.category_id);
 
-    const removeAccents = (str) => {
-      if (!str) return "";
-      return str
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/đ/g, "d")
-        .replace(/Đ/g, "D")
-        .trim();
-    };
 
     const matchesColor =
       filters.colors.length === 0 ||
@@ -207,12 +218,10 @@ const Category = () => {
     if (prices.length === 0) return false;
 
 
-    // Filter products - sửa phần matchesPrice
     const matchesPrice = product.product_variants.some((variant) => {
       const originalPrice = Number(variant.price);
       if (isNaN(originalPrice)) return false;
 
-      // Tính giá sau giảm giá (nếu có discount)
       const discountPercent = product.discount || 0;
       const finalPrice = originalPrice * (1 - discountPercent / 100);
 
@@ -222,6 +231,10 @@ const Category = () => {
     return matchesCategory && matchesColor && matchesSize && matchesPrice;
   });
 
+
+
+
+  // ======================= HELPERS =======================
   const getProductMinPrice = (product) => {
     const discountPercent = product.discount || 0;
     const prices = product.product_variants
@@ -234,6 +247,7 @@ const Category = () => {
     return minOriginal * (1 - discountPercent / 100);
   };
 
+  // Sorted
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     const priceA = getProductMinPrice(a);
     const priceB = getProductMinPrice(b);
@@ -258,23 +272,25 @@ const Category = () => {
     return acc;
   }, {});
 
+  // Chuyển ID danh mục đang được chọn → thành tên danh mục để hiện lên UI,"Tìm thấy 10 sản phẩm có danh mục "Áo thun, Áo sơ mi""
   const activeCategories = filters.categories
     .map(catId => {
       const cat = categoryFilter.find(c => c.category_id === catId);
       return cat ? cat.name : null;
     })
     .filter(Boolean);
+
+  //Danh mục là phụ kiện -> không có bộ lọc size
   const hasSizeFilter = filteredProducts.some(
     (product) => product.product_variants.some((variant) => variant.size)
   );
 
+  //Lấy badge cho mỗi loại trang 
   const getBadgeContext = (product) => {
     const badges = [];
     if (isNewestPage) badges.push("new");
     if (product.discount > 0) badges.push("sale");
-    // giả sử bạn muốn đánh dấu tất cả sản phẩm trong trang danh mục:
     if (categoryId && !keyword) badges.push("category");
-    // nếu bạn có thông tin bestseller từ product, thêm: 
     if (product.is_bestseller) badges.push("bestseller");
 
     return badges;
@@ -282,6 +298,7 @@ const Category = () => {
 
 
 
+  // ======================= RENDER SECTIONS =======================
 
   // Sidebar filters
   const renderContentLeft = () => (
@@ -321,7 +338,6 @@ const Category = () => {
                 </div>
               </div>
             )}
-
 
             {/* Colors */}
             <div>
@@ -364,7 +380,6 @@ const Category = () => {
                 </div>
               </div>
             )}
-
 
             {/* Price */}
             <div>
@@ -573,6 +588,7 @@ const Category = () => {
     );
   };
 
+  // ======================= MAIN RENDER =======================
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8">

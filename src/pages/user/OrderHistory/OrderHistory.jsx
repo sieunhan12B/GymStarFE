@@ -516,27 +516,33 @@ const OrderHistory = () => {
                                         {renderExchangeOrder()}
 
                                         {/* Thanh toán ngay */}
-                                        {(!order.payment || order.payment.status === "đang chờ") && order.status === "chờ xác nhận" && (
-                                            <Tooltip title="Thanh toán ngay">
-                                                <button
-                                                    onClick={() => handleRepay(order)}
-                                                    className="px-4 py-2 border border-blue-400 text-blue-600 rounded-lg text-sm hover:bg-blue-50"
-                                                >
-                                                    Thanh toán ngay
-                                                </button>
-                                            </Tooltip>
-                                        )}
+                                        {(!order.payment || order.payment.status === "đang chờ") &&
+                                            order.status === "chờ xác nhận" &&
+                                            order.payment?.method !== "COD" && (
 
-                                        {order.payment?.status === "thất bại" && order.status === "chờ xác nhận" && (
-                                            <Tooltip title="Thanh toán lại đơn hàng">
-                                                <button
-                                                    onClick={() => handleRepay(order)}
-                                                    className="px-4 py-2 border border-green-400 text-green-600 rounded-lg text-sm hover:bg-green-50"
-                                                >
-                                                    Thanh toán lại
-                                                </button>
-                                            </Tooltip>
-                                        )}
+                                                <Tooltip title="Thanh toán ngay">
+                                                    <button
+                                                        onClick={() => handleRepay(order)}
+                                                        className="px-4 py-2 border border-blue-400 text-blue-600 rounded-lg text-sm hover:bg-blue-50"
+                                                    >
+                                                        Thanh toán ngay
+                                                    </button>
+                                                </Tooltip>
+                                            )}
+
+                                        {order.payment?.status === "thất bại" &&
+                                            order.status === "chờ xác nhận" &&
+                                            order.payment?.method !== "COD" && (
+
+                                                <Tooltip title="Thanh toán lại đơn hàng">
+                                                    <button
+                                                        onClick={() => handleRepay(order)}
+                                                        className="px-4 py-2 border border-green-400 text-green-600 rounded-lg text-sm hover:bg-green-50"
+                                                    >
+                                                        Thanh toán lại
+                                                    </button>
+                                                </Tooltip>
+                                            )}
 
 
 

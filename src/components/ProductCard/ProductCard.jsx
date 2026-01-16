@@ -30,7 +30,6 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = [] }) => {
 
     /* ===== STATE ===== */
     const [isHovered, setIsHovered] = useState(false);
-    const [selectedSize, setSelectedSize] = useState("");
     const { showNotification } = useContext(NotificationContext);
     const dispatch = useDispatch();
     const user = useSelector((state) => state.userSlice.user);
@@ -53,8 +52,6 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = [] }) => {
         );
     }
 
-
-
     /* ================= UTILS ================= */
 
     // ========LẤY VARIANT ĐẦU TIÊN THEO ID BÉ NHẤT CÒN HÀNG==========
@@ -74,11 +71,9 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = [] }) => {
     const selectedColor = product.colors?.find(
         c => c.color === firstVariant.color
     );
-    console.log(selectedColor)
 
     // chỉ lấy ảnh (không lấy video)
     const validImages = selectedColor?.images || [].filter(img => !isVideo(img));
-    console.log(validImages)
 
     // lấy 2 ảnh đầu tiên hợp lệ
     const images = [
@@ -145,7 +140,6 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = [] }) => {
     const handleSelectSize = async (size) => {
         if (!availableSizes.includes(size)) return;
 
-        setSelectedSize(size);
 
         if (!userId) {
             showNotification("Vui lòng đăng nhập để thêm vào giỏ hàng!", "warning");
@@ -177,7 +171,7 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = [] }) => {
                 err.response?.data?.message || "Có lỗi xảy ra",
                 "error"
             );
-        } 
+        }
     };
 
 
@@ -257,11 +251,8 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = [] }) => {
                                             e.stopPropagation();
                                             handleSelectSize(size);
                                         }}
-                                        className={`py-2 text-xs font-medium border transition-all
-                                            ${selectedSize === size
-                                                ? "bg-black text-white border-black"
-                                                : "bg-white text-black border-gray-300"
-                                            }
+                                        className={`py-2 text-xs font-medium hover:bg-black hover:text-white border transition-all
+                                          bg-white text-black border-gray-300 hover:border-blackactive:bg-black active:text-white
                                             ${!isAvailable
                                                 ? "line-through opacity-50 cursor-not-allowed"
                                                 : "hover:border-black"

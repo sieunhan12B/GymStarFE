@@ -71,13 +71,6 @@ const Home = () => {
       .catch(console.error);
   }, []);
 
-
-
-
-
-
-
-
   // ===== NEWEST =====
 
   const renderNewestProducts = () => {

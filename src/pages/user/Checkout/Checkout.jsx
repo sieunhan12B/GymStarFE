@@ -595,13 +595,10 @@ const Checkout = () => {
 
     const renderVoucherSection = () => {
         return (
-
-
             < div className="bg-white rounded-lg p-6 shadow-sm" >
                 <h2 className="text-xl flex items-center gap-2 font-bold mb-4">
                     <GiftOutlined className="text-orange-500" /> Mã giảm giá
                 </h2>
-
                 {
                     selectedVoucher ? (
                         <div className="border-2 border-orange-500 rounded-lg p-4 bg-orange-50">
@@ -772,7 +769,6 @@ const Checkout = () => {
         return (
             <>
                 <div className="bg-white rounded-lg p-6 shadow-sm my-4">
-
                     <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
                         <div className="w-2/3"></div>
                         <div className="w-1/3 flex justify-between items-center">
@@ -782,9 +778,8 @@ const Checkout = () => {
                                 {selectedVoucher && <p className="text-orange-600 font-medium">Giảm voucher:</p>}
                                 <p>Phí vận chuyển:</p>
                                 <p className='font-bold text-lg text-red-600 '>Tổng thanh toán:</p>
-
-
                             </div>
+
                             <div className="w-1/2 flex flex-col items-end gap-5">
                                 <p>{formatPrice(calculateSubtotal())}</p>
                                 <p>-{formatPrice(calculateProductDiscount())}</p>
@@ -793,12 +788,7 @@ const Checkout = () => {
                                 <p className='font-bold text-lg text-red-600'>{formatPrice(calculateTotalAfterProductDiscount() - calculateVoucherDiscount())}</p>
                             </div>
                         </div>
-
-
-
-
                     </div>
-
 
                     <div className="flex justify-between items-center mt-6 pt-6 border-t font-bold text-lg text-red-600">
                         <div className="w-2/3"></div>
@@ -806,7 +796,6 @@ const Checkout = () => {
                             <div className="w-1/3 flex flex-col items-start gap-5">
                             </div>
                             <div className="w-2/3 flex flex-col items-end gap-5 ">
-
                                 <Button
                                     type="primary"
                                     className="w-full bg-black text-white py-5 font-semibold text-lg "

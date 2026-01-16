@@ -3,10 +3,10 @@ import { PlusOutlined, StarFilled, StarOutlined, EditOutlined, EnvironmentOutlin
 import { Button, Tooltip, Spin } from "antd";
 import { addressService } from "@/services/address.service";
 import { NotificationContext } from "@/App";
-import AddEditAddressModal from "../../../components/AddEditAddressModal/AddEditAddressModal";
+import AddEditAddressModal from "@/components/AddEditAddressModal/AddEditAddressModal";
 
 
-const AddressBook = () => {
+const Addresses = () => {
     const [addresses, setAddresses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [openAddEditModal, setOpenAddEditModal] = useState(false);
@@ -65,7 +65,6 @@ const AddressBook = () => {
             phone: values.phone,
             address_detail,
         };
-
         try {
             if (addressModalMode === "add") {
                 await addressService.addAddress(payload);
@@ -74,7 +73,6 @@ const AddressBook = () => {
                 await addressService.updateAddress(editingAddress.address_id, payload);
                 showNotification("Cập nhật địa chỉ thành công", "success");
             }
-
             setOpenAddEditModal(false);
             setEditingAddress(null);
             fetchAddresses();
@@ -189,12 +187,9 @@ const AddressBook = () => {
                                                         ward: parsed.ward,
                                                         houseNumber: parsed.houseNumber,
                                                     });
-
-
                                                     setOpenAddEditModal(true);
                                                 }}
                                             />
-
                                         </Tooltip>
 
                                         <Tooltip title="Xóa địa chỉ">
@@ -206,7 +201,6 @@ const AddressBook = () => {
                                                     handleDeleteAddress(addr.address_id);
                                                 }}
                                             />
-
                                         </Tooltip>
                                     </div>
                                 </div>
@@ -228,4 +222,4 @@ const AddressBook = () => {
     );
 };
 
-export default AddressBook;
+export default Addresses;

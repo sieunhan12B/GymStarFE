@@ -38,10 +38,10 @@ import Cart from "../pages/user/Cart/Cart";
 import OrderSuccess from "../pages/user/OrderSuccess/OrderSuccess";
 import OrderDetail from "../pages/user/OrderDetail/OrderDetail";
 import OrderHistory from "../pages/user/OrderHistory/OrderHistory";
-import AddressBook from "../pages/user/AddressBook/AddressBook";
 import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
 import Checkout from "../pages/user/Checkout/Checkout";
 import Voucher from "../pages/user/Voucher/Voucher";
+import Addresses from "../pages/user/Addresses/Addresses";
 
 export const AppRouter = [
     // ------------------ AUTH ------------------
@@ -138,8 +138,8 @@ export const AppRouter = [
                         element: <Voucher />,
                     },
                     {
-                        path: path.addressBook,
-                        element: <AddressBook />,
+                        path: path.addresses,
+                        element: <Addresses />,
                     },
                     {
                         path: path.reviewFeedback,

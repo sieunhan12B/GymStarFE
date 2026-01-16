@@ -42,7 +42,7 @@ const ProductAddEditModal = ({
     product, // null = thêm mới, object = sửa
     categories,
     onClose,
-    onSuccess, // callback sau khi thành công (reload danh sách)
+    onSuccess, 
 }) => {
     const [form] = Form.useForm();
     const { showNotification } = useContext(NotificationContext);

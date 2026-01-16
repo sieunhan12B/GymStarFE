@@ -27,7 +27,7 @@ export const path = {
   accountInfo: "thong-tin-tai-khoan",
   orderHistory: "lich-su-don-hang",
   voucher: "ma-giam-gia",
-  addressBook: "so-dia-chi",
+  addresses: "so-dia-chi",
   reviewFeedback: "dong-gop-y-kien-va-danh-gia",
 
   // ------------------ ADMIN ------------------

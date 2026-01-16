@@ -42,7 +42,7 @@ const sidebarItems = [
     key: '4',
     icon: <FileTextOutlined />,
     label: 'Số địa chỉ',
-    path: path.addressBook,
+    path: path.addresses,
 
   },
   {
