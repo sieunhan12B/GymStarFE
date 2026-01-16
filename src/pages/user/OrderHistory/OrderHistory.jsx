@@ -12,6 +12,7 @@ import { orderService } from "@/services/order.service";
 import { useNavigate } from "react-router-dom";
 import { NotificationContext } from "@/App";
 import { formatPrice } from "../../../utils/formatPrice";
+import { paymentService } from "../../../services/payment.service";
 
 const PaymentBadge = ({ payment }) => {
     if (!payment) {
@@ -137,6 +138,30 @@ const OrderHistory = () => {
             setCancelLoading(false); // 🔥 KẾT THÚC LOADING
         }
     };
+
+    const handleRepay = async (order) => {
+        try {
+            // Ví dụ: gọi API tạo lại link thanh toán
+            const data = {
+                order_id: order.order_id,
+            }
+            const res = await paymentService.reTryPayment(data);
+
+            // Nếu backend trả về link thanh toán
+            if (res.data?.payUrl) {
+                window.location.href = res.data.payUrl;
+            } else {
+                showNotification("Không thể tạo lại thanh toán", "error");
+            }
+        } catch (error) {
+            console.error(error);
+            showNotification(
+                error?.response?.data?.message || "Thanh toán lại thất bại",
+                "error"
+            );
+        }
+    };
+
 
     /* ================== HELPERS ================== */
     const getStatusIcon = (status) => {
@@ -490,6 +515,30 @@ const OrderHistory = () => {
                                         )}
                                         {renderExchangeOrder()}
 
+                                        {/* Thanh toán ngay */}
+                                        {(!order.payment || order.payment.status === "đang chờ") && order.status === "chờ xác nhận" && (
+                                            <Tooltip title="Thanh toán ngay">
+                                                <button
+                                                    onClick={() => handleRepay(order)}
+                                                    className="px-4 py-2 border border-blue-400 text-blue-600 rounded-lg text-sm hover:bg-blue-50"
+                                                >
+                                                    Thanh toán ngay
+                                                </button>
+                                            </Tooltip>
+                                        )}
+
+                                        {order.payment?.status === "thất bại" && order.status === "chờ xác nhận" && (
+                                            <Tooltip title="Thanh toán lại đơn hàng">
+                                                <button
+                                                    onClick={() => handleRepay(order)}
+                                                    className="px-4 py-2 border border-green-400 text-green-600 rounded-lg text-sm hover:bg-green-50"
+                                                >
+                                                    Thanh toán lại
+                                                </button>
+                                            </Tooltip>
+                                        )}
+
+
 
 
                                         {["chờ xác nhận", "đã xác nhận", "đang xử lý", "đang giao"].includes(order.status) && (
@@ -504,6 +553,8 @@ const OrderHistory = () => {
                                                     Hủy đơn
                                                 </button>
                                             </Tooltip>
+
+
 
 
 

@@ -2,9 +2,9 @@ import React, { useContext, useEffect, useState } from "react";
 import { Input, Button, Form, Typography, Image } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import logo from "@/assets/images/logo.svg";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
-import { NotificationContext } from "@/App"; // giả sử bạn có NotificationContext trong App.jsx
+import { NotificationContext } from "@/App";
 import { authService } from "@/services/auth.service";
 
 const { Title, Text } = Typography;
@@ -23,13 +23,10 @@ const ResetPassword = () => {
         confirm_password: values.confirmPassword,
 
       };
-
       const response = await authService.resetPassword(
         payload,
         resetToken
       );
-      ;
-
       showNotification(response.data.message, "success");
       sessionStorage.removeItem("reset_token");
 

@@ -78,13 +78,11 @@ const ReviewManager = () => {
             showNotification("Vui lòng nhập nội dung phản hồi", "warning");
             return;
         }
-
         try {
             const res = await reviewService.replyReview({
                 review_id: selectedReview.review_id,
                 message: replyContent,
             });
-
             showNotification(res.data.message, "success");
             setIsReplyModalOpen(false);
             fetchReviews();
@@ -99,12 +97,10 @@ const ReviewManager = () => {
 
     const handleChangeStatus = async () => {
         if (!selectedReview) return;
-
         try {
             const res = await reviewService.updateStatusReview(
                 selectedReview.review_id
             );
-
             showNotification(res.data.message, "success");
             setIsStatusModalOpen(false);
             fetchReviews(); // reload list
@@ -135,9 +131,7 @@ const ReviewManager = () => {
                     <span className="text-sm">{record.product.product_name}</span>
                 </div>
             ),
-            // Có thể thêm filter hoặc sorter nếu muốn
         },
-
         {
             title: "⭐ Số sao",
             dataIndex: "rating",
@@ -160,7 +154,6 @@ const ReviewManager = () => {
                 { text: "Có nội dung", value: "comment" },
                 { text: "Chưa có nội dung", value: "not_comment" },
             ],
-
             onFilter: (value, record) => {
                 if (value === "comment") return !!record.comment;
                 if (value === "not_comment") return !record.comment;
@@ -187,13 +180,11 @@ const ReviewManager = () => {
                 { text: "Đã phản hồi", value: "replied" },
                 { text: "Chưa phản hồi", value: "not_replied" },
             ],
-
             onFilter: (value, record) => {
                 if (value === "replied") return !!record.reply;
                 if (value === "not_replied") return !record.reply;
                 return true;
             },
-
             render: (reply, record) => {
                 if (!reply) {
                     return (
@@ -206,7 +197,6 @@ const ReviewManager = () => {
                         </Button>
                     );
                 }
-
                 return (
                     <div className="max-w-80 flex flex-col gap-1">
                         <Typography.Text
@@ -223,11 +213,6 @@ const ReviewManager = () => {
                 );
             },
         },
-
-
-
-
-
         {
             title: "Người đánh giá",
             key: "reviewer",
@@ -402,9 +387,7 @@ const ReviewManager = () => {
             showCategoryFilter={false}
             showAddButton={false}
         />
-
     );
-
 
     const renderReplyModal = () => (
         <Modal
@@ -442,7 +425,6 @@ const ReviewManager = () => {
                 />
             </div>
         </Modal>
-
     );
 
     // ===== DETAIL MODAL =====

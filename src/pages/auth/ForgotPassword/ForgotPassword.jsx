@@ -1,11 +1,10 @@
 import React, { useContext, useState } from "react";
 import { Input, Button, Form, Typography, Image } from "antd";
-import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import logo from "@/assets/images/logo.svg"; // đổi đường dẫn nếu khác
+import logo from "@/assets/images/logo.svg";
 import { Link, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
-import { NotificationContext } from "@/App"; // giả sử bạn có NotificationContext trong App.jsx
-import { authService } from "../../../services/auth.service";
+import { NotificationContext } from "@/App";
+import { authService } from "@/services/auth.service";
 
 const { Title, Text } = Typography;
 
@@ -19,29 +18,21 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      // Chuẩn bị dữ liệu gửi lên API
       const payload = {
         email: values.email,
-
       };
-
-      // Gọi API đăng ký
       const response = await authService.forgotPassword(payload);
-
       showNotification(response.data.message, "success");
-      // Nếu API trả về thành công
       navigate(path.verifyEmail, {
         state: { email: values.email }
       });
     } catch (error) {
-      // Xử lý lỗi trả về từ API
       if (error.response?.data?.message) {
         showNotification("Xác thực thất bại: " + error.response.data.message, "error");
       } else {
         showNotification("Đã xảy ra lỗi. Vui lòng thử lại!", "error");
       }
       console.error(error);
-
     } finally {
       setLoading(false);
     }
@@ -94,7 +85,7 @@ const ForgotPassword = () => {
               size="large"
               className="w-full bg-black  hover:!bg-gray-700 border-none rounded-full font-semibold"
             >
-             GỬI YÊU CẦU
+              GỬI YÊU CẦU
             </Button>
           </Form.Item>
         </Form>

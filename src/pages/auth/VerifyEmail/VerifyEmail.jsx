@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
 const { Title, Text } = Typography;
 import { NotificationContext } from "@/App";
-import { authService } from "../../../services/auth.service";
+import { authService } from "@/services/auth.service";
 import { useLocation } from "react-router-dom";
 
 
@@ -23,17 +23,11 @@ const VerifyOtp = () => {
       const payload = {
         email: email,
         otp: values.otp,
-
       };
-
       const response = await authService.verifyOtp(payload);
-
       showNotification(response.data.message, "success");
-
       sessionStorage.setItem("reset_token", response.data.reset_token);
-
       navigate(path.resetPassword);
-
     } catch (error) {
       if (error.response?.data?.message) {
         showNotification("Xác thực thất bại: " + error.response.data.message, "error");
@@ -41,7 +35,6 @@ const VerifyOtp = () => {
         showNotification("Đã xảy ra lỗi. Vui lòng thử lại!", "error");
       }
       console.error(error);
-
     } finally {
       setLoading(false);
     }

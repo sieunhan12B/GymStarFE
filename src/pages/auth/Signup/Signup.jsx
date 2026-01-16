@@ -8,7 +8,6 @@ import {
     UserOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
-
 import logo from "@/assets/images/logo.svg";
 import { path } from "@/common/path";
 import { NotificationContext } from "@/App";
@@ -21,7 +20,6 @@ const Signup = () => {
     const navigate = useNavigate();
     const { showNotification } = useContext(NotificationContext);
 
-    // Xử lý submit form
     const onFinish = async (values) => {
         setLoading(true);
         try {

@@ -109,28 +109,20 @@ const OrderDetail = () => {
 
     const isPaid = orderData.payments[0]?.status === "thành công";
 
-    // const isPendingMomoPayment =
-    //     orderData.payments[0]?.method === "MOMO" &&
-    //     orderData.payments[0]?.status === "đang chờ";
+    const isMomo = orderData.payments[0]?.method === "MOMO";
+    const paymentStatus = orderData.payments[0]?.status;
+    const orderStatus = orderData.status;
 
-    // const canPayment =
-    //     orderData.payments?.some(
-    //         p =>
-    //             p.method === "MOMO" &&
-    //             (
-    //                 (p.status === "thất bại" && orderData.status === "chờ xác nhận") ||
-    //                 p.status === "đang chờ"
-    //             )
-    //     );
-    const canPayment =
-        orderData.payments[0]?.method === "MOMO" &&
-        (
-            (
-                orderData.payments[0]?.status === "thất bại" && orderData.status === "chờ xác nhận"
-            ) ||
-            orderData.payments[0]?.status === "đang chờ"
+    const canPayNow =
+        isMomo &&
+        paymentStatus === "đang chờ" &&
+        orderStatus === "chờ xác nhận";
 
-        )
+    const canRepay =
+        isMomo &&
+        paymentStatus === "thất bại" &&
+        orderStatus === "chờ xác nhận";
+
 
 
     const subtotal = orderData.items.reduce(
@@ -174,7 +166,6 @@ const OrderDetail = () => {
             );
         }
     };
-
 
 
     /* ================== CANCEL ORDER ================== */
@@ -679,15 +670,26 @@ const OrderDetail = () => {
 
 
 
-                    {/* Thanh toán lại */}
-                    {canPayment && (
+                    {/* Thanh toán ngay */}
+                    {canPayNow && (
                         <button
                             onClick={handlePayment}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white mt-3 py-2 rounded font-semibold"
+                            className="w-full bg-blue-500 hover:bg-blue-600 text-white mt-3 py-2 rounded font-semibold"
                         >
                             💳 Thanh toán ngay
                         </button>
                     )}
+
+                    {/* Thanh toán lại */}
+                    {canRepay && (
+                        <button
+                            onClick={handlePayment}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white mt-3 py-2 rounded font-semibold"
+                        >
+                            🔁 Thanh toán lại
+                        </button>
+                    )}
+
 
                     {/* Cancel */}
                     {["chờ xác nhận", "đã xác nhận", "đang xử lý"].includes(orderData.status) && (

@@ -30,30 +30,19 @@ const PromotionManager = () => {
     const [selectedPromotion, setSelectedPromotion] = useState(null);
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
-
-
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [createLoading, setCreateLoading] = useState(false);
     const [form] = Form.useForm();
-
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editLoading, setEditLoading] = useState(false);
     const [editForm] = Form.useForm();
     const discountType = Form.useWatch("discount_type", form);
 
-
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
 
-
-
-
-
-
-
     const { showNotification } = useContext(NotificationContext);
-
 
     const getTimeStatus = (start, end) => {
         const now = dayjs();
@@ -96,8 +85,6 @@ const PromotionManager = () => {
         }
     };
 
-
-
     /* ===== FETCH PROMOTIONS ===== */
     const fetchPromotions = async () => {
         setLoading(true);
@@ -138,9 +125,6 @@ const PromotionManager = () => {
                     .includes(keyword)
         );
     }, [promotions, searchText]);
-
-
-
 
 
     const handleUpdatePromotion = async (values) => {
@@ -218,8 +202,6 @@ const PromotionManager = () => {
             setDeleteLoading(false);
         }
     };
-
-
 
     /* ===== TABLE COLUMNS ===== */
     const promotionColumns = [
@@ -384,12 +366,6 @@ const PromotionManager = () => {
                 );
             },
         },
-
-
-
-
-
-
     ];
 
     const renderChangeStatusModal = () => {
@@ -437,7 +413,6 @@ const PromotionManager = () => {
 
         );
     };
-
 
     const renderAddModalPromotion = () => {
         return (
@@ -719,10 +694,6 @@ const PromotionManager = () => {
                 onReload={fetchPromotions}
                 reloading={loading}
             />
-
-
-
-
             <DataTable
                 columns={promotionColumns}
                 dataSource={filteredPromotions}

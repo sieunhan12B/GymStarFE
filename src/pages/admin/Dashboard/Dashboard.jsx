@@ -13,6 +13,7 @@ import {
   Tag,
   Skeleton,
   DatePicker,
+  Spin,
 } from "antd";
 import {
   PieChart,
@@ -146,8 +147,8 @@ const DashboardGym = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <Skeleton active paragraph={{ rows: 8 }} />
+      <div className="bg-white rounded-lg h-screen flex justify-center items-center shadow-sm">
+        <Spin size="large" />
       </div>
     );
   }
@@ -220,7 +221,7 @@ const DashboardGym = () => {
                   <Tooltip
                     formatter={(value, name) =>
                       name === "Doanh thu"
-                        ? [`${formatPrice(value)} ₫`, name]
+                        ? [`${formatPrice(value)} `, name]
                         : [value, name]
                     }
                   />

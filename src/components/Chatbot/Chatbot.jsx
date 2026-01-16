@@ -16,14 +16,9 @@ import chatbot from '@/assets/images/chatbot.jpg';
 
 const QUICK_REPLIES = [
     "Hiện có khuyến mãi nào không?",
-    "Sản phẩm bán chạy nhất là gì?",
     "Bao lâu thì tôi nhận được hàng?",
     "Phí vận chuyển bao nhiêu?",
-    "Kiểm tra đơn hàng của tôi",
-    "Có áo màu đỏ không?",
-    "Có áo nào size M không?",
-    "Sản phẩm còn hàng không?",
-    "Quy định đổi trả",
+    "Chính sách đổi trả",
     "Tôi muốn hủy đơn hàng thì thế nào?",
 ];
 

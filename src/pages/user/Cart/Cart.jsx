@@ -142,7 +142,7 @@ const Cart = () => {
                         });
 
                     } catch (error) {
-                        showNotification("Không thể cập nhật số lượng", "error");
+                        showNotification(error.response.data.message, "error");
                         fetchCart();
                     }
                 }
@@ -165,31 +165,37 @@ const Cart = () => {
                 if (item.cart_detail_id !== cart_detail_id) return item;
 
                 const stock = item.product_variant?.stock ?? 0;
+                let finalQty = Number(newQuantity);
 
                 if (stock === 0) {
                     showNotification("Sản phẩm đã hết hàng", "error");
                     return item;
                 }
 
-                if (newQuantity < 1) {
+                if (!finalQty || finalQty < 1) {
                     showNotification("Số lượng tối thiểu là 1", "warning");
-                    return item;
+                    finalQty = 1;
                 }
 
-                if (newQuantity > stock) {
-                    showNotification(`Chỉ còn ${stock} sản phẩm trong kho`, "warning");
-                    return item;
-                }
-
-                if (newQuantity > 10) {
+                if (finalQty > 10) {
                     showNotification("Mỗi sản phẩm chỉ được mua tối đa 10 cái", "warning");
-                    return item;
+                    finalQty = 10;
                 }
 
-                return { ...item, quantity: newQuantity };
+                if (finalQty > stock) {
+                    showNotification(`Chỉ còn ${stock} sản phẩm trong kho`, "warning");
+                    finalQty = stock;
+                }
+
+                return {
+                    ...item,
+                    quantity: finalQty,
+                    inputQuantity: String(finalQty) // nếu bạn dùng inputQuantity
+                };
             })
         );
     };
+
 
     // Xóa 1 sản phẩm
     const handleDeleteItem = async (cart_detail_id) => {
@@ -434,7 +440,33 @@ const Cart = () => {
                                             -
                                         </button>
 
-                                        <span className="px-4">{item.quantity}</span>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            disabled={isInactive}
+                                            value={item.inputQuantity ?? item.quantity}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, "");
+                                                setCartItems(prev =>
+                                                    prev.map(i =>
+                                                        i.cart_detail_id === item.cart_detail_id
+                                                            ? { ...i, inputQuantity: val }
+                                                            : i
+                                                    )
+                                                );
+                                            }}
+                                            onBlur={() => {
+                                                handleQuantityChange(item.cart_detail_id, item.inputQuantity);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") e.target.blur();
+                                            }}
+                                            className="w-16 text-center"
+                                        />
+
+
+
+
                                         <button
                                             disabled={isInactive}
                                             className={`px-3 py-1 ${isInactive ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}

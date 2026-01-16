@@ -15,23 +15,17 @@ export const http = axios.create({
  */
 http.interceptors.request.use(
   (config) => {
-    // Bỏ qua interceptor cho endpoint reset password (nếu cần)
-    if (config.url?.includes("dat-lai-mat-khau")) {
-      return config;
+    if (!config.headers.Authorization) {
+      const accessToken = Cookies.get("access_token");
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
     }
-
-    const accessToken = Cookies.get("access_token");
-
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
+
 
 /* ================= RESPONSE INTERCEPTOR ================= */
 /**
