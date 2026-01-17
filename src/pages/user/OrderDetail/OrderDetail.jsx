@@ -438,8 +438,11 @@ const OrderDetail = () => {
                     {activeTab === 'products' && (
                         <div className="p-6">
                             {orderData.items.map(item => {
-                                const productNameSlug = generateSlug(item.product.name).split("-").slice(0, 2).join("-");
-                                const productLink = `/san-pham/${productNameSlug}/${item.product.product_id}`;
+                               
+                                const categorySlug = generateSlug(item.product.name).split("-").slice(0, 2).join("-");
+                                const productSlug = generateSlug(item.product.name);
+
+                                const productLink = `/san-pham/${categorySlug}/${productSlug}/${item.product.product_id}`;
                                 return (
                                     <div
                                         key={item.order_detail_id}

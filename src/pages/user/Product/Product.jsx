@@ -109,7 +109,7 @@ const Product = () => {
   // ======================= EFFECTS =======================
   useEffect(() => {
     fetchProduct();
-  }, []);
+  }, [productId]);
 
   useEffect(() => {
     if (product?.category_id) {

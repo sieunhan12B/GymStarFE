@@ -21,10 +21,10 @@ import { setCart } from '@/redux/cartSlice';
 // 6. Utils / constants / paths
 import { path } from '@/common/path';
 import { formatPrice } from '@/utils/formatPrice';
+import { generateSlug } from '@/utils/generateSlug';
 
 // 7. Context
 import { NotificationContext } from "@/App";
-import { generateSlug } from '../../../utils/generateSlug';
 
 const Cart = () => {
     const dispatch = useDispatch();
@@ -363,8 +363,11 @@ const Cart = () => {
                     {cartItems.map((item) => {
                         const isInactive = item.product_variant?.product?.status !== "đang bán";
 
-                        const productNameSlug = generateSlug(item.product_variant.product.name).split("-").slice(0, 2).join("-");
-                        const productLink = `/san-pham/${productNameSlug}/${item.product_variant.product.product_id}`;
+                        const categorySlug = generateSlug(item.product_variant.product.name).split("-").slice(0, 2).join("-");
+                        const productSlug = generateSlug(item.product_variant.product.name);
+
+                        const productLink = `/san-pham/${categorySlug}/${productSlug}/${item.product_variant.product.product_id}`;
+
 
                         return (
                             <div

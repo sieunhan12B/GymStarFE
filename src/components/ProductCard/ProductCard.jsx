@@ -83,7 +83,9 @@ const ProductCard = ({ product, hoverSize = true, badgeContext = [] }) => {
 
     // ========SIZE THEO MÀU CỦA VARIANT ĐẦU TIÊN=========
     const allSizes = ["S", "M", "L", "XL", "XXL"];
-    const productLink = `/san-pham/${generateSlug(product.category_name)}/${product.product_id}`;
+    const categorySlug = generateSlug(product.category_name);
+    const productSlug = generateSlug(product.name);
+    const productLink = `/san-pham/${categorySlug}/${productSlug}/${product.product_id}`;
 
     // lọc ra tất cả các variant cùng màu với variant đang chọn ( xác định màu đó có mấy size và kiểm tra stock)
     const variantsOfSelectedColor = product.product_variants.filter(

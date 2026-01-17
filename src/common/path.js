@@ -17,7 +17,8 @@ export const path = {
   bestSeller: "san-pham-ban-chay",
   sale: "san-pham-giam-gia",
 
-  product: "san-pham/:subcategory/:productId",
+  // product: "san-pham/:subcategory/:productId",
+  product: "san-pham/:categorySlug/:productSlug/:productId",
   cart: "gio-hang",
   orderResult: "ket-qua-thanh-toan/:orderId",
   orderDetail: "chi-tiet-don-hang/:orderId",
