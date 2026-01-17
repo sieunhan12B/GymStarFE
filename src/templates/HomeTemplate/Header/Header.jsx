@@ -19,6 +19,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/userSlice";
 import { clearCart, setCart } from "@/redux/cartSlice";
+import { setCategoryTree } from "@/redux/categorySlice";
 
 // Assets
 import logo from "@/assets/images/logo.svg";
@@ -107,6 +108,8 @@ const Header = () => {
     try {
       const res = await danhMucService.getAllCategory();
       setCategories(res.data.data || []);
+      dispatch(setCategoryTree(res.data.data));    
+
     } catch (error) {
       console.error("Lỗi lấy danh mục:", error);
     }

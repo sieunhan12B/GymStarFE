@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header/Header'
 import Footer from './Footer/Footer'
 import Chatbot from '@/components/Chatbot/Chatbot'
+import BreadcrumbBar from '@/components/BreadcrumbBar/BreadcrumbBar'
 
 const HomeTemplate = () => {
   const { pathname } = useLocation()
@@ -17,6 +18,7 @@ const HomeTemplate = () => {
   return (
     <>
       <Header />
+      <BreadcrumbBar />
       <Outlet />
       <Footer />
       <Chatbot />

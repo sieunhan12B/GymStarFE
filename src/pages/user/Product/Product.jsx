@@ -36,6 +36,7 @@ import SuggestionSize from './SuggestionSize';
 
 // 7. Context
 import { NotificationContext } from '@/App';
+import BreadcrumbBar from '../../../components/BreadcrumbBar/BreadcrumbBar';
 
 
 dayjs.extend(relativeTime);
@@ -588,7 +589,10 @@ const Product = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Breadcrumb */}
+      <BreadcrumbBar product={product} />
       <div className="max-w-7xl mx-auto px-4 py-8">
+
         {/* Chi tiết sản phẩm */}
         {renderProductDetailSection()}
 
