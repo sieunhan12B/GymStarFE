@@ -1,205 +1,282 @@
 import React, { useState } from 'react';
 import { Modal } from 'antd';
-import {
-    CloseOutlined,
-    ColumnHeightOutlined,
-    BulbOutlined,
-} from '@ant-design/icons';
+import { CloseOutlined, ColumnHeightOutlined, BulbOutlined } from '@ant-design/icons';
 
-const SuggestionSize = ({ isOpen, onClose, sizeChart }) => {
+const defaultShirtSizeChart = [
+    { size: 'S', height: '155-160', weight: '48-55' },
+    { size: 'M', height: '160-165', weight: '55-62' },
+    { size: 'L', height: '165-172', weight: '62-69' },
+    { size: 'XL', height: '172-177', weight: '69-76' },
+    { size: '2XL', height: '177-183', weight: '76-85' },
+];
+
+const defaultPantsSizeChart = [
+    { size: 'S', height: '155-160', weight: '48-55', waist: '66-70' },
+    { size: 'M', height: '160-165', weight: '55-62', waist: '70-74' },
+    { size: 'L', height: '165-172', weight: '62-69', waist: '74-78' },
+    { size: 'XL', height: '172-177', weight: '69-76', waist: '78-82' },
+    { size: '2XL', height: '177-183', weight: '76-85', waist: '82-86' },
+];
+
+const SuggestionSize = ({ isOpen, onClose, productType }) => {
     const [height, setHeight] = useState('');
     const [weight, setWeight] = useState('');
+    const [waist, setWaist] = useState('');
+    console.log(productType)
     const [status, setStatus] = useState({
-        type: 'idle', // idle | error | success
-        message: 'Nhập chiều cao và cân nặng để gợi ý size phù hợp',
+        type: 'idle',
+        message: 'Nhập thông tin để gợi ý size',
     });
+    const isPants =
+        productType &&
+        productType.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes('quan');
 
-    // result = { type: 'success' | 'error', message: string }
 
-    const defaultSizeChart = [
-        { size: 'S', height: '155-160', weight: '48-55', chest: '65', waist: '47', shoulder: '47', sleeve: '34.5', cuffWidth: '19.6', cuffOpening: '16', collarWidth: '16' },
-        { size: 'M', height: '160-165', weight: '55-62', chest: '67', waist: '49', shoulder: '40', sleeve: '36', cuffWidth: '20.4', cuffOpening: '16.5', collarWidth: '15.5' },
-        { size: 'L', height: '165-172', weight: '62-69', chest: '69', waist: '51', shoulder: '51', sleeve: '37', cuffWidth: '21.2', cuffOpening: '17', collarWidth: '15' },
-        { size: 'XL', height: '172-177', weight: '69-76', chest: '71', waist: '53', shoulder: '53', sleeve: '39', cuffWidth: '22', cuffOpening: '17', collarWidth: '16.5' },
-        { size: '2XL', height: '177-183', weight: '76-85', chest: '73', waist: '55', shoulder: '55', sleeve: '40.5', cuffWidth: '22.8', cuffOpening: '18', collarWidth: '17' },
-    ];
+    const sizes = isPants ? defaultPantsSizeChart : defaultShirtSizeChart;
 
-    const sizes = sizeChart || defaultSizeChart;
+    const parseRange = (range) => range.split('-').map(Number);
 
-    const calculateSize = () => {
+    const calculateShirtSize = () => {
         const h = Number(height);
         const w = Number(weight);
 
-        if (!h || !w) {
+        // Check rỗng
+        if (!height || !weight) {
+            setStatus({ type: 'error', message: 'Vui lòng nhập đầy đủ thông tin' });
+            return;
+        }
+
+        // Phi thực tế
+        if (h < 120 || h > 250 || w < 30 || w > 300) {
             setStatus({
                 type: 'error',
-                message: 'Vui lòng nhập đầy đủ chiều cao và cân nặng',
+                message: 'Số đo không hợp lệ (quá nhỏ hoặc quá lớn)',
             });
             return;
         }
 
-        if (h < 140 || h > 200) {
-            setStatus({
-                type: 'error',
-                message: 'Chiều cao nên nằm trong khoảng 140 – 200 cm',
-            });
-            return;
-        }
-
-        if (w < 35 || w > 150) {
-            setStatus({
-                type: 'error',
-                message: 'Cân nặng nên nằm trong khoảng 35 – 150 kg',
-            });
-            return;
-        }
-
-        const matched = sizes.find((item) => {
-            const [hMin, hMax] = item.height.split('-').map(Number);
-            const [wMin, wMax] = item.weight.split('-').map(Number);
-            return h >= hMin && h <= hMax && w >= wMin && w <= wMax;
+        const parsed = sizes.map(s => {
+            const [hMin, hMax] = parseRange(s.height);
+            const [wMin, wMax] = parseRange(s.weight);
+            return { ...s, hMin, hMax, wMin, wMax };
         });
 
-        const finalSize = matched
-            ? matched.size
-            : sizes[sizes.length - 1].size;
+        const maxWeight = Math.max(...parsed.map(s => s.wMax));
+        const minWeight = Math.min(...parsed.map(s => s.wMin));
+        const maxHeight = Math.max(...parsed.map(s => s.hMax));
+        const minHeight = Math.min(...parsed.map(s => s.hMin));
+
+        // Vượt hẳn bảng size
+        if (w > maxWeight + 2 || h > maxHeight + 2 || w < minWeight - 2 || h < minHeight - 2) {
+            setStatus({
+                type: 'warning',
+                message: 'Số đo vượt ngoài bảng size hiện tại',
+            });
+            return;
+        }
+
+        // Match chuẩn
+        let match = parsed.find(s =>
+            h >= s.hMin && h <= s.hMax &&
+            w >= s.wMin && w <= s.wMax
+        );
+
+        // Match nới biên ±2
+        if (!match) {
+            match = parsed.find(s =>
+                h >= s.hMin - 2 && h <= s.hMax + 2 &&
+                w >= s.wMin - 2 && w <= s.wMax + 2
+            );
+        }
+
+        if (!match) {
+            setStatus({
+                type: 'warning',
+                message: 'Không tìm thấy size phù hợp',
+            });
+            return;
+        }
+
+        // Check sát biên
+        const nearBoundary =
+            Math.abs(h - match.hMin) <= 2 ||
+            Math.abs(h - match.hMax) <= 2 ||
+            Math.abs(w - match.wMin) <= 2 ||
+            Math.abs(w - match.wMax) <= 2;
+
+        if (nearBoundary) {
+            setStatus({
+                type: 'warning',
+                message: `Bạn đang ở sát biên size ${match.size}, nên cân nhắc lên size nếu thích mặc rộng`,
+                size: match.size,
+            });
+            return;
+        }
 
         setStatus({
             type: 'success',
-            message: `Size phù hợp với bạn là ${finalSize}`,
-            size: finalSize,
+            message: `Size phù hợp là ${match.size}`,
+            size: match.size,
         });
     };
 
 
+
+    const calculatePantsSize = () => {
+        const h = Number(height);
+        const w = Number(weight);
+        const ws = Number(waist);
+
+        // Check rỗng
+        if (!height || !weight || !waist) {
+            setStatus({ type: 'error', message: 'Vui lòng nhập đầy đủ thông tin' });
+            return;
+        }
+
+        // Phi thực tế
+        if (h < 120 || h > 250 || w < 30 || w > 300 || ws < 50 || ws > 200) {
+            setStatus({
+                type: 'error',
+                message: 'Số đo không hợp lệ (quá nhỏ hoặc quá lớn)',
+            });
+            return;
+        }
+
+        const parsed = sizes.map(s => {
+            const [hMin, hMax] = parseRange(s.height);
+            const [wMin, wMax] = parseRange(s.weight);
+            const [waistMin, waistMax] = parseRange(s.waist);
+            return { ...s, hMin, hMax, wMin, wMax, waistMin, waistMax };
+        });
+
+        const maxWaist = Math.max(...parsed.map(s => s.waistMax));
+        const minWaist = Math.min(...parsed.map(s => s.waistMin));
+
+        if (ws > maxWaist + 2 || ws < minWaist - 2) {
+            setStatus({
+                type: 'warning',
+                message: 'Vòng eo vượt ngoài bảng size hiện tại',
+            });
+            return;
+        }
+
+        // Match chuẩn
+        let match = parsed.find(s =>
+            ws >= s.waistMin && ws <= s.waistMax &&
+            h >= s.hMin && h <= s.hMax
+        );
+
+        // Match nới biên ±2
+        if (!match) {
+            match = parsed.find(s =>
+                ws >= s.waistMin - 2 && ws <= s.waistMax + 2 &&
+                h >= s.hMin - 2 && h <= s.hMax + 2
+            );
+        }
+
+        if (!match) {
+            setStatus({
+                type: 'warning',
+                message: 'Không tìm thấy size phù hợp',
+            });
+            return;
+        }
+
+        // Sát biên
+        const nearBoundary =
+            Math.abs(ws - match.waistMin) <= 2 ||
+            Math.abs(ws - match.waistMax) <= 2;
+
+        if (nearBoundary) {
+            setStatus({
+                type: 'warning',
+                message: `Bạn đang sát biên size ${match.size}, nên cân nhắc lên size nếu thích mặc thoải mái`,
+                size: match.size,
+            });
+            return;
+        }
+
+        setStatus({
+            type: 'success',
+            message: `Size phù hợp là ${match.size}`,
+            size: match.size,
+        });
+    };
+
+
+
+    const calculateSize = () => {
+        if (isPants) calculatePantsSize();
+        else calculateShirtSize();
+    };
+
     return (
-        <Modal
-            open={isOpen}
-            onCancel={onClose}
-            footer={null}
-            width={1100}
-            closeIcon={false}
-            centered
-        >
+        <Modal open={isOpen} onCancel={onClose} footer={null} width={1000} closeIcon={false} centered>
             <div className="bg-white rounded-2xl max-h-[90vh] overflow-hidden flex flex-col">
 
-                {/* Header */}
-                <div className="px-6 py-4 border-b flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
-                    <h2 className="text-2xl font-bold text-gray-900">
-                        Hướng dẫn chọn size
+                <div className="px-6 py-4 border-b flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">
+                        Hướng dẫn chọn size {isPants ? 'quần' : 'áo'}
                     </h2>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                    >
+                    <button onClick={onClose}>
                         <CloseOutlined style={{ fontSize: 22 }} />
                     </button>
                 </div>
 
-                {/* Content */}
                 <div className="overflow-y-auto p-6 space-y-6">
 
-                    {/* Calculator */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                        <h3 className="text-lg font-semibold mb-4 text-gray-900 flex items-center gap-2">
-                            <ColumnHeightOutlined className="text-blue-600" />
-                            Tính toán size phù hợp
+                    <div className="bg-blue-50 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <ColumnHeightOutlined /> Tính toán size
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Chiều cao (cm)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={height}
-                                    onChange={(e) => setHeight(e.target.value)}
-                                    className="w-full px-4 py-3 border rounded-lg"
-                                />
-                            </div>
+                            <input placeholder="Chiều cao (cm)" value={height} onChange={e => setHeight(e.target.value)} className="px-4 py-3 border rounded-lg" />
+                            <input placeholder="Cân nặng (kg)" value={weight} onChange={e => setWeight(e.target.value)} className="px-4 py-3 border rounded-lg" />
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Cân nặng (kg)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={weight}
-                                    onChange={(e) => setWeight(e.target.value)}
-                                    className="w-full px-4 py-3 border rounded-lg"
-                                />
-                            </div>
+                            {isPants && (
+                                <input placeholder="Vòng eo (cm)" value={waist} onChange={e => setWaist(e.target.value)} className="px-4 py-3 border rounded-lg" />
+                            )}
                         </div>
 
-                        <button
-                            onClick={calculateSize}
-                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 rounded-lg"
-                        >
+                        <button onClick={calculateSize} className="w-full bg-blue-600 text-white py-3 rounded-lg">
                             Tính toán
                         </button>
 
-                        {/* RESULT / ERROR DISPLAY */}
-                        {status && (
-                            <div className="mt-4 min-h-[80px] flex items-center justify-center">
-                                <div
-                                    className={`w-full p-4 rounded-lg border transition-all ${status.type === 'success'
-                                            ? 'bg-green-50 border-green-400'
-                                            : status.type === 'error'
-                                                ? 'bg-amber-50 border-amber-400'
-                                                : 'bg-gray-50 border-gray-200'
-                                        }`}
-                                >
-                                    <p className="text-center text-sm text-gray-700">
-                                        {status.type === 'success' ? (
-                                            <>
-                                                <span className="font-medium">Size gợi ý: </span>
-                                                <span className="text-2xl font-bold text-green-600">
-                                                    {status.size}
-                                                </span>
-                                            </>
-                                        ) : (
-                                            status.message
-                                        )}
-                                    </p>
-                                </div>
+                        <div className="mt-4 min-h-[70px] flex items-center justify-center">
+                            <div className={`w-full p-4 rounded-lg border ${status.type === 'success' ? 'bg-green-50 border-green-400' :
+                                status.type === 'error' ? 'bg-red-50 border-red-400' :
+                                    'bg-gray-50 border-gray-200'
+                                }`}>
+                                <p className="text-center">
+                                    {status.type === 'success'
+                                        ? <span className="text-2xl font-bold text-green-600">{status.size}</span>
+                                        : status.message}
+                                </p>
                             </div>
-
-                        )}
+                        </div>
                     </div>
 
-                    {/* Table */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-4">Bảng size chi tiết</h3>
+                        <h3 className="text-lg font-semibold mb-4">Bảng size</h3>
                         <div className="overflow-x-auto border rounded-lg">
                             <table className="w-full text-sm">
                                 <thead className="bg-gray-800 text-white">
                                     <tr>
-                                        {['Size', 'Chiều cao', 'Cân nặng', 'Dài thân', 'Ngang ngực', 'Ngang gấu', 'Dài tay', 'Rộng bắp tay', 'Cửa tay', 'Ngang cổ']
-                                            .map(h => (
-                                                <th key={h} className="px-4 py-3 text-center">{h}</th>
-                                            ))}
+                                        <th>Size</th>
+                                        <th>Chiều cao</th>
+                                        <th>Cân nặng</th>
+                                        {isPants && <th>Vòng eo</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {sizes.map((row, i) => (
-                                        <tr
-                                            key={i}
-                                            className={`${i % 2 ? 'bg-gray-50' : 'bg-white'} ${status?.type === 'success' && status.message === row.size
-                                                ? 'bg-green-100 font-semibold'
-                                                : ''
-                                                }`}
-                                        >
-                                            <td className="px-4 py-3 font-bold">{row.size}</td>
-                                            <td className="px-4 py-3 text-center">{row.height}</td>
-                                            <td className="px-4 py-3 text-center">{row.weight}</td>
-                                            <td className="px-4 py-3 text-center">{row.chest}</td>
-                                            <td className="px-4 py-3 text-center">{row.waist}</td>
-                                            <td className="px-4 py-3 text-center">{row.shoulder}</td>
-                                            <td className="px-4 py-3 text-center">{row.sleeve}</td>
-                                            <td className="px-4 py-3 text-center">{row.cuffWidth}</td>
-                                            <td className="px-4 py-3 text-center">{row.cuffOpening}</td>
-                                            <td className="px-4 py-3 text-center">{row.collarWidth}</td>
+                                        <tr key={i} className={`${i % 2 ? 'bg-gray-50' : 'bg-white'} ${status.type === 'success' && status.size === row.size ? 'bg-green-100 font-bold' : ''
+                                            }`}>
+                                            <td className="text-center">{row.size}</td>
+                                            <td className="text-center">{row.height}</td>
+                                            <td className="text-center">{row.weight}</td>
+                                            {isPants && <td className="text-center">{row.waist}</td>}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -207,13 +284,11 @@ const SuggestionSize = ({ isOpen, onClose, sizeChart }) => {
                         </div>
                     </div>
 
-                    {/* Tips */}
                     <div className="bg-amber-50 border rounded-lg p-5">
                         <h3 className="font-semibold flex items-center gap-2 mb-2">
-                            <BulbOutlined /> Lưu ý khi chọn size
+                            <BulbOutlined /> Lưu ý
                         </h3>
                         <ul className="text-sm space-y-1">
-                            <li>• Ưu tiên theo chiều cao nếu thích mặc rộng</li>
                             <li>• Giữa 2 size → chọn size lớn hơn</li>
                             <li>• Sai số ±1–2cm</li>
                         </ul>

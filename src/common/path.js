@@ -19,13 +19,13 @@ export const path = {
 
   product: "san-pham/:subcategory/:productId",
   cart: "gio-hang",
-  orderStatus: "ket-qua-thanh-toan/:orderId",
+  orderResult: "ket-qua-thanh-toan/:orderId",
   orderDetail: "chi-tiet-don-hang/:orderId",
   checkout: "dat-hang",
 
   account: "/tai-khoan",
   accountInfo: "thong-tin-tai-khoan",
-  orderHistory: "lich-su-don-hang",
+  myOrder: "don-hang-cua-toi",
   voucher: "ma-giam-gia",
   addresses: "so-dia-chi",
   reviewFeedback: "dong-gop-y-kien-va-danh-gia",

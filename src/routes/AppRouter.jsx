@@ -35,13 +35,13 @@ import Account from "../pages/user/Account/Account";
 import Product from "../pages/user/Product/Product";
 import Category from "../pages/user/Category/Category";
 import Cart from "../pages/user/Cart/Cart";
-import OrderSuccess from "../pages/user/OrderSuccess/OrderSuccess";
+import OrderSuccess from "../pages/user/OrderResult/OrderResult";
 import OrderDetail from "../pages/user/OrderDetail/OrderDetail";
-import OrderHistory from "../pages/user/OrderHistory/OrderHistory";
 import ReviewsFeedback from "../pages/user/ReviewsFeedback/ReviewsFeedback";
 import Checkout from "../pages/user/Checkout/Checkout";
 import Voucher from "../pages/user/Voucher/Voucher";
 import Addresses from "../pages/user/Addresses/Addresses";
+import MyOrder from "../pages/user/MyOrder/MyOrder";
 
 export const AppRouter = [
     // ------------------ AUTH ------------------
@@ -112,7 +112,7 @@ export const AppRouter = [
                 element: <Checkout />
             },
             {
-                path: path.orderStatus,
+                path: path.orderResult,
                 element: <OrderSuccess />,
             },
             {
@@ -130,8 +130,8 @@ export const AppRouter = [
 
                     },
                     {
-                        path: path.orderHistory,
-                        element: <OrderHistory />,
+                        path: path.myOrder,
+                        element: <MyOrder />,
                     },
                     {
                         path: path.voucher,

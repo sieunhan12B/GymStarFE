@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StarFilled, StarOutlined } from '@ant-design/icons';
-import { reviewService } from '../../../services/review.service';
-import { feedbackService } from '../../../services/feedback.service';
+import { reviewService } from '@/services/review.service';
+import { feedbackService } from '@/services/feedback.service';
 
 const ReviewsFeedback = () => {
   const [activeTab, setActiveTab] = useState('review');
@@ -12,7 +12,7 @@ const ReviewsFeedback = () => {
 
   const [expandedComments, setExpandedComments] = useState({});
 
-
+  /* ================= UTILS ================= */
   const countByReplyStatus = (list, replyField = 'reply') => {
     const total = list.length;
     const replied = list.filter(item => item[replyField] !== null).length;
@@ -27,21 +27,21 @@ const ReviewsFeedback = () => {
     countByReplyStatus(currentList);
 
 
+  const fetchData = async () => {
+    try {
+      const [reviewRes, feedbackRes] = await Promise.all([
+        reviewService.getReviewUser(),
+        feedbackService.getFeedbackUser()
+      ]);
+
+      setReviews(reviewRes.data.data);
+      setFeedbacks(feedbackRes.data.data);
+    } catch (error) {
+      console.error('Lỗi khi lấy dữ liệu:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [reviewRes, feedbackRes] = await Promise.all([
-          reviewService.getReviewUser(),
-          feedbackService.getFeedbackUser()
-        ]);
-
-        setReviews(reviewRes.data.data);
-        setFeedbacks(feedbackRes.data.data);
-      } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu:', error);
-      }
-    };
-
     fetchData();
   }, []);
 

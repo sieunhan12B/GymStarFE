@@ -438,7 +438,9 @@ const Product = () => {
         <SuggestionSize
           isOpen={isSizeGuideOpen}
           onClose={() => setIsSizeGuideOpen(false)}
+          productType={product?.parent_category_name} // "Áo" | "Quần"
         />
+        {console.log(product.parent_category_name)}
 
         {/* Quantity */}
         <div>

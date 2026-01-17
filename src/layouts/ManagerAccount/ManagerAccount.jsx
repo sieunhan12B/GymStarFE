@@ -28,7 +28,7 @@ const sidebarItems = [
     key: '2',
     icon: <ShoppingCartOutlined />,
     label: 'Đơn hàng của tôi',
-    path: path.orderHistory,
+    path: path.myOrder,
 
   },
   {

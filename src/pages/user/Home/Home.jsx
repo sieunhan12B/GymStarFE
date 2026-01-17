@@ -72,7 +72,6 @@ const Home = () => {
   }, []);
 
   // ===== NEWEST =====
-
   const renderNewestProducts = () => {
     const sellingNewest = filterSellingProducts(newestProducts).slice(0, 10);
     return (
@@ -123,7 +122,6 @@ const Home = () => {
       </section>
     );
   };
-
 
 
   // ===== BEST SELLING + SALE =====
@@ -177,6 +175,7 @@ const Home = () => {
     );
   };
 
+  
   // ===== SALE =====
   const renderSaleProducts = () => {
 
@@ -233,9 +232,6 @@ const Home = () => {
   };
 
 
-
-
-
   // ===== WOMEN =====
   const renderWomenProducts = () => {
     const sellingWomenProducts = filterSellingProducts(womenProducts);
@@ -285,7 +281,6 @@ const Home = () => {
   };
 
 
-
   // ===== MEN =====
   const renderMenProducts = () => {
     const sellingMenProducts = filterSellingProducts(menProducts);
@@ -333,7 +328,6 @@ const Home = () => {
       </section>
     );
   }
-
 
 
   // ===== ACCESSORIES =====

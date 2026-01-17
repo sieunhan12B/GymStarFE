@@ -1,32 +1,37 @@
+// ================== IMPORTS ==================
 import React, { useContext, useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+
 import {
     CheckCircleFilled,
     CloseCircleFilled,
-    ClockCircleFilled,
     MailOutlined,
     PhoneOutlined,
 } from '@ant-design/icons'
-import { useParams, useNavigate } from 'react-router-dom'
+
 import { orderService } from '@/services/order.service'
+import { paymentService } from '@/services/payment.service'
+
 import { useDispatch } from 'react-redux'
-import { setUser } from '../../../redux/userSlice'
-import { setCart } from '../../../redux/cartSlice'
-import { paymentService } from '../../../services/payment.service'
+import { setUser } from '@/redux/userSlice'
+import { setCart } from '@/redux/cartSlice'
+
 import dayjs from 'dayjs'
-import { getLocalStorage } from '../../../utils/storage'
+import { getLocalStorage } from '@/utils/storage'
+
 import { NotificationContext } from "@/App";
 
-const OrderSuccess = () => {
+const OrderResult = () => {
     const { orderId } = useParams()
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const [retryLoading, setRetryLoading] = useState(false)
     const { showNotification } = useContext(NotificationContext);
 
-
+    const [retryLoading, setRetryLoading] = useState(false)
     const [order, setOrder] = useState(null)
     const [loading, setLoading] = useState(true)
 
+    /* ================= FETCH ORDER ================= */
     const fetchOrderDetail = async () => {
         try {
             const res = await orderService.getDetailOrder(orderId)
@@ -37,33 +42,9 @@ const OrderSuccess = () => {
         } finally {
             setLoading(false)
         }
-
     }
 
-    const handleRetryPayment = async () => {
-        try {
-            setRetryLoading(true)
-            const data = {
-                order_id: order.order_id,
-            }
-
-            const res = await paymentService.reTryPayment(data);
-
-            const payUrl = res.data.payUrl
-
-            if (payUrl) {
-                // Redirect sang MoMo
-                window.location.href = payUrl
-            }
-        } catch (error) {
-            console.error(error)
-            showNotification(error.response.data.message, "error")
-        } finally {
-            setRetryLoading(false)
-        }
-    }
-
-
+    /* ================= EFFECT ================= */
     useEffect(() => {
         const tempUser = getLocalStorage('tempUser')
         const tempCart = getLocalStorage('tempCart')
@@ -87,29 +68,46 @@ const OrderSuccess = () => {
             </div>
         )
     }
-
     if (!order) return null
 
-    // =====================
-    // PAYMENT LOGIC
-    // =====================
-    const payment = order.payments?.[0]
 
-    const isCOD = payment?.method === 'COD'
-    const isSuccess = payment?.status === 'thành công'
-    const isFailed = payment?.status === 'thất bại'
-    const isPending = payment?.status === 'chờ thanh toán'
+    // ================== HANDLERS ==================
+    const handleRetryPayment = async () => {
+        try {
+            setRetryLoading(true)
+            const data = {
+                order_id: order.order_id,
+            }
 
+            const res = await paymentService.reTryPayment(data);
+
+            const payUrl = res.data.payUrl
+
+            if (payUrl) {
+                window.location.href = payUrl
+            }
+        } catch (error) {
+            console.error(error)
+            showNotification(error.response.data.message, "error")
+        } finally {
+            setRetryLoading(false)
+        }
+    }
+
+
+    /* ================= HELPERS ================= */
     const getPaymentText = () => {
-        if (isCOD) return 'Thanh toán khi nhận hàng'
-        if (isSuccess) return 'Thanh toán thành công'
-        if (isFailed) return 'Thanh toán thất bại'
-        if (isPending) return 'Chưa thanh toán'
+        if (order.payments?.[0]?.method === 'COD') return 'Thanh toán khi nhận hàng'
+        if (order.payments?.[0]?.status === 'thành công') return 'Thanh toán thành công'
+        if (order.payments?.[0]?.status === 'thất bại') return 'Thanh toán thất bại'
+        if (order.payments?.[0]?.status === 'đang chờ') return 'Chưa thanh toán'
         return 'Không xác định'
     }
 
+
+    /* ================= XỬ LÝ TẠO DỮ LIỆU BANNER DỰA TRÊN TRẠNG THÁI ORDER VÀ PAYMENT ================= */
     const getHeaderConfig = () => {
-        if (isSuccess) {
+        if (order.payments?.[0]?.status === 'thành công') {
             return {
                 bg: 'bg-green-600',
                 icon: <CheckCircleFilled className="text-black text-5xl" />,
@@ -118,7 +116,7 @@ const OrderSuccess = () => {
             }
         }
 
-        if (isFailed) {
+        if (order.payments?.[0]?.status === 'thất bại') {
             return {
                 bg: 'bg-red-600',
                 icon: <CloseCircleFilled className="text-red-600 text-5xl" />,
@@ -135,11 +133,12 @@ const OrderSuccess = () => {
         }
     }
 
-    const header = getHeaderConfig()
+    const header = getHeaderConfig();
 
+    /* ================== RENDER ================== */
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-            {/* HEADER */}
+            {/* HEADER/BANNER */}
             <div className={`${header.bg} text-white py-14 text-center`}>
                 <div className="mx-auto w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6">
                     {header.icon}
@@ -209,7 +208,7 @@ const OrderSuccess = () => {
                             Phương thức thanh toán
                         </span>
                         <span className="font-medium">
-                            {payment?.method}
+                            {order.payments?.[0]?.method}
                         </span>
                     </div>
 
@@ -218,9 +217,9 @@ const OrderSuccess = () => {
                             Trạng thái thanh toán
                         </span>
                         <span
-                            className={`font-semibold ${isSuccess
+                            className={`font-semibold ${order.payments?.[0]?.status === 'thành công'
                                 ? 'text-green-600'
-                                : isFailed
+                                : order.payments?.[0]?.status === 'thất bại'
                                     ? 'text-red-600'
                                     : 'text-yellow-600'
                                 }`}
@@ -267,7 +266,7 @@ const OrderSuccess = () => {
 
                 {/* CTA */}
                 <div className="space-y-3">
-                    {!isSuccess && !isCOD && (
+                    {order.payments?.[0]?.status !== 'thành công' && order.payments?.[0]?.method !== 'COD' && (
                         <button
                             onClick={handleRetryPayment}
                             disabled={retryLoading}
@@ -320,4 +319,4 @@ const OrderSuccess = () => {
     )
 }
 
-export default OrderSuccess
+export default OrderResult

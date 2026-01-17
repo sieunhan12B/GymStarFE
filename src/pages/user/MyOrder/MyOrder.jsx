@@ -1,4 +1,9 @@
+// ================== IMPORTS ==================
+//  React & Router
 import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+//  Ant Design / Icons
 import {
     ShoppingCartOutlined,
     ClockCircleOutlined,
@@ -8,85 +13,66 @@ import {
     SyncOutlined
 } from "@ant-design/icons";
 import { Button, Modal, Pagination, Select, Tooltip } from "antd";
+
+// Services
 import { orderService } from "@/services/order.service";
-import { useNavigate } from "react-router-dom";
+import { paymentService } from "@/services/payment.service";
+
+// Utils
+import { formatPrice } from "@/utils/formatPrice";
+
+// Context
 import { NotificationContext } from "@/App";
-import { formatPrice } from "../../../utils/formatPrice";
-import { paymentService } from "../../../services/payment.service";
-
-const PaymentBadge = ({ payment }) => {
-    if (!payment) {
-        return (
-            <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
-                Chưa thanh toán
-            </span>
-        );
-    }
-
-    let color = "bg-gray-100 text-gray-600";
-    let icon = "⏳";
-
-    if (payment.status === "thành công") {
-        color = "bg-green-100 text-green-700";
-        icon = "✅";
-    } else if (payment.status === "thất bại") {
-        color = "bg-red-100 text-red-700";
-        icon = "❌";
-    } else if (payment.status === "đang chờ") {
-        color = "bg-yellow-100 text-yellow-700";
-        icon = "⏳";
-    }
-
-    return (
-        <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full ${color}`}>
-            {icon} {payment.method} • {payment.status}
-        </span>
-    );
-};
 
 
-const OrderHistory = () => {
+/* ================== CONSTANCE ================== */
+const orderStatuses = [
+    { key: "all", label: "Tất cả" },
+    { key: "chờ xác nhận", label: "Chờ xác nhận" },
+    { key: "đã xác nhận", label: "Đã xác nhận" },
+    { key: "đang xử lý", label: "Đang xử lý" },
+    { key: "đang giao", label: "Đang giao" },
+    { key: "đã giao", label: "Đã giao" },
+    { key: "giao thất bại", label: "Giao thất bại" },
+    { key: "đã hủy", label: "Đã hủy" },
+    { key: "đổi hàng", label: "Đổi hàng" }
+];
+const cancelReasons = [
+    "Đổi ý không muốn mua nữa",
+    "Đặt nhầm sản phẩm/màu/size",
+    "Tìm được chỗ khác rẻ hơn",
+    "Thay đổi địa chỉ giao hàng",
+    "Giao hàng quá lâu",
+    "Muốn thay đổi phương thức thanh toán",
+];
+
+const PAGE_SIZE = 5;
+
+
+const MyOrder = () => {
+    // ================== CONTEXT / ROUTER ==================
+    const { showNotification } = useContext(NotificationContext);
+    const navigate = useNavigate();
+
+    // ================== STATES ==================
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(false);
+
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 5;
     const [activeTab, setActiveTab] = useState("all");
-    const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
-    const [cancelReason, setCancelReason] = useState('');
-    const [selectedOrderId, setSelectedOrderId] = useState(null);
-    const [cancelLoading, setCancelLoading] = useState(false);
-    const [isExchangeModalVisible, setIsExchangeModalVisible] = useState(false);
+
     const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
     const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
 
+    const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+    const [cancelReason, setCancelReason] = useState("");
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [cancelLoading, setCancelLoading] = useState(false);
+
+    const [isExchangeModalVisible, setIsExchangeModalVisible] = useState(false);
 
 
-    const { showNotification } = useContext(NotificationContext);
-
-    const navigate = useNavigate();
-
-
-    /* ================== STATUS CONFIG (THEO BACKEND) ================== */
-    const orderStatuses = [
-        { key: "all", label: "Tất cả" },
-        { key: "chờ xác nhận", label: "Chờ xác nhận" },
-        { key: "đã xác nhận", label: "Đã xác nhận" },
-        { key: "đang xử lý", label: "Đang xử lý" },
-        { key: "đang giao", label: "Đang giao" },
-        { key: "đã giao", label: "Đã giao" },
-        { key: "giao thất bại", label: "Giao thất bại" },
-        { key: "đã hủy", label: "Đã hủy" },
-        { key: "đổi hàng", label: "Đổi hàng" }
-    ];
-    const cancelReasons = [
-        "Đổi ý không muốn mua nữa",
-        "Đặt nhầm sản phẩm/màu/size",
-        "Tìm được chỗ khác rẻ hơn",
-        "Thay đổi địa chỉ giao hàng",
-        "Giao hàng quá lâu",
-        "Muốn thay đổi phương thức thanh toán",
-    ];
-
+    // ================== FETCH ==================
     const fetchOrders = async () => {
         try {
             setLoading(true);
@@ -101,13 +87,13 @@ const OrderHistory = () => {
     };
 
 
-
-    /* ================== CALL API ================== */
+    // ================== EFFECTS ==================
     useEffect(() => {
-
         fetchOrders();
     }, []);
 
+
+    // ================== HANDLERS ==================
     const handleCancelOrder = async (orderId) => {
 
         if (!cancelReason) {
@@ -204,7 +190,6 @@ const OrderHistory = () => {
         }
     };
 
-
     const getStatusColor = (status) => {
         switch (status) {
             case "chờ xác nhận":
@@ -229,7 +214,7 @@ const OrderHistory = () => {
 
     /* ================== FILTER ================== */
     const filteredOrders = orders.filter((order) => {
-        // Filter theo tab status
+        // Filter theo tab status order
         if (activeTab !== "all" && order.status !== activeTab) return false;
 
         // Filter theo trạng thái thanh toán
@@ -255,18 +240,20 @@ const OrderHistory = () => {
         return true;
     });
 
-
     /* ================== PAGINATION ================== */
     const paginatedOrders = filteredOrders.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
     );
+
+    /* ================== LẤY SỐ LƯỢNG CỦA TỪNG TRẠNG THÁI ================== */
     const getOrderCountByStatus = (statusKey) => {
         if (statusKey === "all") return orders.length;
         return orders.filter(order => order.status === statusKey).length;
     };
 
 
+    /* ================== RENDER FUNCTION ================== */
     const renderExchangeOrder = () => {
         return (
             <Modal
@@ -439,7 +426,24 @@ const OrderHistory = () => {
 
                                         {/* Badge thanh toán */}
                                         <div className="mt-1">
-                                            <PaymentBadge payment={order.payment} />
+                                            {!order.payment ? (
+                                                <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                                                    Chưa thanh toán
+                                                </span>
+                                            ) : order.payment.status === "thành công" ? (
+                                                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                                                    ✅ {order.payment.method} • {order.payment.status}
+                                                </span>
+                                            ) : order.payment.status === "thất bại" ? (
+                                                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-red-100 text-red-700">
+                                                    ❌ {order.payment.method} • {order.payment.status}
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                                                    ⏳ {order.payment.method} • {order.payment.status}
+                                                </span>
+                                            )}
+
                                         </div>
                                     </div>
 
@@ -616,11 +620,11 @@ const OrderHistory = () => {
 
             {/* Pagination */}
             {
-                filteredOrders.length > pageSize && (
+                filteredOrders.length > PAGE_SIZE && (
                     <div className="flex justify-center pb-6">
                         <Pagination
                             current={currentPage}
-                            pageSize={pageSize}
+                            pageSize={PAGE_SIZE}
                             total={filteredOrders.length}
                             onChange={(page) => setCurrentPage(page)}
                             showSizeChanger={false}
@@ -632,4 +636,4 @@ const OrderHistory = () => {
     );
 };
 
-export default OrderHistory;
+export default MyOrder;
