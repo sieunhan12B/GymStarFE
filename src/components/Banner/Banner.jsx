@@ -1,14 +1,33 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-const Banner = ({ imgSrc, titleBanner, desBanner,categories=[]}) => {
+const Banner = ({
+    imgSrc,
+    titleBanner,
+    desBanner,
+    categories = [],
+    mediaType = "image", // NEW: "image" | "video"
+}) => {
     return (
-        <section className="relative h-[500px] overflow-hidden">
-            <img
-                src={imgSrc}
-                alt="Gym Banner"
-                className="w-full h-full object-cover"
-            />
+        <section className="relative h-[70vh] overflow-hidden">
+            {mediaType === "image" && (
+                <img
+                    src={imgSrc}
+                    alt={titleBanner}
+                    className="w-full h-full object-cover"
+                />
+            )}
+
+            {mediaType === "video" && (
+                <video
+                    src={imgSrc}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                />
+            )}
 
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/30" />
@@ -21,6 +40,7 @@ const Banner = ({ imgSrc, titleBanner, desBanner,categories=[]}) => {
                 <p className="text-sm md:text-base mb-4 text-gray-200">
                     {desBanner}
                 </p>
+
                 <div className="flex gap-4">
                     {categories.map((item, index) => (
                         <Link
@@ -36,7 +56,6 @@ const Banner = ({ imgSrc, titleBanner, desBanner,categories=[]}) => {
                         </Link>
                     ))}
                 </div>
-
             </div>
         </section>
     )

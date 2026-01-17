@@ -1,82 +1,65 @@
 import React from 'react';
-import { Button } from 'antd';
-import { HomeOutlined, SearchOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
+import errorBanner from '@/assets/images/errorBanner.avif';
+import logo from "@/assets/images/logo.svg";
+import { Image } from 'antd';
 
 const Error = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full text-center">
-        {/* Số 404 lớn */}
-        <div className="relative mb-8">
-          <h1 className="text-[200px] font-bold text-gray-200 leading-none select-none">
-            404
-          </h1>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-6xl animate-bounce">
-              😕
-            </div>
-          </div>
+    <div className="relative w-full h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <img
+        src={errorBanner}
+        alt="Background"
+        className="absolute top-0 left-0 w-full h-full object-cover z-0"
+      />
+
+      {/* Overlay */}
+      <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-30 z-10"></div>
+
+      {/* Content */}
+      <div className="relative z-20 text-center text-white px-5 max-w-3xl">
+        {/* Logo */}
+        {/* <div className="text-3xl md:text-4xl font-bold tracking-wider mb-10 uppercase">
+          GYMSHARK
+        </div> */}
+        <div className=" absolute left-0 right-0 -top-72">
+          <Link to={"/"}>
+            <Image preview={false} width={400} src={logo} alt="Gymshark Logo" />
+          </Link>
         </div>
 
-        {/* Tiêu đề và mô tả */}
-        <h2 className="text-4xl font-bold text-gray-800 mb-4">
-          Trang không tìm thấy
-        </h2>
-        <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
-          Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển. 
-          Hãy kiểm tra lại URL hoặc quay về trang chủ.
+
+        {/* Error Code */}
+        <div className="text-7xl sm:text-8xl md:text-9xl font-black leading-none mb-5 drop-shadow-2xl">
+          404
+        </div>
+
+        {/* Error Title */}
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-wide mb-5 drop-shadow-lg">
+          Không tìm thấy trang
+        </h1>
+
+        {/* Error Message */}
+        <p className="text-base sm:text-lg md:text-xl mb-10 leading-relaxed drop-shadow-md px-4">
+          Không chắc chuyện gì đã xảy ra. Có lẽ bạn nên lấy một bộ trang phục mới và sau đó chúng ta có thể đi tập?
         </p>
 
-        {/* Các nút hành động */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button 
-            type="primary" 
-            size="large"
-            icon={<HomeOutlined />}
-            className="bg-black hover:bg-gray-800 border-black px-8 h-12 text-base font-medium"
-            onClick={() => window.location.href = '/'}
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
+          <Link
+            to="/danh-muc/nu-2"
+            className="w-full sm:w-auto px-12 py-4 text-base font-semibold uppercase tracking-wider bg-white text-gray-800 rounded-full transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:bg-gray-100 no-underline"
           >
-            Về trang chủ
-          </Button>
-          
-          <Button 
-            size="large"
-            icon={<SearchOutlined />}
-            className="px-8 h-12 text-base font-medium"
-            onClick={() => window.history.back()}
+            Mua sắm nữ
+          </Link>
+
+          <Link
+            to="/danh-muc/nam-1"
+            className="w-full sm:w-auto px-12 py-4 text-base font-semibold uppercase tracking-wider bg-transparent text-white border-2 border-white rounded-full transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:bg-white hover:text-gray-800 no-underline"
           >
-            Quay lại
-          </Button>
-        </div>
-
-        {/* Gợi ý liên kết */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-4">Hoặc bạn có thể thử:</p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <a href="/" className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
-              Trang chủ
-            </a>
-            <span className="text-gray-300">•</span>
-            <a href="/products" className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
-              Sản phẩm
-            </a>
-            <span className="text-gray-300">•</span>
-            <a href="/contact" className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
-              Liên hệ
-            </a>
-            <span className="text-gray-300">•</span>
-            <a href="/help" className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
-              Trợ giúp
-            </a>
-          </div>
-        </div>
-
-        {/* Decorative elements */}
-        <div className="absolute top-20 left-10 text-6xl opacity-20 animate-pulse">
-          🔍
-        </div>
-        <div className="absolute bottom-20 right-10 text-6xl opacity-20 animate-pulse delay-300">
-          📍
+            Mua sắm nam
+          </Link>
         </div>
       </div>
     </div>

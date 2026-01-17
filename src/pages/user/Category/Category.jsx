@@ -18,6 +18,16 @@ import { formatPrice } from "@/utils/formatPrice";
 
 //Hook
 import useDebounce from "@/hooks/useDebounce";
+import Banner from "../../../components/Banner/Banner";
+
+//Banner
+import menBanner from '@/assets/images/menBanner.avif';
+// import womenBanner from '@/assets/images/womenBanner.avif';
+import womenBanner from '@/assets/mp4s/womenBanner.mp4';
+import accessoriesBanner from '@/assets/images/accessoriesBanner.avif';
+
+
+
 
 
 const { Option } = Select;
@@ -37,10 +47,32 @@ const COLOR_OPTIONS = [
 
 ];
 
+const CATEGORY_BANNER_MAP = {
+  nam: {
+    imgSrc: menBanner,
+    mediaType: "image",
+    titleBanner: "Thời trang nam",
+    desBanner: "Phong cách mạnh mẽ – hiện đại",
+  },
+  nu: {
+    imgSrc: womenBanner,
+    mediaType: "video",
+    titleBanner: "Thời trang nữ",
+    desBanner: "Thanh lịch – tinh tế – thời thượng",
+  },
+  "phu-kien": {
+    imgSrc: accessoriesBanner,
+    mediaType: "image",
+    titleBanner: "Phụ kiện",
+    desBanner: "Hoàn thiện outfit của bạn",
+  },
+};
+
+
 // ================= UTILS =================
 const getCategoryId = (splat) => {
   if (!splat) return null;
-  const segments = splat.split("/").filter(Boolean);
+  const segments = splat?.split("/").filter(Boolean);
   const lastSegment = segments[segments.length - 1];
   const match = lastSegment.match(/-(\d+)$/);
   return match ? Number(match[1]) : null;
@@ -62,6 +94,12 @@ const Category = () => {
   const { "*": splat, keyword } = useParams();
   const location = useLocation();
   const categoryId = getCategoryId(splat);
+
+  const segments = splat?.split("/").filter(Boolean);
+  const rawRootSlug = segments?.[0];
+  const rootSlug = rawRootSlug?.replace(/-\d+$/, "");
+  const bannerData = CATEGORY_BANNER_MAP[rootSlug];
+
 
   // ================= PAGE TYPE FLAGS =================
   const isNewestPage = location.pathname === "/san-pham-moi";
@@ -591,6 +629,17 @@ const Category = () => {
   // ======================= MAIN RENDER =======================
   return (
     <div className="min-h-screen bg-white">
+      {bannerData && !keyword && !isNewestPage && !isBestSellerPage && !isSalePage && (
+        <div className="mb-10">
+          <Banner
+            imgSrc={bannerData.imgSrc}
+            mediaType={bannerData.mediaType}
+            titleBanner={bannerData.titleBanner}
+            desBanner={bannerData.desBanner}
+            categories={[]}
+          />
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className={`font-bold mb-10 ${keyword ? "text-3xl" : "text-5xl"}`}>
           {isNewestPage
