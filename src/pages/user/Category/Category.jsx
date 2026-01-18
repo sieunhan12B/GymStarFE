@@ -111,8 +111,6 @@ const removeAccents = (str) => {
 };
 
 
-
-
 const Category = () => {
   // ================= ROUTER / PARAMS =================
   const { "*": splat, keyword } = useParams();
@@ -407,10 +405,6 @@ const Category = () => {
       };
     });
   };
-
-
-
-
 
   // ======================= RENDER SECTIONS =======================
 

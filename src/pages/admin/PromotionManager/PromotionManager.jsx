@@ -496,7 +496,14 @@ const PromotionManager = () => {
                         label="Mã khuyến mãi"
                         name="code"
                         extra="Mã duy nhất, thường viết IN HOA – ví dụ: SALE10P"
-                        rules={[{ required: true, message: "Nhập mã khuyến mãi" }]}
+                        rules={[
+                            { required: true, message: "Nhập mã khuyến mãi" },
+                            { min: 3, max: 30, message: "Mã phải từ 3 đến 30 ký tự" },
+                            {
+                                pattern: /^[a-zA-Z0-9\s.,-]+$/,
+                                message: "Chỉ được chứa chữ, số, khoảng trắng và dấu ., -",
+                            },
+                        ]}
                     >
                         <Input placeholder="SALE10P" />
                     </Form.Item>
@@ -504,7 +511,10 @@ const PromotionManager = () => {
                     <Form.Item
                         label="Mô tả"
                         name="description"
-                        extra="Mô tả ngắn giúp admin dễ quản lý (không hiển thị cho user)"
+                        rules={[
+                            { required: true, message: "Nhập mô tả" },
+                            { min: 5, max: 100, message: "Mô tả từ 5–100 ký tự" },
+                        ]}
                     >
                         <Input.TextArea rows={2} />
                     </Form.Item>
@@ -528,8 +538,37 @@ const PromotionManager = () => {
                         <Form.Item
                             label="Giá trị giảm"
                             name="value"
-                            extra="VD: 10 (%) hoặc 50.000 (VNĐ)"
-                            rules={[{ required: true }]}
+                            rules={[
+                                { required: true, message: "Nhập giá trị giảm" },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        const type = getFieldValue("discount_type");
+
+                                        if (!value) return Promise.resolve();
+
+                                        if (!Number.isInteger(value)) {
+                                            return Promise.reject("Phải là số nguyên");
+                                        }
+
+                                        if (type === "fixed") {
+                                            if (value < 20000 || value > 5000000) {
+                                                return Promise.reject("Giá trị từ 20.000 đến 5.000.000");
+                                            }
+                                            if (value % 1000 !== 0) {
+                                                return Promise.reject("Phải chia hết cho 1.000");
+                                            }
+                                        }
+
+                                        if (type === "percent") {
+                                            if (value < 1 || value > 99) {
+                                                return Promise.reject("Phần trăm từ 1 đến 99");
+                                            }
+                                        }
+
+                                        return Promise.resolve();
+                                    },
+                                }),
+                            ]}
                         >
                             <InputNumber
                                 min={1}
@@ -552,11 +591,31 @@ const PromotionManager = () => {
                         <Form.Item
                             label="Giảm tối đa"
                             name="max_discount"
-                            extra={
-                                discountType === "percent"
-                                    ? "Áp dụng cho giảm theo %"
-                                    : "Không áp dụng cho giảm cố định"
-                            }
+                            rules={[
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        const type = getFieldValue("discount_type");
+
+                                        if (type !== "percent") return Promise.resolve();
+
+                                        if (!value) return Promise.reject("Nhập giảm tối đa");
+
+                                        if (!Number.isInteger(value)) {
+                                            return Promise.reject("Phải là số nguyên");
+                                        }
+
+                                        if (value < 20000 || value > 5000000) {
+                                            return Promise.reject("Từ 20.000 đến 5.000.000");
+                                        }
+
+                                        if (value % 1000 !== 0) {
+                                            return Promise.reject("Phải chia hết cho 1.000");
+                                        }
+
+                                        return Promise.resolve();
+                                    },
+                                }),
+                            ]}
                         >
                             <InputNumber
                                 className="w-full"
@@ -576,8 +635,26 @@ const PromotionManager = () => {
                         <Form.Item
                             label="Đơn hàng tối thiểu"
                             name="min_order_value"
-                            extra="Đơn hàng phải đạt giá trị này mới áp dụng mã"
-                            rules={[{ required: true }]}
+                            rules={[
+                                { required: true, message: "Nhập đơn hàng tối thiểu" },
+                                () => ({
+                                    validator(_, value) {
+                                        if (!Number.isInteger(value)) {
+                                            return Promise.reject("Phải là số nguyên");
+                                        }
+
+                                        if (value < 100000 || value > 10000000) {
+                                            return Promise.reject("Từ 100.000 đến 10.000.000");
+                                        }
+
+                                        if (value % 1000 !== 0) {
+                                            return Promise.reject("Phải chia hết cho 1.000");
+                                        }
+
+                                        return Promise.resolve();
+                                    },
+                                }),
+                            ]}
                         >
                             <InputNumber
                                 min={0}
@@ -594,8 +671,22 @@ const PromotionManager = () => {
                     <Form.Item
                         label="Thời gian áp dụng"
                         name="time"
-                        extra="Mã chỉ có hiệu lực trong khoảng thời gian này"
-                        rules={[{ required: true }]}
+                        rules={[
+                            { required: true, message: "Chọn thời gian áp dụng" },
+                            () => ({
+                                validator(_, value) {
+                                    if (!value || value.length !== 2) return Promise.resolve();
+
+                                    const [start, end] = value;
+
+                                    if (start.isAfter(end)) {
+                                        return Promise.reject("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+                                    }
+
+                                    return Promise.resolve();
+                                },
+                            }),
+                        ]}
                     >
                         <DatePicker.RangePicker
                             format="DD/MM/YYYY"
@@ -606,7 +697,15 @@ const PromotionManager = () => {
                     <Form.Item
                         label="Lượt dùng / user"
                         name="usage_per_user"
-                        extra="Giới hạn số lần mỗi user được sử dụng mã"
+                        rules={[
+                            { required: true, message: "Nhập số lượt" },
+                            {
+                                type: "number",
+                                min: 1,
+                                max: 30,
+                                message: "Từ 1 đến 30",
+                            },
+                        ]}
                     >
                         <InputNumber className="w-full" min={1} />
                     </Form.Item>
@@ -651,7 +750,10 @@ const PromotionManager = () => {
                     <Form.Item
                         label="Mô tả"
                         name="description"
-                        rules={[{ required: true }]}
+                        rules={[
+                            { required: true, message: "Nhập mô tả" },
+                            { min: 5, max: 100, message: "Mô tả từ 5–100 ký tự" },
+                        ]}
                     >
                         <Input.TextArea rows={2} />
                     </Form.Item>
@@ -718,9 +820,17 @@ const PromotionManager = () => {
                     <Form.Item
                         label="Lượt dùng / user"
                         name="usage_per_user"
-                        rules={[{ required: true }]}
+                        rules={[
+                            { required: true, message: "Nhập số lượt" },
+                            {
+                                type: "number",
+                                min: 1,
+                                max: 30,
+                                message: "Từ 1 đến 30",
+                            },
+                        ]}
                     >
-                        <InputNumber min={1} max={30} className="w-full" />
+                        <InputNumber className="w-full" min={1} />
                     </Form.Item>
 
                     {/* ================= NOTICE ================= */}

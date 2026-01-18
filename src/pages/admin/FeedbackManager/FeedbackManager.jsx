@@ -96,16 +96,27 @@ const FeedbackManager = () => {
     };
 
     const handleReply = async () => {
-        if (!replyMessage.trim()) {
-            message.error("Vui lòng nhập nội dung phản hồi!");
+        if (!selectedFeedback?.feedback?.feedback_id) {
+            showNotification("Feedback không hợp lệ","error")
+            return;
+        }
+
+        const cleanMessage = replyMessage.trim();
+
+        if (!cleanMessage) {
+            showNotification("Vui lòng nhập nội dung phản hồi!","warning");
+            return;
+        }
+
+        if (cleanMessage.length > 1000) {
+            showNotification("Phản hồi không được vượt quá 1000 ký tự","warning");
             return;
         }
 
         try {
             await feedbackService.replyFeedback(
                 selectedFeedback.feedback.feedback_id,
-                { message: replyMessage },
-
+                { message: cleanMessage }
             );
 
             showNotification("Trả lời góp ý thành công", "success");
