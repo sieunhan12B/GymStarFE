@@ -171,14 +171,14 @@ export const AppRouter = [
                 path: path.dashboard,
                 element: (
                     <ProtectedRoute allowedRoles={["Quản trị viên"]}>
-                        <Dashboard />
+                        <Dashboard /> 
                     </ProtectedRoute>
                 ),
             },
             {
                 path: path.userManager,
                 element: (
-                    <ProtectedRoute allowedRoles={["Quản trị viên"]}>
+                    <ProtectedRoute allowedRoles={["Quản trị viên", "Quản lý đơn hàng","Quản lý sản phẩm","Quản lý phản hồi"]}>
                         <UserManager />
                     </ProtectedRoute>
                 ),

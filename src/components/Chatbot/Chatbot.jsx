@@ -107,7 +107,7 @@ const Chatbot = () => {
             {!open && (
                 <button
                     onClick={handleOpen}
-                    className="fixed bottom-6 right-6 bg-black text-white p-4 rounded-full shadow-2xl hover:scale-105 transition-all z-50"
+                    className="fixed bottom-6 right-6 bg-blue-500 text-white p-4 rounded-full shadow-2xl hover:scale-105 transition-all z-50"
                 >
                     <CommentOutlined style={{ fontSize: 26 }} />
                 </button>
@@ -116,7 +116,7 @@ const Chatbot = () => {
             {open && (
                 <div className="fixed bottom-6 right-6 w-[420px] h-[600px] bg-white rounded-3xl shadow-2xl border-2 border-black flex flex-col overflow-hidden z-50">
                     {/* Header */}
-                    <div className="bg-black text-white p-5 flex justify-between">
+                    <div className="bg-blue-500 text-white p-5 flex justify-between">
                         <div className="flex items-center space-x-3">
                             <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center">
                                 <img
@@ -166,7 +166,7 @@ const Chatbot = () => {
 
                                     <div
                                         className={`px-5 py-3 text-sm whitespace-pre-wrap ${msg.type === "user"
-                                            ? "bg-black text-white rounded-3xl rounded-br-md"
+                                            ? "bg-blue-500 text-white rounded-3xl rounded-br-md"
                                             : "bg-gray-100 border rounded-3xl rounded-bl-md"
                                             }`}
                                     >
@@ -246,7 +246,7 @@ const Chatbot = () => {
                                 <button
                                     key={i}
                                     onClick={() => handleSend(q)}
-                                    className="whitespace-nowrap text-xs px-4 py-2 border rounded-full hover:bg-black hover:text-white"
+                                    className="whitespace-nowrap text-xs px-4 py-2 border rounded-full hover:bg-blue-500 hover:text-white"
                                 >
                                     {q}
                                 </button>
@@ -277,7 +277,7 @@ const Chatbot = () => {
                                 onClick={() => handleSend(input)}
                                 disabled={!input.trim() || loading}
                                 className={`w-11 h-11 rounded-full flex items-center justify-center ${input.trim() && !loading
-                                    ? "bg-black text-white"
+                                    ? "bg-blue-500 text-white"
                                     : "bg-gray-200 text-gray-400"
                                     }`}
                             >

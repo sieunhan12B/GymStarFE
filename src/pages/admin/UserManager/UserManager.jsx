@@ -42,6 +42,7 @@ const UserManager = () => {
 
   const { showNotification } = useContext(NotificationContext);
   const currentUser = useSelector((state) => state.userSlice.user);
+  console.log(currentUser)
   const [form] = Form.useForm();
 
   /* ===== FETCH USERS ===== */
@@ -222,13 +223,14 @@ const UserManager = () => {
             <Tag color={color} className="rounded-full px-3">
               {r.role_name}
             </Tag>
-
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              disabled={r.user_id === currentUser.user_id}
-              onClick={() => openRoleModal(r)}
-            />
+            {currentUser.role_id == 2 &&
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                disabled={r.user_id === currentUser.user_id}
+                onClick={() => openRoleModal(r)}
+              />
+            }
           </div>
         );
       },
@@ -257,25 +259,26 @@ const UserManager = () => {
             <Tag color={color} className="rounded-full">
               {r.status}
             </Tag>
-
-            {r.status !== "chưa xác nhận" && (
-              <Tooltip title="Thay đổi phân quyền">
-                <Button
-                  type="text"
-                  icon={
-                    r.status === "đang hoạt động" ? (
-                      <LockOutlined className="text-red-500" />
-                    ) : (
-                      <UnlockOutlined className="text-green-500" />
-                    )
-                  }
-                  disabled={r.user_id === currentUser.user_id}
-                  onClick={() => {
-                    setSelectedUser(r);
-                    setIsStatusModalOpen(true);
-                  }}
-                />
-              </Tooltip>
+            {currentUser.role_id == 2 && (
+              r.status !== "chưa xác nhận" && (
+                <Tooltip title="Thay đổi phân quyền">
+                  <Button
+                    type="text"
+                    icon={
+                      r.status === "đang hoạt động" ? (
+                        <LockOutlined className="text-red-500" />
+                      ) : (
+                        <UnlockOutlined className="text-green-500" />
+                      )
+                    }
+                    disabled={r.user_id === currentUser.user_id}
+                    onClick={() => {
+                      setSelectedUser(r);
+                      setIsStatusModalOpen(true);
+                    }}
+                  />
+                </Tooltip>
+              )
             )}
           </div>
         );

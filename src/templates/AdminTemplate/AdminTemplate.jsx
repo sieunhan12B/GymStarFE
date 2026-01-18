@@ -32,7 +32,7 @@ const { Header, Content, Footer, Sider } = Layout;
 
 const MENU_ITEMS = [
   { key: path.dashboard, icon: <BarChartOutlined />, label: "Dashboard", roles: ["Quản trị viên"] },
-  { key: path.userManager, icon: <UserOutlined />, label: "Người dùng", roles: ["Quản trị viên"] },
+  { key: path.userManager, icon: <UserOutlined />, label: "Người dùng", roles: ["Quản trị viên", "Quản lý đơn hàng","Quản lý sản phẩm","Quản lý phản hồi"] },
   { key: path.productManager, icon: <ProductOutlined />, label: "Sản phẩm", roles: ["Quản trị viên", "Quản lý sản phẩm"] },
   { key: path.categoryManager, icon: <TagOutlined />, label: "Danh mục", roles: ["Quản trị viên", "Quản lý sản phẩm"] },
   { key: path.promotionManager, icon: <UploadOutlined />, label: "Khuyến mãi", roles: ["Quản trị viên"] },
@@ -100,7 +100,7 @@ const AdminTemplate = () => {
         className="overflow-auto h-screen sticky left-0 top-0 bottom-0 bg-black"
       >
         <div className="h-16 flex items-center justify-center border-b border-white/10">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+          <div className=" w-10 h-10  bg-white rounded-lg flex items-center justify-center">
             <Image src={logo} preview={false} />
           </div>
         </div>
@@ -128,7 +128,7 @@ const AdminTemplate = () => {
               style={{ fontSize: "16px", width: 64, height: 64 }}
             />
 
-            <Link to={path.home}>
+            <Link className="pt-7" to={path.home}>
               <Image src={logo} preview={false} width={100} />
             </Link>
           </div>

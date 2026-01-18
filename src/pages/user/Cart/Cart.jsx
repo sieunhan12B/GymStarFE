@@ -120,6 +120,26 @@ const Cart = () => {
     }, []);
 
     useEffect(() => {
+        if (!selectedVoucher) return;
+
+        // Không còn sản phẩm nào được chọn
+        if (selectedCartItems.length === 0) {
+            setSelectedVoucher(null);
+            setDiscountAmount(0);
+            return;
+        }
+
+        // Không đủ điều kiện min order
+        const minOrderValue = parseFloat(selectedVoucher.min_order_value || 0);
+        if (totalSelectedAmount < minOrderValue) {
+            setSelectedVoucher(null);
+            setDiscountAmount(0);
+            showNotification("Voucher đã bị hủy do không đủ điều kiện áp dụng", "info");
+        }
+    }, [selectedCartItems, totalSelectedAmount]);
+
+
+    useEffect(() => {
         const updateCartApi = async () => {
             for (let item of debouncedCartItems) {
                 if (item.quantity !== item.originalQuantity) {
