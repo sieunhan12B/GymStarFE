@@ -20,7 +20,14 @@ import { normalizeText } from "../../../utils/normalizeText";
 import { formatPrice } from "@/utils/formatPrice";
 import { productService } from "@/services/product.service";
 
-const COMMON_SPECS = ["Chất liệu", "Kiểu dáng", "Xuất xứ"];
+const COMMON_SPECS = [
+    "Chất liệu",
+    "Kiểu dáng",
+    "Độ dày",
+    "Độ co giãn",
+    "Độ thoáng khí",
+    "Bề mặt vải"
+];
 const BASIC_COLORS = [
     "Đỏ",
     "Xanh",
@@ -42,7 +49,7 @@ const ProductAddEditModal = ({
     product, // null = thêm mới, object = sửa
     categories,
     onClose,
-    onSuccess, 
+    onSuccess,
 }) => {
     const [form] = Form.useForm();
     const { showNotification } = useContext(NotificationContext);

@@ -46,6 +46,20 @@ const COLOR_OPTIONS = [
   { name: "Nâu", hex: "#8B4513" },
 
 ];
+const PAGE_DESCRIPTION_MAP = {
+  newest: "Cập nhật những sản phẩm mới nhất, bắt kịp xu hướng thời trang hiện đại.",
+  bestseller: "Những sản phẩm được yêu thích và mua nhiều nhất bởi khách hàng.",
+  sale: "Ưu đãi hấp dẫn với mức giá tốt nhất – số lượng có hạn!",
+  search: "Kết quả tìm kiếm phù hợp với từ khóa bạn đã nhập.",
+  category: "Khám phá bộ sưu tập đa dạng, thiết kế tinh tế phù hợp với mọi phong cách."
+};
+
+const ROOT_CATEGORY_DESCRIPTION_MAP = {
+  nam: "Phong cách mạnh mẽ, hiện đại và nam tính – dễ phối cho mọi hoàn cảnh.",
+  nu: "Thanh lịch, tinh tế và thời thượng – tôn vinh vẻ đẹp của bạn.",
+  "phu-kien": "Những món phụ kiện giúp outfit của bạn trở nên hoàn hảo hơn."
+};
+
 
 const CATEGORY_BANNER_MAP = {
   nam: {
@@ -89,6 +103,8 @@ const removeAccents = (str) => {
 };
 
 
+
+
 const Category = () => {
   // ================= ROUTER / PARAMS =================
   const { "*": splat, keyword } = useParams();
@@ -106,12 +122,29 @@ const Category = () => {
   const isBestSellerPage = location.pathname === "/san-pham-ban-chay";
   const isSalePage = location.pathname === "/san-pham-giam-gia";
 
+  const getRootCategoryDescription = () => {
+    if (!rootSlug) return PAGE_DESCRIPTION_MAP.category;
+    return ROOT_CATEGORY_DESCRIPTION_MAP[rootSlug] || PAGE_DESCRIPTION_MAP.category;
+  };
+
+  const pageDescription = isNewestPage
+    ? PAGE_DESCRIPTION_MAP.newest
+    : isBestSellerPage
+      ? PAGE_DESCRIPTION_MAP.bestseller
+      : isSalePage
+        ? PAGE_DESCRIPTION_MAP.sale
+        : keyword
+          ? PAGE_DESCRIPTION_MAP.search
+          : getRootCategoryDescription();
+
+
+
   // ================= STATE =================
   const [filters, setFilters] = useState({
     categories: [],
     colors: [],
     sizes: [],
-    priceRange: [40000, 1000000],
+    priceRange: [40000, 10000000],
   });
   const debouncedPriceRange = useDebounce(filters.priceRange, 150);
   const [sortBy, setSortBy] = useState("featured");
@@ -189,7 +222,7 @@ const Category = () => {
       categories: [],
       colors: [],
       sizes: [],
-      priceRange: [40000, 1000000],
+      priceRange: [40000, 10000000],
     });
     setSortBy("featured");
   }, [categoryId, keyword]);
@@ -222,7 +255,7 @@ const Category = () => {
     setFilters({ ...filters, priceRange: value });
 
   const clearFilters = () =>
-    setFilters({ categories: [], colors: [], sizes: [], priceRange: [40000, 1000000] });
+    setFilters({ categories: [], colors: [], sizes: [], priceRange: [40000, 10000000] });
 
   // Filter products
   const filteredProducts = products.filter((product) => {
@@ -335,7 +368,6 @@ const Category = () => {
   };
 
 
-
   // ======================= RENDER SECTIONS =======================
 
   // Sidebar filters
@@ -421,11 +453,11 @@ const Category = () => {
 
             {/* Price */}
             <div>
-              <h3 className="font-bold text-sm mb-2 uppercase">Price Range</h3>
+              <h3 className="font-bold text-sm mb-2 uppercase">Khoảng giá</h3>
               <Slider
                 range
                 min={40000}
-                max={1000000}
+                max={10000000}
                 value={filters.priceRange}
                 onChange={handlePriceChange}
                 className="mb-2"
@@ -458,7 +490,7 @@ const Category = () => {
       filters.colors.length > 0 ||
       filters.sizes.length > 0 ||
       debouncedPriceRange[0] !== 40000 ||
-      debouncedPriceRange[1] !== 1000000;
+      debouncedPriceRange[1] !== 10000000;
 
     return (
       <div className="flex-1">
@@ -531,12 +563,12 @@ const Category = () => {
                 ))}
 
                 {/* Price */}
-                {(debouncedPriceRange[0] !== 40000 || debouncedPriceRange[1] !== 1000000) && (
+                {(debouncedPriceRange[0] !== 40000 || debouncedPriceRange[1] !== 10000000) && (
                   <span className="flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
                     {formatPrice(debouncedPriceRange[0])} – {formatPrice(debouncedPriceRange[1])}
                     <button
                       onClick={() =>
-                        setFilters({ ...filters, priceRange: [40000, 1000000] })
+                        setFilters({ ...filters, priceRange: [40000, 10000000] })
                       }
                     >
                       ✕
@@ -607,7 +639,7 @@ const Category = () => {
                 {filters.categories.length > 0 && ` thuộc danh mục "${activeCategories.join(", ")}"`}
                 {filters.colors.length > 0 && ` màu "${filters.colors.join(", ")}"`}
                 {filters.sizes.length > 0 && `, size "${filters.sizes.join(", ")}"`}
-                {filters.priceRange[0] !== 40000 || filters.priceRange[1] !== 1000000
+                {filters.priceRange[0] !== 40000 || filters.priceRange[1] !== 10000000
                   ? ` trong khoảng giá ${formatPrice(filters.priceRange[0])} – ${formatPrice(filters.priceRange[1])}`
                   : ""}
                 .
@@ -641,20 +673,28 @@ const Category = () => {
         </div>
       )}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className={`font-bold mb-10 ${keyword ? "text-3xl" : "text-5xl"}`}>
-          {isNewestPage
-            ? `Sản phẩm mới (${sortedProducts.length})`
-            : isBestSellerPage
-              ? `Sản phẩm hot/bán chạy (${sortedProducts.length})`
-              : isSalePage
-                ? `Sản phẩm giảm giá (${sortedProducts.length})`
-                : !keyword
-                  ? category?.name
-                    ? `${category.name} (${sortedProducts.length})`
-                    : "Không có sản phẩm nào"
-                  : `Kết quả tìm kiếm: "${keyword}" (${sortedProducts.length} sản phẩm)`
-          }
-        </h1>
+        <div className="mb-10 space-y-3">
+          <h1 className={`font-bold ${keyword ? "text-3xl" : "text-5xl"}`}>
+            {isNewestPage
+              ? "Sản phẩm mới"
+              : isBestSellerPage
+                ? "Sản phẩm hot/bán chạy"
+                : isSalePage
+                  ? "Sản phẩm giảm giá"
+                  : !keyword
+                    ? category?.name || "Không có sản phẩm nào"
+                    : `Kết quả tìm kiếm: "${keyword}"`
+            }
+          </h1>
+
+          <p className="mt-2 text-gray-600 text-lg">
+            {sortedProducts.length} sản phẩm
+          </p>
+
+          <p className="mt-1 text-xl  max-w-2xl">
+            {pageDescription}
+          </p>
+        </div>
 
 
 

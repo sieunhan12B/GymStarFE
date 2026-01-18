@@ -131,6 +131,7 @@ const AddressManager = () => {
         <div className="bg-white rounded-lg shadow-sm p-4">
             <Header
                 itemName="địa chỉ"
+                placeholder="theo người dùng, người nhận,sđt, địa chỉ,email"
 
                 searchText={searchText}
                 setSearchText={setSearchText}

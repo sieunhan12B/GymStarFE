@@ -51,20 +51,24 @@ const ReviewManager = () => {
     const filteredData = useMemo(() => {
         if (!searchText) return data;
 
-        const keyword = removeVietnameseTones(
-            normalizeText(searchText)
-        );
+        const keyword = removeVietnameseTones(normalizeText(searchText));
 
         return data.filter((item) => {
             const user = item.reviewer;
+            const product = item.product;
+
+            const userName = removeVietnameseTones(normalizeText(user?.full_name || ""));
+            const userEmail = normalizeText(user?.email || "");
+            const productName = removeVietnameseTones(normalizeText(product?.product_name || ""));
+
             return (
-                removeVietnameseTones(
-                    normalizeText(user?.full_name)
-                ).includes(keyword) ||
-                normalizeText(user?.email).includes(keyword)
+                userName.includes(keyword) ||
+                userEmail.includes(keyword) ||
+                productName.includes(keyword)
             );
         });
     }, [data, searchText]);
+
 
 
     const openReplyModal = (record) => {
@@ -230,6 +234,16 @@ const ReviewManager = () => {
             dataIndex: "images",
             key: "images",
             width: 120,
+            filters: [
+                { text: "Có ảnh", value: "has_image" },
+                { text: "Không có ảnh", value: "no_image" },
+            ],
+            onFilter: (value, record) => {
+                const hasImage = record.images && record.images.length > 0;
+                if (value === "has_image") return hasImage;
+                if (value === "no_image") return !hasImage;
+                return true;
+            },
             render: (images = []) =>
                 images.length ? (
                     <Image.PreviewGroup>
@@ -386,6 +400,7 @@ const ReviewManager = () => {
             reloading={loading}
             showCategoryFilter={false}
             showAddButton={false}
+            placeholder="theo tên sp, tên user, email"
         />
     );
 
@@ -484,6 +499,7 @@ const ReviewManager = () => {
                 dataSource={filteredData}
                 loading={loading}
                 totalText="đánh giá"
+
             />
             {renderDetailModal()}
             {renderReplyModal()}

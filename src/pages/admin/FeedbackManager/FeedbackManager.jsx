@@ -233,8 +233,8 @@ const FeedbackManager = () => {
             title: "Ngày gửi",
             dataIndex: ["feedback", "created_at"],
             render: (date) =>
-                dayjs(date, "HH:mm:ss DD/MM/YYYY").isValid()
-                    ? dayjs(date).format("DD/MM/YYYY")
+                date
+                    ? dayjs(date, "HH:mm:ss DD/MM/YYYY").format("DD/MM/YYYY")
                     : "—",
         },
         {
@@ -277,6 +277,7 @@ const FeedbackManager = () => {
         <div className="bg-white rounded-lg shadow-sm">
             <Header
                 itemName="góp ý"
+                placeholder="theo tên,email người dùng"
 
                 searchText={searchText}
                 setSearchText={setSearchText}

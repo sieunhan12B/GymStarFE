@@ -165,6 +165,7 @@ const RoleManager = () => {
                 onReload={fetchRoles}
                 reloading={loading}
                 showCategoryFilter={false}
+                placeholder="theo tên role"
             />
 
 

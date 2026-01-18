@@ -442,6 +442,7 @@ const ProductManager = () => {
                 onAddItem={openAddModal}
                 onReload={fetchProducts}
                 reloading={loading}
+                 placeholder="theo tên sản phẩm"
             />
 
 

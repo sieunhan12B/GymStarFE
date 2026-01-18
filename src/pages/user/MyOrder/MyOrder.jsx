@@ -10,7 +10,8 @@ import {
     CheckCircleOutlined,
     TruckOutlined,
     CloseCircleOutlined,
-    SyncOutlined
+    SyncOutlined,
+    SearchOutlined
 } from "@ant-design/icons";
 import { Button, Modal, Pagination, Select, Tooltip } from "antd";
 
@@ -20,6 +21,7 @@ import { paymentService } from "@/services/payment.service";
 
 // Utils
 import { formatPrice } from "@/utils/formatPrice";
+import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
 
 // Context
 import { NotificationContext } from "@/App";
@@ -70,6 +72,8 @@ const MyOrder = () => {
     const [cancelLoading, setCancelLoading] = useState(false);
 
     const [isExchangeModalVisible, setIsExchangeModalVisible] = useState(false);
+    const [searchText, setSearchText] = useState("");
+
 
 
     // ================== FETCH ==================
@@ -214,10 +218,10 @@ const MyOrder = () => {
 
     /* ================== FILTER ================== */
     const filteredOrders = orders.filter((order) => {
-        // Filter theo tab status order
+        // ===== Filter theo tab status =====
         if (activeTab !== "all" && order.status !== activeTab) return false;
 
-        // Filter theo trạng thái thanh toán
+        // ===== Filter theo trạng thái thanh toán =====
         if (paymentStatusFilter !== "all") {
             if (!order.payment) return false;
 
@@ -231,14 +235,36 @@ const MyOrder = () => {
                 return false;
         }
 
-        // Filter theo phương thức
+        // ===== Filter theo phương thức =====
         if (paymentMethodFilter !== "all") {
             if (!order.payment) return false;
             if (order.payment.method !== paymentMethodFilter) return false;
         }
 
+        // ===== SEARCH: Mã đơn + Tên sản phẩm =====
+        if (searchText) {
+            const keyword = removeVietnameseTones(searchText.toLowerCase());
+
+            const orderId = order.order_id?.toString() || "";
+
+            const productNames = order.items
+                .map(item =>
+                    removeVietnameseTones(item.name || "").toLowerCase()
+                )
+                .join(" ");
+
+            if (
+                !orderId.includes(keyword) &&
+                !productNames.includes(keyword)
+            ) {
+                return false;
+            }
+        }
+
         return true;
     });
+
+
 
     /* ================== PAGINATION ================== */
     const paginatedOrders = filteredOrders.slice(
@@ -383,9 +409,27 @@ const MyOrder = () => {
                     )}
                 </div>
 
-                {/* Bên phải: Số lượng */}
-                <div className="text-sm text-gray-500">
-                    Tìm thấy <strong>{filteredOrders.length}</strong> đơn
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+
+                        <input
+                            type="text"
+                            placeholder="Tìm theo mã đơn hoặc tên sản phẩm..."
+                            value={searchText}
+                            onChange={(e) => {
+                                setSearchText(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="pl-7 pr-4 py-2 border rounded-lg text-sm w-72 
+                   focus:outline-none focus:ring-1 focus:ring-black"
+                        />
+                    </div>
+
+
+                    <div className="text-sm text-gray-500">
+                        Tìm thấy <strong>{filteredOrders.length}</strong> đơn
+                    </div>
                 </div>
             </div>
 

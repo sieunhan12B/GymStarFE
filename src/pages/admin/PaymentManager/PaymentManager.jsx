@@ -59,6 +59,8 @@ const PaymentManager = () => {
             dataIndex: "payment_id",
             key: "payment_id",
             width: 120,
+            sorter: (a, b) => Number(a.payment_id || 0) - Number(b.payment_id || 0),
+
         },
 
         {
@@ -66,6 +68,7 @@ const PaymentManager = () => {
             dataIndex: "order_id",
             key: "order_id",
             width: 120,
+            sorter: (a, b) => Number(a.order_id || 0) - Number(b.order_id || 0),
         },
 
         {

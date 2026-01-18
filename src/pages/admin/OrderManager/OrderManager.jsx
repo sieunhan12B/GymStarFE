@@ -146,12 +146,21 @@ const OrderManager = () => {
 
     const keyword = removeVietnameseTones(normalizeText(searchText));
 
-    return orders.filter((o) =>
-      removeVietnameseTones(
-        normalizeText(o.user?.full_name)
-      ).includes(keyword)
-    );
+    return orders.filter((o) => {
+      const orderId = normalizeText(String(o.order_id));
+      const name = removeVietnameseTones(normalizeText(o.user?.full_name));
+      const email = removeVietnameseTones(normalizeText(o.user?.email));
+      const phone = normalizeText(o.phone);
+
+      return (
+        orderId.includes(keyword) ||
+        name.includes(keyword) ||
+        email.includes(keyword) ||
+        phone.includes(keyword)
+      );
+    });
   }, [orders, searchText]);
+
 
   /* ===== TABLE ===== */
   const columns = [
@@ -266,6 +275,7 @@ const OrderManager = () => {
         itemName="đơn hàng"
         searchText={searchText}
         setSearchText={setSearchText}
+        placeholder="theo mã đơn, tên, email, SĐT"
 
         showAddButton={false}
         showCategoryFilter={false}

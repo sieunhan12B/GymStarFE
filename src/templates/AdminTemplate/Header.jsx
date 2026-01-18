@@ -9,6 +9,7 @@ import {
 const Header = ({
     title,
     itemName,
+    placeholder,
 
     // Data
     searchText,
@@ -84,11 +85,11 @@ const Header = ({
                 <div className="flex gap-4 flex-wrap mt-3">
                     {showSearch && (
                         <Input
-                            placeholder={`Tìm kiếm ${itemName}...`}
+                            placeholder={`Tìm kiếm ${placeholder || itemName}...`}
                             prefix={<SearchOutlined className="text-gray-400" />}
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
-                            className="w-64"
+                            className="w-1/4"
                             size="large"
                         />
                     )}

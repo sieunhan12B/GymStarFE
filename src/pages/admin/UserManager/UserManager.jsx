@@ -296,6 +296,7 @@ const UserManager = () => {
     <div className="bg-white rounded-lg shadow-sm">
       <Header
         itemName="người dùng"
+        placeholder="theo tên, email"
 
         searchText={searchText}
         setSearchText={setSearchText}

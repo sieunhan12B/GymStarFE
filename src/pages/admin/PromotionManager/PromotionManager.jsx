@@ -44,6 +44,8 @@ const PromotionManager = () => {
 
     const { showNotification } = useContext(NotificationContext);
 
+
+    /* ===== HELPERS ===== */
     const getTimeStatus = (start, end) => {
         const now = dayjs();
 
@@ -62,28 +64,18 @@ const PromotionManager = () => {
         return { text: "Đang diễn ra", color: "green" };
     };
 
-    const handleCreatePromotion = async (values) => {
-        const payload = {
-            ...values,
-            start_date: values.time[0].format("DD/MM/YYYY"),
-            end_date: values.time[1].format("DD/MM/YYYY"),
-        };
+    const getTimeFilterStatus = (start, end) => {
+        const now = dayjs();
+        const startDate = dayjs(start, "DD/MM/YYYY");
+        const endDate = dayjs(end, "DD/MM/YYYY");
 
-        delete payload.time;
-
-        try {
-            setCreateLoading(true);
-            await promotionService.createPromotion(payload);
-            showNotification("Tạo khuyến mãi thành công!", "success");
-            setIsCreateModalOpen(false);
-            form.resetFields();
-            fetchPromotions(); // reload table
-        } catch (error) {
-            showNotification(error.response.data.message || "Tạo khuyến mãi thất bại!", "error");
-        } finally {
-            setCreateLoading(false);
-        }
+        if (now.isBefore(startDate)) return "upcoming";
+        if (now.isAfter(endDate)) return "expired";
+        return "running";
     };
+
+
+
 
     /* ===== FETCH PROMOTIONS ===== */
     const fetchPromotions = async () => {
@@ -98,6 +90,7 @@ const PromotionManager = () => {
         }
     };
 
+    /* ===== EFFECTS ===== */
     useEffect(() => {
         fetchPromotions();
     }, []);
@@ -126,6 +119,30 @@ const PromotionManager = () => {
         );
     }, [promotions, searchText]);
 
+
+    /* ===== HANDLERS ===== */
+    const handleCreatePromotion = async (values) => {
+        const payload = {
+            ...values,
+            start_date: values.time[0].format("DD/MM/YYYY"),
+            end_date: values.time[1].format("DD/MM/YYYY"),
+        };
+
+        delete payload.time;
+
+        try {
+            setCreateLoading(true);
+            await promotionService.createPromotion(payload);
+            showNotification("Tạo khuyến mãi thành công!", "success");
+            setIsCreateModalOpen(false);
+            form.resetFields();
+            fetchPromotions(); // reload table
+        } catch (error) {
+            showNotification(error.response.data.message || "Tạo khuyến mãi thất bại!", "error");
+        } finally {
+            setCreateLoading(false);
+        }
+    };
 
     const handleUpdatePromotion = async (values) => {
         const payload = {
@@ -163,7 +180,7 @@ const PromotionManager = () => {
             await promotionService.changePromotionStatus(
                 selectedPromotion.promotion_id
             );
- 
+
             showNotification(
                 "Cập nhật trạng thái khuyến mãi thành công",
                 "success"
@@ -179,7 +196,6 @@ const PromotionManager = () => {
             );
         }
     };
-
 
     const handleDeletePromotion = async () => {
         if (!selectedPromotion) return;
@@ -215,6 +231,8 @@ const PromotionManager = () => {
             dataIndex: "description",
             render: (v) => v || "—",
         },
+
+        // ================== LOẠI GIẢM ==================
         {
             title: "Loại giảm",
             dataIndex: "discount_type",
@@ -222,40 +240,94 @@ const PromotionManager = () => {
                 { text: "Phần trăm", value: "percent" },
                 { text: "Cố định", value: "fixed" },
             ],
-            onFilter: (value, record) =>
-                normalizeText(record.discount_type) === value,
-
+            onFilter: (value, record) => record.discount_type === value,
             render: (type) => (
                 <Tag color={type === "percent" ? "blue" : "purple"}>
                     {type === "percent" ? "Phần trăm" : "Cố định"}
                 </Tag>
             ),
         },
+
+        // ================== GIÁ TRỊ GIẢM ==================
         {
             title: "Giá trị",
+            filters: [
+                { text: "Nhỏ", value: "low" },
+                { text: "Trung bình", value: "mid" },
+                { text: "Lớn", value: "high" },
+            ],
+            onFilter: (value, record) => {
+                const v = Number(record.value);
+                if (record.discount_type === "percent") {
+                    if (value === "low") return v <= 10;
+                    if (value === "mid") return v > 10 && v <= 30;
+                    if (value === "high") return v > 30;
+                } else {
+                    if (value === "low") return v < 50000;
+                    if (value === "mid") return v >= 50000 && v <= 200000;
+                    if (value === "high") return v > 200000;
+                }
+                return true;
+            },
             render: (_, r) =>
                 r.discount_type === "percent"
                     ? `${r.value}%`
                     : Number(r.value).toLocaleString() + "đ",
         },
+
+        // ================== ĐƠN TỐI THIỂU ==================
         {
             title: "Đơn tối thiểu",
             dataIndex: "min_order_value",
+            filters: [
+                { text: "< 200.000đ", value: "low" },
+                { text: "200.000đ - 1.000.000đ", value: "mid" },
+                { text: "> 1.000.000đ", value: "high" },
+            ],
+            onFilter: (value, record) => {
+                const v = Number(record.min_order_value);
+                if (value === "low") return v < 200000;
+                if (value === "mid") return v >= 200000 && v <= 1000000;
+                if (value === "high") return v > 1000000;
+                return true;
+            },
             render: (v) => Number(v).toLocaleString() + "đ",
         },
+
+        // ================== GIẢM TỐI ĐA ==================
         {
             title: "Giảm tối đa",
             dataIndex: "max_discount",
-            render: (v) =>
-                v ? Number(v).toLocaleString() + "đ" : "—",
+            filters: [
+                { text: "Không giới hạn", value: "none" },
+                { text: "< 50.000đ", value: "low" },
+                { text: "50.000đ - 200.000đ", value: "mid" },
+                { text: "> 200.000đ", value: "high" },
+            ],
+            onFilter: (value, record) => {
+                const v = record.max_discount ? Number(record.max_discount) : null;
+                if (value === "none") return v === null;
+                if (v === null) return false;
+                if (value === "low") return v < 50000;
+                if (value === "mid") return v >= 50000 && v <= 200000;
+                if (value === "high") return v > 200000;
+                return true;
+            },
+            render: (v) => (v ? Number(v).toLocaleString() + "đ" : "—"),
         },
-        {
-            title: "Lượt / user",
-            dataIndex: "usage_per_user",
-            render: (v) => v ?? "—",
-        },
+
+        // ================== THỜI GIAN ==================
         {
             title: "Thời gian",
+            filters: [
+                { text: "Sắp diễn ra", value: "upcoming" },
+                { text: "Đang diễn ra", value: "running" },
+                { text: "Hết hạn", value: "expired" },
+            ],
+            onFilter: (value, record) => {
+                const status = getTimeFilterStatus(record.start_date, record.end_date);
+                return status === value;
+            },
             render: (_, r) => {
                 const timeStatus = getTimeStatus(r.start_date, r.end_date);
                 return (
@@ -269,6 +341,8 @@ const PromotionManager = () => {
                 );
             },
         },
+
+        // ================== TRẠNG THÁI ==================
         {
             title: "Trạng thái",
             dataIndex: "status",
@@ -277,7 +351,6 @@ const PromotionManager = () => {
                 { text: "Ngưng", value: "inactive" },
             ],
             onFilter: (value, record) => record.status === value,
-
             render: (_, r) => {
                 const isActive = r.status === "active";
 
@@ -288,11 +361,7 @@ const PromotionManager = () => {
                         </Tag>
 
                         <Tooltip
-                            title={
-                                isActive
-                                    ? "Ngưng khuyến mãi"
-                                    : "Kích hoạt khuyến mãi"
-                            }
+                            title={isActive ? "Ngưng khuyến mãi" : "Kích hoạt khuyến mãi"}
                         >
                             <Button
                                 size="small"
@@ -303,71 +372,59 @@ const PromotionManager = () => {
                                     setSelectedPromotion(r);
                                     setIsStatusModalOpen(true);
                                 }}
-                            >
-                            </Button>
+                            />
                         </Tooltip>
                     </div>
                 );
             },
         },
 
+        // ================== ACTION ==================
         {
             title: "Thao tác",
             key: "action",
             align: "center",
-            render: (_, r) => {
-                const isUsed = r.used_count > 0; // theo BE
+            render: (_, r) => (
+                <div className="flex gap-2 justify-center">
+                    <Tooltip title="Chỉnh sửa khuyến mãi">
+                        <Button
+                            size="small"
+                            type="text"
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                                setSelectedPromotion(r);
+                                editForm.setFieldsValue({
+                                    code: r.code,
+                                    description: r.description,
+                                    usage_per_user: r.usage_per_user,
+                                    time: [
+                                        dayjs(r.start_date, "DD/MM/YYYY"),
+                                        dayjs(r.end_date, "DD/MM/YYYY"),
+                                    ],
+                                });
+                                setIsEditModalOpen(true);
+                            }}
+                        />
+                    </Tooltip>
 
-                return (
-                    <div className="flex gap-2 justify-center">
-                        {/* ✏️ SỬA */}
-                        <Tooltip title="Chỉnh sửa khuyến mãi">
-                            <Button
-                                size="small"
-                                type="text"
-                                icon={<EditOutlined />}
-                                onClick={() => {
-                                    setSelectedPromotion(r);
-                                    editForm.setFieldsValue({
-                                        code: r.code,
-                                        description: r.description,
-                                        usage_per_user: r.usage_per_user,
-                                        time: [
-                                            dayjs(r.start_date, "DD/MM/YYYY"),
-                                            dayjs(r.end_date, "DD/MM/YYYY"),
-                                        ],
-                                    });
-                                    setIsEditModalOpen(true);
-                                }}
-                            />
-                        </Tooltip>
-
-                        {/* 🗑️ XÓA */}
-                        <Tooltip
-                            title={
-                                isUsed
-                                    ? "Khuyến mãi đã được sử dụng, không thể xóa"
-                                    : "Xóa khuyến mãi"
-                            }
-                        >
-                            <Button
-                                size="small"
-                                type="text"
-                                danger
-                                icon={<DeleteOutlined />}
-                                disabled={isUsed}
-                                onClick={() => {
-                                    setSelectedPromotion(r);
-                                    setIsDeleteModalOpen(true);
-                                }}
-                            />
-                        </Tooltip>
-                    </div>
-                );
-            },
+                    <Tooltip title="Xóa khuyến mãi">
+                        <Button
+                            size="small"
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => {
+                                setSelectedPromotion(r);
+                                setIsDeleteModalOpen(true);
+                            }}
+                        />
+                    </Tooltip>
+                </div>
+            ),
         },
     ];
 
+    /* ===== RENDER FUNCTION ===== */
     const renderChangeStatusModal = () => {
         return (
             <Modal
@@ -685,6 +742,7 @@ const PromotionManager = () => {
                 itemName="khuyến mãi"
                 searchText={searchText}
                 setSearchText={setSearchText}
+                placeholder="theo mã khuyến mãi, mô tả"
 
                 showCategoryFilter={false}
                 showAddButton={true}
