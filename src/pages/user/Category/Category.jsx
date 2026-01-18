@@ -6,6 +6,9 @@ import { Slider, Button, message, Tooltip, Select } from "antd";
 // Router
 import { useLocation, useParams } from "react-router-dom";
 
+import { useSelector } from "react-redux";
+
+
 //Components
 import ProductCard from "@/components/ProductCard/ProductCard";
 
@@ -18,7 +21,7 @@ import { formatPrice } from "@/utils/formatPrice";
 
 //Hook
 import useDebounce from "@/hooks/useDebounce";
-import Banner from "../../../components/Banner/Banner";
+import Banner from "@/components/Banner/Banner";
 
 //Banner
 import menBanner from '@/assets/images/menBanner.avif';
@@ -60,6 +63,11 @@ const ROOT_CATEGORY_DESCRIPTION_MAP = {
   "phu-kien": "Những món phụ kiện giúp outfit của bạn trở nên hoàn hảo hơn."
 };
 
+const ROOT_NAME_MAP = {
+  nam: "Nam",
+  nu: "Nữ",
+  "phu-kien": "Phụ kiện",
+};
 
 const CATEGORY_BANNER_MAP = {
   nam: {
@@ -116,6 +124,7 @@ const Category = () => {
   const rootSlug = rawRootSlug?.replace(/-\d+$/, "");
   const bannerData = CATEGORY_BANNER_MAP[rootSlug];
 
+  const categoryTree = useSelector((state) => state.categorySlice.tree);
 
   // ================= PAGE TYPE FLAGS =================
   const isNewestPage = location.pathname === "/san-pham-moi";
@@ -136,8 +145,6 @@ const Category = () => {
         : keyword
           ? PAGE_DESCRIPTION_MAP.search
           : getRootCategoryDescription();
-
-
 
   // ================= STATE =================
   const [filters, setFilters] = useState({
@@ -302,8 +309,11 @@ const Category = () => {
     return matchesCategory && matchesColor && matchesSize && matchesPrice;
   });
 
+  const currentRoot = categoryTree.find(
+    (r) => r.name === ROOT_NAME_MAP[rootSlug]
+  );
 
-
+  const groupedCategories = currentRoot?.children || [];
 
   // ======================= HELPERS =======================
   const getProductMinPrice = (product) => {
@@ -367,6 +377,40 @@ const Category = () => {
     return badges;
   };
 
+  const parentToChildrenMap = categoryFilter.reduce((acc, item) => {
+    if (!acc[item.parent_name]) acc[item.parent_name] = [];
+    acc[item.parent_name].push(item.category_id);
+    return acc;
+  }, {});
+
+
+  const toggleChildCategory = (id) => {
+    setFilters((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(id)
+        ? prev.categories.filter((c) => c !== id)
+        : [...prev.categories, id],
+    }));
+  };
+
+  const toggleParentCategory = (childrenIds) => {
+    setFilters((prev) => {
+      const isAllSelected = childrenIds.every((id) =>
+        prev.categories.includes(id)
+      );
+
+      return {
+        ...prev,
+        categories: isAllSelected
+          ? prev.categories.filter((id) => !childrenIds.includes(id))
+          : Array.from(new Set([...prev.categories, ...childrenIds])),
+      };
+    });
+  };
+
+
+
+
 
   // ======================= RENDER SECTIONS =======================
 
@@ -381,33 +425,75 @@ const Category = () => {
 
           <div className="flex-1 space-y-4">
             {/* Categories */}
-            {categoryFilter.length > 0 && (
-              <div>
-                <h3 className="font-bold text-sm mb-2 uppercase">Danh mục</h3>
-                <div className="overflow-y-auto max-h-60 border p-2 rounded">
-                  {categoryFilter.map((cat) => (
-                    <label key={cat.category_id} className="flex items-center gap-2 mb-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.categories.includes(cat.category_id)}
-                        onChange={() => {
-                          setFilters((prev) => ({
-                            ...prev,
-                            categories: prev.categories.includes(cat.category_id)
-                              ? prev.categories.filter((c) => c !== cat.category_id)
-                              : [...prev.categories, cat.category_id],
-                          }));
-                        }}
-                      />
-                      <span className="flex justify-between w-full">
-                        <span>{cat.name}</span>
-                        <span className="text-gray-500">({categoryCounts[cat.category_id] || 0})</span>
-                      </span>
-                    </label>
-                  ))}
+            {groupedCategories.map((parent) => {
+              const hasChildren = parent.children && parent.children.length > 0;
+
+              // ===== CẤP CUỐI (không có con) =====
+              if (!hasChildren) {
+                return (
+                  <label
+                    key={parent.category_id}
+                    className="flex items-center gap-3 text-base cursor-pointer select-none py-1 hover:text-black transition-all"
+                  >
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 accent-black cursor-pointer"
+                      checked={filters.categories.includes(parent.category_id)}
+                      onChange={() => toggleChildCategory(parent.category_id)}
+                    />
+                    <span>{parent.name}</span>
+                  </label>
+                );
+              }
+
+              // ===== CÓ CON =====
+              const childrenIds = parent.children.map((c) => c.category_id);
+              const isAllChecked = childrenIds.every((id) =>
+                filters.categories.includes(id)
+              );
+              const isSomeChecked =
+                childrenIds.some((id) => filters.categories.includes(id)) &&
+                !isAllChecked;
+
+              return (
+                <div
+                  key={parent.category_id}
+                  className="mb-4 rounded-lg p-3 transition-all"
+                >
+                  {/* CHA */}
+                  <label className="flex items-center gap-3 font-semibold text-base cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 accent-black cursor-pointer"
+                      checked={isAllChecked}
+                      ref={(el) => {
+                        if (el) el.indeterminate = isSomeChecked;
+                      }}
+                      onChange={() => toggleParentCategory(childrenIds)}
+                    />
+                    <span>{parent.name}</span>
+                  </label>
+
+                  {/* CON */}
+                  <div className="ml-6 mt-3 space-y-2">
+                    {parent.children.map((child) => (
+                      <label
+                        key={child.category_id}
+                        className="flex items-center gap-3 text-base cursor-pointer select-none hover:text-black transition-all"
+                      >
+                        <input
+                          type="checkbox"
+                          className="w-5 h-5 accent-black cursor-pointer"
+                          checked={filters.categories.includes(child.category_id)}
+                          onChange={() => toggleChildCategory(child.category_id)}
+                        />
+                        <span>{child.name}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })}
 
             {/* Colors */}
             <div>
@@ -695,12 +781,6 @@ const Category = () => {
             {pageDescription}
           </p>
         </div>
-
-
-
-
-
-
 
         <div className="flex  gap-8">
           {renderContentLeft()}

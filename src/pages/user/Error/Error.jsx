@@ -23,9 +23,17 @@ const Error = () => {
         {/* <div className="text-3xl md:text-4xl font-bold tracking-wider mb-10 uppercase">
           GYMSHARK
         </div> */}
-        <div className=" absolute left-0 right-0 -top-72">
+        {/* <div className=" absolute left-0 right-0 -top-72">
           <Link to={"/"}>
             <Image preview={false} width={400} src={logo} alt="Gymshark Logo" />
+          </Link>
+        </div> */}
+        <div className="">
+          <Link to={"/"}>
+            {/* <Image preview={false} width={400} src={logo} alt="Gymshark Logo" /> */}
+            <div className="text-3xl md:text-4xl font-bold tracking-wider mb-10 uppercase">
+              GYMSHARK
+            </div>
           </Link>
         </div>
 

@@ -874,17 +874,40 @@ const ProductAddEditModal = ({
                                                                     <Form.Item
                                                                         label="Số lượng"
                                                                         name={[name, "stocks", size]}
-                                                                        rules={[{ required: true, message: "Nhập tồn kho" }]}
+                                                                        rules={[
+                                                                            { required: true, message: "Nhập tồn kho" },
+                                                                            {
+                                                                                type: "number",
+                                                                                min: 1,
+                                                                                max: 10000,
+                                                                                message: "Tồn kho phải từ 1 đến 10.000",
+                                                                            },
+                                                                        ]}
                                                                         className="flex-1 mb-0"
                                                                     >
-                                                                        <InputNumber min={0} className="w-full" />
+                                                                        <InputNumber
+                                                                            min={1}
+                                                                            max={10000}
+                                                                            precision={0}   // không cho số thập phân
+                                                                            className="w-full"
+                                                                        />
                                                                     </Form.Item>
+
                                                                     <Form.Item
                                                                         label="Giá"
                                                                         name={[name, "prices", size]}
-                                                                        rules={[{ required: true, message: "Nhập giá" }]}
+                                                                        rules={[
+                                                                            { required: true, message: "Nhập giá" },
+                                                                            {
+                                                                                type: "number",
+                                                                                min: 40000,
+                                                                                max: 10000000,
+                                                                                message: "Giá phải từ 40.000đ đến 10.000.000đ",
+                                                                            },
+                                                                        ]}
                                                                         className="flex-1 mb-0"
                                                                     >
+
                                                                         <InputNumber
                                                                             min={0}
                                                                             formatter={(value) => (value ? formatPrice(value) : "")}
