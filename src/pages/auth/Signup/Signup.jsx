@@ -24,13 +24,11 @@ const Signup = () => {
         setLoading(true);
         try {
             const payload = {
-                full_name: values.name,
-                email: values.email,
-                password: values.password,
+                full_name: values.name.trim(),
+                email: values.email.trim(),
+                password: values.password.trim(),
             };
-
             const response = await authService.signUp(payload);
-
             showNotification(response.data.message, "success");
             navigate(path.logIn);
         } catch (error) {
@@ -69,11 +67,19 @@ const Signup = () => {
                     {/* Full Name */}
                     <Form.Item
                         name="name"
-                        rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập!" }]}
+                        rules={[
+                            { required: true, message: "Vui lòng nhập họ tên!" },
+                            { min: 3, message: "Họ tên phải có ít nhất 3 ký tự!" },
+                            { max: 100, message: "Họ tên không được quá 100 ký tự!" },
+                            {
+                                pattern: /^[\p{L} ]+$/u,
+                                message: "Họ tên chỉ được chứa chữ cái và khoảng trắng!",
+                            },
+                        ]}
                     >
                         <Input
                             size="large"
-                            placeholder="Tên đăng nhập*"
+                            placeholder="Họ và tên*"
                             className="rounded-md"
                             prefix={<UserOutlined />}
                         />
@@ -98,8 +104,23 @@ const Signup = () => {
                     {/* Password */}
                     <Form.Item
                         name="password"
-                        rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+                        rules={[
+                            { required: true, message: "Vui lòng nhập mật khẩu!" },
+                            { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự!" },
+                        ]}
                     >
+                    {/* <Form.Item
+                        name="password"
+                        rules={[
+                            { required: true, message: "Vui lòng nhập mật khẩu!" },
+                            {
+                                pattern:
+                                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#^_+\-])[A-Za-z\d@$!%*?&.#^_+\-]{8,}$/,
+                                message:
+                                    "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt!",
+                            },
+                        ]}
+                    > */}
                         <Input.Password
                             size="large"
                             placeholder="Mật khẩu*"
@@ -117,7 +138,7 @@ const Signup = () => {
                         dependencies={["password"]}
                         hasFeedback
                         rules={[
-                            { required: true, message: "Xác nhận mật khẩu!" },
+                            { required: true, message: "Vui lòng xác nhận mật khẩu!" },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
                                     if (!value || getFieldValue("password") === value) {

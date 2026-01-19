@@ -62,6 +62,11 @@ const buildCategoryUrl = (category, parents = []) => {
     : `/danh-muc/${self}`;
 };
 
+const getAvatarLetter = (fullName) => {
+  if (!fullName) return "U";
+  const words = fullName.trim().split(" ");
+  return words[words.length - 1].charAt(0).toUpperCase();
+};
 
 
 /* ================= COMPONENT ================= */
@@ -108,7 +113,7 @@ const Header = () => {
     try {
       const res = await danhMucService.getAllCategory();
       setCategories(res.data.data || []);
-      dispatch(setCategoryTree(res.data.data));    
+      dispatch(setCategoryTree(res.data.data));
 
     } catch (error) {
       console.error("Lỗi lấy danh mục:", error);
@@ -163,7 +168,6 @@ const Header = () => {
       <>
         <div
           className="flex items-center h-full w-1/3"
-
         >
           <nav className="space-x-6 h-full flex items-center">
 
@@ -187,8 +191,6 @@ const Header = () => {
               </span>
               <span className="absolute left-0 -bottom-0.5 w-full h-[2px] bg-orange-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
             </Link>
-
-
 
             <div
               onMouseLeave={(e) => {
@@ -223,8 +225,6 @@ const Header = () => {
             </Link>
 
           </nav>
-
-
         </div>
       </>
     )
@@ -267,13 +267,7 @@ const Header = () => {
                 </div>
               </div>
             </div>
-
-
-
-
-
           </div>
-
 
           {/* USER DROPDOWN */}
           <div className='relative'>
@@ -281,7 +275,15 @@ const Header = () => {
               onClick={() => setIsUserOpen(!isUserOpen)}
               className="text-gray-600 hover:text-gray-900"
             >
-              <UserOutlined className="text-xl" />
+              {user ? (
+                <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold">
+                  {getAvatarLetter(user.full_name)}
+                </div>
+
+              ) : (
+                <UserOutlined className="text-xl" />
+              )}
+
             </button>
 
             {isUserOpen && (

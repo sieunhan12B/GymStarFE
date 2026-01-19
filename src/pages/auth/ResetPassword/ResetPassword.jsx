@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Input, Button, Form, Typography, Image } from "antd";
-import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
+import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined } from "@ant-design/icons";
 import logo from "@/assets/images/logo.svg";
 import { Link, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
@@ -71,15 +71,31 @@ const ResetPassword = () => {
         >
           <Form.Item
             name="password"
-            rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới!" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập mật khẩu!" },
+              { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự!" },
+            ]}
           >
+            {/* <Form.Item
+            name="password"
+            rules={[
+              { required: true, message: "Vui lòng nhập mật khẩu!" },
+              {
+                pattern:
+                  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#^_+\-])[A-Za-z\d@$!%*?&.#^_+\-]{8,}$/,
+                message:
+                  "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt!",
+              },
+            ]}
+          > */}
             <Input.Password
               size="large"
-              placeholder="Mật khẩu mới*"
+              placeholder="Mật khẩu*"
               className="rounded-md"
               iconRender={(visible) =>
                 visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
               }
+              prefix={<LockOutlined />}
             />
           </Form.Item>
 
@@ -106,6 +122,7 @@ const ResetPassword = () => {
               iconRender={(visible) =>
                 visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
               }
+              prefix={<LockOutlined />}
             />
           </Form.Item>
 

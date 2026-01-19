@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Input, Button, Form, Typography, Image } from "antd";
-import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
+import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 
 import logo from "@/assets/images/logo.svg";
@@ -99,7 +99,12 @@ const Login = () => {
               { type: "email", message: "Email không hợp lệ!" },
             ]}
           >
-            <Input size="large" placeholder="Email *" className="rounded-md" />
+            <Input
+              size="large"
+              placeholder="Email *"
+              className="rounded-md"
+              prefix={<MailOutlined />}
+            />
           </Form.Item>
 
           <Form.Item
@@ -113,6 +118,7 @@ const Login = () => {
               iconRender={(visible) =>
                 visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
               }
+              prefix={<LockOutlined />}
             />
           </Form.Item>
 

@@ -3,6 +3,13 @@ import React, { useState, useEffect, useContext } from "react";
 
 // 2. UI & tool
 import { Modal, Form, Input, DatePicker, Select, Button, Spin } from "antd";
+import {
+  CalendarOutlined,
+  EyeInvisibleOutlined,
+  EyeTwoTone,
+  LockOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 
 // 3. Redux
@@ -186,20 +193,62 @@ const Account = () => {
           <Form.Item
             label="Họ và tên"
             name="full_name"
-            rules={[{ required: true, message: "Vui lòng nhập họ tên" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập họ tên!" },
+              { min: 3, message: "Họ tên phải có ít nhất 3 ký tự!" },
+              { max: 100, message: "Họ tên không được quá 100 ký tự!" },
+              {
+                pattern: /^[\p{L} ]+$/u,
+                message: "Họ tên chỉ được chứa chữ cái và khoảng trắng!",
+              },
+            ]}
           >
-            <Input />
+            <Input
+              size="large"
+              placeholder="Họ và tên*"
+              className="rounded-md"
+              prefix={<UserOutlined />}
+            />
           </Form.Item>
 
           <Form.Item label="Giới tính" name="gender">
-            <Select placeholder="Chọn giới tính">
+            <Select
+              prefix={<UserOutlined />}
+              placeholder="Chọn giới tính">
               <Select.Option value="nam">Nam</Select.Option>
               <Select.Option value="nữ">Nữ</Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item label="Ngày sinh" name="birth_date">
-            <DatePicker format="DD/MM/YYYY" className="w-full" />
+          <Form.Item
+            label="Ngày sinh"
+            name="birth_date"
+            rules={[
+              {
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve(); // cho phép bỏ trống
+
+                  const today = dayjs();
+                  const age = today.diff(value, "year");
+
+                  if (age < 5) {
+                    return Promise.reject(
+                      new Error("Tuổi phải từ 5 trở lên!")
+                    );
+                  }
+
+                  if (age > 120) {
+                    return Promise.reject(
+                      new Error("Tuổi không được lớn hơn 120!")
+                    );
+                  }
+
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
+            <DatePicker prefix={<CalendarOutlined />} format="DD/MM/YYYY" className="w-full" />
           </Form.Item>
         </Form>
       </Modal>
@@ -251,27 +300,73 @@ const Account = () => {
             name="old_password"
             rules={[{ required: true, message: "Vui lòng nhập mật khẩu cũ" }]}
           >
-            <Input.Password />
+            <Input.Password
+              size="large"
+              placeholder="Mật khẩu cũ*"
+              className="rounded-md"
+              iconRender={(visible) =>
+                visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+              }
+              prefix={<LockOutlined />}
+            />
           </Form.Item>
 
+          {/* <Form.Item
+                        name="password"
+                        rules={[
+                            { required: true, message: "Vui lòng nhập mật khẩu!" },
+                            {
+                                pattern:
+                                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#^_+\-])[A-Za-z\d@$!%*?&.#^_+\-]{8,}$/,
+                                message:
+                                    "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt!",
+                            },
+                        ]}
+                    > */}
           <Form.Item
             label="Mật khẩu mới"
             name="new_password"
-            rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập mật khẩu mới!" },
+              { min: 8, message: "Mật khẩu mới phải có ít nhất 8 ký tự!" },
+            ]}
           >
-            <Input.Password />
+            <Input.Password
+              size="large"
+              placeholder="Mật khẩu mới*"
+              className="rounded-md"
+              iconRender={(visible) =>
+                visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+              }
+              prefix={<LockOutlined />}
+            />
           </Form.Item>
 
           <Form.Item
             label="Xác nhận mật khẩu"
+            dependencies={["new_password"]}
             name="confirm_password"
-            rules={[{ required: true, message: "Vui lòng xác nhận mật khẩu" }]}
+            hasFeedback
+            rules={[
+              { required: true, message: "Vui lòng xác nhận mật khẩu!" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("new_password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error("Mật khẩu xác nhận không khớp!"));
+                },
+              }),
+            ]}
           >
-            <Input.Password />
+            <Input.Password
+              placeholder="Xác nhận mật khẩu"
+              prefix={<LockOutlined />}
+            />
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </div >
   );
 };
 

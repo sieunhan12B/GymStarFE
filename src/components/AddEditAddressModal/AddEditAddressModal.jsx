@@ -1,5 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 import { Modal, Form, Input, Select, Spin, message, AutoComplete } from "antd";
+import {
+    ApartmentOutlined,
+    EnvironmentOutlined,
+    EyeInvisibleOutlined,
+    EyeTwoTone,
+    GlobalOutlined,
+    LockOutlined,
+    MailOutlined,
+    PhoneOutlined,
+    UserOutlined,
+} from "@ant-design/icons";
 import { removeVietnameseTones } from "@/utils/removeVietnameseTones";
 import useDebounce from "@/hooks/useDebounce";
 
@@ -233,16 +244,44 @@ const AddEditAddressModal = ({ open, onCancel, onSubmit, addressData, mode }) =>
                 </div>
             ) : (
                 <Form layout="vertical" form={form} onFinish={handleFinish}>
-                    <Form.Item label="Tên người nhận" name="receiver_name" rules={[{ required: true }]}>
-                        <Input />
+                    <Form.Item
+                        label="Tên người nhận"
+                        name="receiver_name"
+                        rules={[
+                            { required: true, message: "Vui lòng nhập tên người nhận" },
+                            { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
+                            { max: 100, message: "Tên không được quá 100 ký tự" },
+                            {
+                                pattern: /^[A-Za-zÀ-ỹ\s]+$/,
+                                message: "Tên chỉ được chứa chữ cái và khoảng trắng",
+                            },
+                        ]}
+                    >
+                        <Input prefix={<UserOutlined />} placeholder="Nguyễn Văn A" />
                     </Form.Item>
 
-                    <Form.Item label="Số điện thoại" name="phone" rules={[{ required: true }]}>
-                        <Input />
+                    <Form.Item
+                        label="Số điện thoại"
+                        name="phone"
+                        rules={[
+                            { required: true, message: "Vui lòng nhập số điện thoại" },
+                            {
+                                pattern: /^0\d{9}$/,
+                                message: "Số điện thoại phải bắt đầu bằng 0 và gồm 10 chữ số",
+                            },
+                        ]}
+                    >
+                        <Input prefix={<PhoneOutlined />} placeholder="0xxxxxxxxx" />
                     </Form.Item>
 
-                    <Form.Item label="Tỉnh / Thành phố" name="city">
+                    <Form.Item
+                        label="Tỉnh / Thành phố"
+                        name="city"
+                        rules={[{ required: true, message: "Vui lòng chọn tỉnh / thành phố" }]}
+                    >
                         <Select
+                            prefix={<EnvironmentOutlined />}
+                            placeholder="VD: Thành phố Hồ Chí Minh"
                             showSearch
                             allowClear
                             options={data.map((c) => ({ label: c.name, value: c.name }))}
@@ -255,11 +294,17 @@ const AddEditAddressModal = ({ open, onCancel, onSubmit, addressData, mode }) =>
                         />
                     </Form.Item>
 
-                    <Form.Item label="Phường / Xã" name="ward">
+                    <Form.Item
+                        label="Phường / Xã"
+                        name="ward"
+                        rules={[{ required: true, message: "Vui lòng chọn phường / xã" }]}
+                    >
                         <Select
+                            prefix={<GlobalOutlined />}
                             showSearch
                             disabled={!city}
                             allowClear
+                            placeholder="VD: Phường Phú Nhuận"
                             options={wards.map((w) => ({ label: w.name, value: w.name }))}
                             filterOption={(input, option) =>
                                 removeVietnameseTones(option.label.toLowerCase()).includes(
@@ -269,8 +314,37 @@ const AddEditAddressModal = ({ open, onCancel, onSubmit, addressData, mode }) =>
                         />
                     </Form.Item>
 
-                    <Form.Item label="Địa chỉ chi tiết" name="houseNumber" rules={[{ required: true }]}>
+                    <Form.Item
+                        label="Địa chỉ chi tiết"
+                        name="houseNumber"
+                        rules={[
+                            { required: true, message: "Vui lòng nhập địa chỉ chi tiết" },
+                            { min: 10, message: "Địa chỉ phải có ít nhất 10 ký tự" },
+                            { max: 255, message: "Địa chỉ không được vượt quá 255 ký tự" },
+                            {
+                                pattern: /^[A-Za-zÀ-ỹ0-9\s\/,]+$/,
+                                message: "Chỉ được chứa chữ, số, dấu '/' và ','",
+                            },
+                            {
+                                validator: (_, value) => {
+                                    if (!value) return Promise.resolve();
+
+                                    const hasLetter = /[A-Za-zÀ-ỹ]/.test(value);
+                                    const hasNumber = /[0-9]/.test(value);
+
+                                    if (!hasLetter || !hasNumber) {
+                                        return Promise.reject(
+                                            new Error("Địa chỉ phải chứa cả chữ và số")
+                                        );
+                                    }
+
+                                    return Promise.resolve();
+                                },
+                            },
+                        ]}
+                    >
                         <AutoComplete
+                            prefix={<ApartmentOutlined />}
                             onSearch={(val) => setSearchText(val)}
                             onSelect={handleSelect}
                             notFoundContent={fetchingSuggestions ? <Spin size="small" /> : null}

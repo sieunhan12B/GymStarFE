@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Input, Button, Form, Typography, Image } from "antd";
+import { MailOutlined } from "@ant-design/icons";
 import logo from "@/assets/images/logo.svg";
 import { Link, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
@@ -74,6 +75,7 @@ const ForgotPassword = () => {
               size="large"
               placeholder="Email *"
               className="rounded-md"
+              prefix={<MailOutlined />}
             />
           </Form.Item>
 
