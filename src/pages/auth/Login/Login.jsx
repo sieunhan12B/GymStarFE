@@ -20,8 +20,6 @@ const Login = () => {
   const dispatch = useDispatch();
   const { showNotification } = useContext(NotificationContext);
 
-  const AdminPath = "/admin";
-
   const onFinish = async (values) => {
     setLoading(true);
     try {

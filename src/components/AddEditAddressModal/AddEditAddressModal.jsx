@@ -3,11 +3,7 @@ import { Modal, Form, Input, Select, Spin, message, AutoComplete } from "antd";
 import {
     ApartmentOutlined,
     EnvironmentOutlined,
-    EyeInvisibleOutlined,
-    EyeTwoTone,
     GlobalOutlined,
-    LockOutlined,
-    MailOutlined,
     PhoneOutlined,
     UserOutlined,
 } from "@ant-design/icons";

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Spin, Empty, Tag, message } from "antd";
+import { Spin, Empty, Tag, message, Select } from "antd";
 import { GiftOutlined, CalendarOutlined, ShoppingOutlined, CopyOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { promotionService } from "@/services/promotion.service";
@@ -10,6 +10,7 @@ const Voucher = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all"); // all, available, used
     const [messageApi, contextHolder] = message.useMessage();
+    const [sort, setSort] = useState("default");
 
     // Fetch vouchers
     const fetchVouchers = async () => {
@@ -28,6 +29,11 @@ const Voucher = () => {
     useEffect(() => {
         fetchVouchers();
     }, []);
+
+    // Devired data
+    const isPercent = (voucher) => voucher.discount_type === "percent";
+    const isMoney = (voucher) => voucher.discount_type !== "percent";
+
 
     // Copy voucher code
     const handleCopyCode = (code) => {
@@ -53,12 +59,52 @@ const Voucher = () => {
         return voucher.remaining_usage > 0 && !isExpired(voucher.end_date);
     };
 
+    const getSortValue = (voucher) => {
+        if (voucher.discount_type === "percent") {
+            return voucher.value; // % giữ nguyên
+        }
+        return voucher.value; // tiền thì cũng lấy value
+    };
+
     // Filter vouchers
-    const filteredVouchers = vouchers.filter((voucher) => {
-        if (filter === "available") return isAvailable(voucher);
-        if (filter === "unavailable") return !isAvailable(voucher);
-        return true;
-    });
+    const filteredVouchers = vouchers
+        .filter((voucher) => {
+            if (filter === "available") return isAvailable(voucher);
+            if (filter === "unavailable") return !isAvailable(voucher);
+            return true;
+        })
+        .sort((a, b) => {
+            switch (sort) {
+                case "percent_desc":
+                    if (isPercent(a) && isPercent(b)) return b.value - a.value;
+                    if (isPercent(a)) return -1;
+                    if (isPercent(b)) return 1;
+                    return 0;
+
+                case "percent_asc":
+                    if (isPercent(a) && isPercent(b)) return a.value - b.value;
+                    if (isPercent(a)) return -1;
+                    if (isPercent(b)) return 1;
+                    return 0;
+
+                case "money_desc":
+                    if (isMoney(a) && isMoney(b)) return b.value - a.value;
+                    if (isMoney(a)) return -1;
+                    if (isMoney(b)) return 1;
+                    return 0;
+
+                case "money_asc":
+                    if (isMoney(a) && isMoney(b)) return a.value - b.value;
+                    if (isMoney(a)) return -1;
+                    if (isMoney(b)) return 1;
+                    return 0;
+
+                default:
+                    return 0;
+            }
+        });
+
+
 
     if (loading) {
         return (
@@ -113,6 +159,23 @@ const Voucher = () => {
                         Không còn khả dụng ({vouchers.filter(v => !isAvailable(v)).length
                         })
                     </button>
+                </div>
+
+                <div className="flex gap-3 px-6 py-4 items-center">
+                    <span className="text-sm text-gray-500">Sắp xếp:</span>
+                    <Select
+                        value={sort}
+                        onChange={(value) => setSort(value)}
+                        style={{ width: 220 }}
+                        size="middle"
+                        options={[
+                            { value: "default", label: "Mặc định" },
+                            { value: "percent_desc", label: "% Cao → Thấp" },
+                            { value: "percent_asc", label: "% Thấp → Cao" },
+                            { value: "money_desc", label: "Tiền Cao → Thấp" },
+                            { value: "money_asc", label: "Tiền Thấp → Cao" },
+                        ]}
+                    />
                 </div>
 
                 {/* Voucher list */}

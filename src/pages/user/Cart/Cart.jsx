@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 
 // 2. Ant Design / Icons
-import { Checkbox, Button, Tooltip, Modal, Tag, Radio, Input } from 'antd';
+import { Checkbox, Button, Tooltip, Modal, Tag, Radio, Input, Select } from 'antd';
 import { DeleteOutlined, GiftOutlined, TagOutlined } from '@ant-design/icons';
 
 // 3. custom hook
@@ -41,6 +41,7 @@ const Cart = () => {
     const [discountAmount, setDiscountAmount] = useState(0);
     const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
     const [voucherList, setVoucherList] = useState([]);
+    const [voucherSort, setVoucherSort] = useState("default");
 
     // useDebounce custom hook
     const debouncedCartItems = useDebounce(cartItems, 400);
@@ -79,7 +80,21 @@ const Cart = () => {
         item => item.product_variant?.product?.status === "đang bán"
     );
 
+    const getVoucherDiscountValue = (voucher) => {
+        if (!voucher) return 0;
 
+        if (voucher.discount_type === "fixed") {
+            return parseFloat(voucher.value || 0);
+        }
+
+        // percent
+        const percentValue = totalSelectedAmount * parseFloat(voucher.value || 0) / 100;
+        const maxDiscount = voucher.max_discount
+            ? parseFloat(voucher.max_discount)
+            : Infinity;
+
+        return Math.min(percentValue, maxDiscount);
+    };
 
 
     // ======================= FETCH FUNCTIONS =======================
@@ -392,12 +407,11 @@ const Cart = () => {
                         return (
                             <div
                                 key={item.cart_detail_id}
-                                className="grid grid-cols-12 gap-4 items-center border-b pb-4"
+                                className="grid lg:grid-cols-12 grid-cols-11 gap-4 items-center border-b pb-4"
                             >
 
-
                                 {/* 1. Thông tin sản phẩm: ảnh + tên */}
-                                <div className="col-span-3 flex  items-center gap-4">
+                                <div className="lg:col-span-3 col-span-4 flex  items-center gap-4">
                                     <Checkbox
                                         disabled={isInactive}
                                         checked={selectedCartItems.includes(item.cart_detail_id)}
@@ -435,15 +449,13 @@ const Cart = () => {
 
                                 </div>
 
-                                <div className="col-span-2 flex flex-col text-sm text-gray-500">
+                                <div className="col-span-2 hidden sm:flex flex-col text-sm text-gray-500">
                                     <span>Phân loại hàng: </span>
                                     {item.product_variant?.color || "-"} / {item.product_variant?.size || "-"}
                                 </div>
 
-
-
                                 {/* 2. Giá 1 sản phẩm (gốc + sau giảm) */}
-                                <div className="col-span-2 flex flex-col items-center">
+                                <div className="hidden lg:flex md:col-span-2 flex-col items-center">
                                     <span className={item.product_variant?.product?.discount > 0 ? "line-through text-sm text-gray-400" : "text-sm"}>
                                         {formatPrice(item.product_variant?.price)}
                                     </span>
@@ -487,9 +499,6 @@ const Cart = () => {
                                             className="w-16 text-center"
                                         />
 
-
-
-
                                         <button
                                             disabled={isInactive}
                                             className={`px-3 py-1 ${isInactive ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
@@ -511,7 +520,7 @@ const Cart = () => {
                                 </div>
 
                                 {/* 5. Nút xóa */}
-                                <div className="col-span-1 flex justify-center">
+                                <div className="flex col-span-1 justify-center">
                                     <button className="text-red-600 hover:text-red-800" onClick={() => handleDeleteItem(item.cart_detail_id)}>
                                         <DeleteOutlined />  Xóa
                                     </button>
@@ -526,6 +535,13 @@ const Cart = () => {
     }
 
     const renderVoucherSection = () => {
+        const bestVoucher = voucherList.reduce((best, current) => {
+            const bestValue = getVoucherDiscountValue(best);
+            const currentValue = getVoucherDiscountValue(current);
+
+            return currentValue > bestValue ? current : best;
+        }, voucherList[0]);
+
         return (
             <Modal
                 title={
@@ -607,164 +623,204 @@ const Cart = () => {
                             </div>
                         </div>
 
+                        {/* Sort */}
+                        <div className="flex justify-end mb-3">
+                            <Select
+                                value={voucherSort}
+                                onChange={(value) => setVoucherSort(value)}
+                                style={{ width: 240 }}
+                                options={[
+                                    { value: "default", label: "Mặc định" },
+                                    { value: "value_desc", label: "Giảm nhiều nhất → ít nhất" },
+                                    { value: "value_asc", label: "Giảm ít nhất → nhiều nhất" },
+                                ]}
+                            />
+                        </div>
+
                         {/* Danh sách voucher */}
                         <div className="max-h-[450px] overflow-y-auto pr-2 space-y-3">
-                            {voucherList.map((voucher) => {
-                                const minOrderValue = parseFloat(voucher.min_order_value || 0);
-                                const startDate = new Date(voucher.start_date.split('/').reverse().join('-'));
-                                const endDate = new Date(voucher.end_date.split('/').reverse().join('-'));
-                                const now = new Date();
+                            {[...voucherList]
+                                .sort((a, b) => {
+                                    if (voucherSort === "value_desc") {
+                                        return getVoucherDiscountValue(b) - getVoucherDiscountValue(a);
+                                    }
+                                    if (voucherSort === "value_asc") {
+                                        return getVoucherDiscountValue(a) - getVoucherDiscountValue(b);
+                                    }
+                                    return 0;
+                                })
+                                .map((voucher) => {
+                                    const minOrderValue = parseFloat(voucher.min_order_value || 0);
+                                    const startDate = new Date(voucher.start_date.split('/').reverse().join('-'));
+                                    const endDate = new Date(voucher.end_date.split('/').reverse().join('-'));
+                                    const now = new Date();
 
-                                const isExpired = now < startDate || now > endDate;
-                                const isNotEnoughOrder = totalSelectedAmount < minOrderValue;
-                                const isOutOfUsage = voucher.remaining_usage !== null && voucher.remaining_usage <= 0;
-                                const isDisabled = isNotEnoughOrder || isExpired || isOutOfUsage;
+                                    const isExpired = now < startDate || now > endDate;
+                                    const isNotEnoughOrder = totalSelectedAmount < minOrderValue;
+                                    const isOutOfUsage = voucher.remaining_usage !== null && voucher.remaining_usage <= 0;
+                                    const isDisabled = isNotEnoughOrder || isExpired || isOutOfUsage;
 
-                                const isChecked = selectedVoucher?.promotion_id === voucher.promotion_id;
+                                    const isChecked = selectedVoucher?.promotion_id === voucher.promotion_id;
+                                    const isBest = bestVoucher?.promotion_id === voucher.promotion_id;
 
-                                return (
-                                    <div
-                                        key={voucher.promotion_id}
-                                        className={`
+                                    return (
+                                        <div
+                                            key={voucher.promotion_id}
+                                            className={`
                                         relative border-2 rounded-xl overflow-hidden transition-all
                                         ${isDisabled
-                                                ? 'opacity-50 bg-gray-50 border-gray-200'
-                                                : isChecked
-                                                    ? 'border-orange-500 bg-orange-50 shadow-md'
-                                                    : 'border-gray-200 hover:border-orange-300 hover:shadow-sm cursor-pointer bg-white'
-                                            }
+                                                    ? 'opacity-50 bg-gray-50 border-gray-200'
+                                                    : isChecked
+                                                        ? 'border-orange-500 bg-orange-50 shadow-md'
+                                                        : 'border-gray-200 hover:border-orange-300 hover:shadow-sm cursor-pointer bg-white'
+                                                }
                                     `}
-                                        onClick={() => {
-                                            if (isDisabled) return;
+                                            onClick={() => {
+                                                if (isDisabled) return;
 
-                                            if (isChecked) {
-                                                setSelectedVoucher(null);
-                                                setDiscountAmount(0);
-                                                return;
-                                            }
+                                                if (isChecked) {
+                                                    setSelectedVoucher(null);
+                                                    setDiscountAmount(0);
+                                                    return;
+                                                }
 
-                                            setSelectedVoucher(voucher);
+                                                setSelectedVoucher(voucher);
 
-                                            let discount = 0;
-                                            if (voucher.discount_type === 'fixed') {
-                                                discount = parseFloat(voucher.value);
-                                            } else {
-                                                discount = Math.min(
-                                                    totalSelectedAmount * parseFloat(voucher.value) / 100,
-                                                    voucher.max_discount
-                                                        ? parseFloat(voucher.max_discount)
-                                                        : Infinity
-                                                );
-                                            }
-                                            setDiscountAmount(discount);
-                                        }}
-                                    >
-                                        {/* Badge góc trên phải */}
-                                        {isChecked && (
-                                            <div className="absolute top-0 right-0">
-                                                <div className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                                                    ✓ Đang chọn
+                                                let discount = 0;
+                                                if (voucher.discount_type === 'fixed') {
+                                                    discount = parseFloat(voucher.value);
+                                                } else {
+                                                    discount = Math.min(
+                                                        totalSelectedAmount * parseFloat(voucher.value) / 100,
+                                                        voucher.max_discount
+                                                            ? parseFloat(voucher.max_discount)
+                                                            : Infinity
+                                                    );
+                                                }
+                                                setDiscountAmount(discount);
+                                            }}
+                                        >
+                                            {/* Badge góc trên phải */}
+                                            {isChecked && (
+                                                <div className="absolute top-0 right-0">
+                                                    <div className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                                                        ✓ Đang chọn
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
 
-                                        <div className="flex items-center p-4">
-                                            {/* Icon bên trái */}
-                                            <div className={`
+                                            {isBest && !isChecked && (
+                                                <div className="absolute top-0 right-0">
+                                                    <div className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                                                        ⭐ Lựa chọn tốt nhất
+                                                    </div>
+                                                </div>
+                                            )}
+
+
+                                            <div className="flex items-center p-4">
+                                                {/* Icon bên trái */}
+                                                <div className={`
                                             flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center mr-4
                                             ${isDisabled ? 'bg-gray-200' : 'bg-gradient-to-br from-orange-400 to-red-500'}
                                         `}>
-                                                <GiftOutlined className="text-white text-2xl" />
-                                            </div>
-
-                                            {/* Nội dung chính */}
-                                            <div className="flex-1 min-w-0">
-                                                {/* Mã code */}
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="inline-block bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold px-3 py-1 rounded-md text-sm">
-                                                        {voucher.code}
-                                                    </span>
-                                                    <p
-                                                        className={
-                                                            voucher.remaining_usage === 0
-                                                                ? "text-red-500 font-semibold"
-                                                                : "text-green-600"
-                                                        }
-                                                    >
-                                                        {voucher.remaining_usage === 0
-                                                            ? "Hết lượt"
-                                                            : `Còn ${voucher.remaining_usage} lượt`}
-                                                    </p>
-
+                                                    <GiftOutlined className="text-white text-2xl" />
                                                 </div>
 
-                                                {/* Mô tả */}
-                                                <div className="font-semibold text-gray-800 mb-2">
-                                                    {voucher.description}
-                                                </div>
-
-                                                {/* Chi tiết giảm giá */}
-                                                <div className="flex flex-wrap gap-3 text-xs text-gray-600 mb-2">
-                                                    <span className="flex items-center gap-1">
-                                                        <span className="font-medium">Giảm:</span>
-                                                        <span className="text-orange-600 font-bold">
-                                                            {voucher.discount_type === 'percent'
-                                                                ? `${voucher.value}%`
-                                                                : `${parseFloat(voucher.value).toLocaleString()}đ`}
+                                                {/* Nội dung chính */}
+                                                <div className="flex-1 min-w-0">
+                                                    {/* Mã code */}
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className="inline-block bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold px-3 py-1 rounded-md text-sm">
+                                                            {voucher.code}
                                                         </span>
-                                                    </span>
+                                                        <p
+                                                            className={
+                                                                voucher.remaining_usage === 0
+                                                                    ? "text-red-500 font-semibold"
+                                                                    : "text-green-600"
+                                                            }
+                                                        >
+                                                            {voucher.remaining_usage === 0
+                                                                ? "Hết lượt"
+                                                                : `Còn ${voucher.remaining_usage} lượt`}
+                                                        </p>
 
-                                                    {voucher.max_discount && (
+                                                    </div>
+
+                                                    {/* Mô tả */}
+                                                    <div className="font-semibold text-gray-800 mb-2">
+                                                        {voucher.description}
+                                                    </div>
+
+                                                    {/* Chi tiết giảm giá */}
+                                                    <div className="flex flex-wrap gap-3 text-xs text-gray-600 mb-2">
                                                         <span className="flex items-center gap-1">
-                                                            <span className="font-medium">Tối đa:</span>
+                                                            <span className="font-medium">Giảm:</span>
                                                             <span className="text-orange-600 font-bold">
-                                                                {parseFloat(voucher.max_discount).toLocaleString()}đ
+                                                                {voucher.discount_type === 'percent'
+                                                                    ? `${voucher.value}%`
+                                                                    : `${parseFloat(voucher.value).toLocaleString()}đ`}
                                                             </span>
                                                         </span>
+
+                                                        {voucher.max_discount && (
+                                                            <span className="flex items-center gap-1">
+                                                                <span className="font-medium">Tối đa:</span>
+                                                                <span className="text-orange-600 font-bold">
+                                                                    {parseFloat(voucher.max_discount).toLocaleString()}đ
+                                                                </span>
+                                                            </span>
+                                                        )}
+
+                                                        <span className="flex items-center gap-1">
+                                                            <span className="font-medium">Đơn tối thiểu:</span>
+                                                            <span className="text-blue-600 font-bold">
+                                                                {parseFloat(voucher.min_order_value).toLocaleString()}đ
+                                                            </span>
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="text-xs text-gray-500">
+                                                        Sẽ giảm: <span className="font-semibold text-red-500">
+                                                            {getVoucherDiscountValue(voucher).toLocaleString()}đ
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Thời gian áp dụng */}
+                                                    <div className="text-xs text-gray-500">
+                                                        📅 HSD: {voucher.start_date} - {voucher.end_date}
+                                                    </div>
+
+                                                    {/* Tags trạng thái */}
+                                                    {isDisabled && (
+                                                        <div className="mt-2">
+                                                            {isExpired ? (
+                                                                <Tag color="red">⏰ Đã hết hạn</Tag>
+                                                            ) : isOutOfUsage ? (
+                                                                <Tag color="volcano">🚫 Đã hết lượt sử dụng</Tag>
+                                                            ) : isNotEnoughOrder ? (
+                                                                <Tag color="orange">
+                                                                    ⚠️ Đơn hàng chưa đủ {parseFloat(voucher.min_order_value).toLocaleString()}đ
+                                                                </Tag>
+                                                            ) : null}
+                                                        </div>
                                                     )}
 
-                                                    <span className="flex items-center gap-1">
-                                                        <span className="font-medium">Đơn tối thiểu:</span>
-                                                        <span className="text-blue-600 font-bold">
-                                                            {parseFloat(voucher.min_order_value).toLocaleString()}đ
-                                                        </span>
-                                                    </span>
                                                 </div>
 
-                                                {/* Thời gian áp dụng */}
-                                                <div className="text-xs text-gray-500">
-                                                    📅 HSD: {voucher.start_date} - {voucher.end_date}
+                                                {/* Radio button bên phải */}
+                                                <div className="flex-shrink-0 ml-4">
+                                                    <Radio
+                                                        checked={isChecked}
+                                                        disabled={isDisabled}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
                                                 </div>
-
-                                                {/* Tags trạng thái */}
-                                                {isDisabled && (
-                                                    <div className="mt-2">
-                                                        {isExpired ? (
-                                                            <Tag color="red">⏰ Đã hết hạn</Tag>
-                                                        ) : isOutOfUsage ? (
-                                                            <Tag color="volcano">🚫 Đã hết lượt sử dụng</Tag>
-                                                        ) : isNotEnoughOrder ? (
-                                                            <Tag color="orange">
-                                                                ⚠️ Đơn hàng chưa đủ {parseFloat(voucher.min_order_value).toLocaleString()}đ
-                                                            </Tag>
-                                                        ) : null}
-                                                    </div>
-                                                )}
-
-                                            </div>
-
-                                            {/* Radio button bên phải */}
-                                            <div className="flex-shrink-0 ml-4">
-                                                <Radio
-                                                    checked={isChecked}
-                                                    disabled={isDisabled}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
                         </div>
 
                         {/* Footer buttons */}

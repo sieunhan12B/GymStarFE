@@ -77,6 +77,8 @@ const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isUserOpen, setIsUserOpen] = useState(false);
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Search
   const [keyword, setKeyword] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -166,9 +168,7 @@ const Header = () => {
   const renderMenuLeftHeader = () => {
     return (
       <>
-        <div
-          className="flex items-center h-full w-1/3"
-        >
+        <div className="hidden lg:flex items-center h-full w-1/3">
           <nav className="space-x-6 h-full flex items-center">
 
             {/* New */}
@@ -233,8 +233,7 @@ const Header = () => {
   const renderContentRightHeader = () => {
     return (
       <>
-        <div className="flex items-center space-x-6 w-1/3 justify-end">
-
+        <div className="flex items-center space-x-3 md:space-x-6 justify-end">
           {/* SEARCH */}
           <div className=" hidden md:block w-64">
             <Input
@@ -257,7 +256,7 @@ const Header = () => {
                 }`}
             >
               <div className="max-w-7xl mx-auto px-6 py-5">
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {suggestions.slice(0, 4).map((product) => {
                     const hoverStatus = product?.product_variants[0]?.size;
                     return (
@@ -551,10 +550,19 @@ const Header = () => {
             <div className="flex items-center justify-between h-16">
 
               {/* LEFT MENU */}
+              {/* MOBILE HAMBURGER */}
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden text-2xl font-bold"
+              >
+                ☰
+              </button>
+
+
               {renderMenuLeftHeader()}
 
               {/* LOGO */}
-              <div className="flex justify-center w-1/3">
+              <div className="flex justify-center sm:ml-6  flex-1 lg:w-1/3">
                 <Link to={path.home}>
                   <Image src={logo} preview={false} width={100} />
                 </Link>
@@ -566,8 +574,84 @@ const Header = () => {
           </div>
 
           {/* MEGA MENU */}
-          {renderCategoryDropDown()}
+          <div className="hidden lg:block">
+            {renderCategoryDropDown()}
+          </div>
 
+
+          {isMobileMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 bg-black/40 z-40"
+                onClick={() => setIsMobileMenuOpen(false)}
+              />
+
+              <div className="fixed top-0 left-0 w-72 h-full bg-white z-50 p-5 overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-lg">Danh mục</h3>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-xl"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* SEARCH MOBILE */}
+                <div className="mb-4">
+                  <Input
+                    placeholder="Tìm sản phẩm..."
+                    prefix={<SearchOutlined className="text-gray-400" />}
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    onPressEnter={() => {
+                      handleSearch();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="rounded-full"
+                  />
+                </div>
+
+                {/* MENU TĨNH */}
+                <Link
+                  to={path.newest}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-2 border-b font-bold text-red-500"
+                >
+                  NEW
+                </Link>
+
+                <Link
+                  to={path.bestSeller}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-2 border-b font-bold text-orange-500"
+                >
+                  BÁN CHẠY
+                </Link>
+
+                <Link
+                  to={path.sale}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-2 border-b font-bold text-pink-500"
+                >
+                  SALE
+                </Link>
+
+                {/* DANH MỤC ĐỘNG */}
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.category_id}
+                    to={buildCategoryUrl(cat)}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 border-b"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+
+            </>
+          )}
 
         </div>
       </header>

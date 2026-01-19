@@ -22,10 +22,10 @@ import { Avatar, Button, Image, Layout, Menu, Dropdown } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { path } from "@/common/path";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../../redux/userSlice";
+import { logout } from "@/redux/userSlice";
 import { NotificationContext } from "@/App";
 import Cookies from "js-cookie";
-import { clearCart } from "../../redux/cartSlice";
+import { clearCart } from "@/redux/cartSlice";
 
 // CONFIG: layout & menu config
 const { Header, Content, Footer, Sider } = Layout;

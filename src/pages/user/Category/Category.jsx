@@ -157,6 +157,7 @@ const Category = () => {
   const [category, setCategory] = useState();
   const [categoryFilter, setCategoryFilter] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // ================= REFS =================
   const listRef = useRef(null);
@@ -344,12 +345,11 @@ const Category = () => {
   });
 
   // Count products per category
-  const categoryCounts = categoryFilter.reduce((acc, cat) => {
-    acc[cat.category_id] = filterSellingProducts(products).filter(
-      p => p.category_id === cat.category_id
-    ).length;
+  const categoryCounts = products.reduce((acc, p) => {
+    acc[p.category_id] = (acc[p.category_id] || 0) + 1;
     return acc;
   }, {});
+
 
   // Chuyển ID danh mục đang được chọn → thành tên danh mục để hiện lên UI,"Tìm thấy 10 sản phẩm có danh mục "Áo thun, Áo sơ mi""
   const activeCategories = filters.categories
@@ -406,11 +406,23 @@ const Category = () => {
     });
   };
 
+  const parentCategoryCounts = groupedCategories.reduce((acc, parent) => {
+    if (!parent.children) return acc;
+
+    acc[parent.category_id] = parent.children.reduce(
+      (sum, child) => sum + (categoryCounts[child.category_id] || 0),
+      0
+    );
+
+    return acc;
+  }, {});
+
+
   // ======================= RENDER SECTIONS =======================
 
   // Sidebar filters
   const renderContentLeft = () => (
-    <aside className="hidden lg:block w-64 pt-24 flex-shrink-0">
+    <aside className="w-full lg:w-64 pt-6 lg:pt-24 flex-shrink-0">
       <div className="sticky top-20">
         <div className="flex flex-col h-full">
           <h2 className="font-bold text-lg mb-4 sticky top-0 bg-white z-10">
@@ -431,11 +443,16 @@ const Category = () => {
                   >
                     <input
                       type="checkbox"
-                      className="w-5 h-5 accent-black cursor-pointer"
+                      className="w-5 h-5 accent-black cursor-pointer" q
                       checked={filters.categories.includes(parent.category_id)}
                       onChange={() => toggleChildCategory(parent.category_id)}
                     />
-                    <span>{parent.name}</span>
+                    <span>
+                      {parent.name}
+                      <span className="ml-1 text-gray-400 text-sm">
+                        ({categoryCounts[parent.category_id] || 0})
+                      </span>
+                    </span>
                   </label>
                 );
               }
@@ -452,7 +469,7 @@ const Category = () => {
               return (
                 <div
                   key={parent.category_id}
-                  className="mb-4 rounded-lg p-3 transition-all"
+                  className="mb-4 rounded-lg  transition-all"
                 >
                   {/* CHA */}
                   <label className="flex items-center gap-3 font-semibold text-base cursor-pointer select-none">
@@ -465,7 +482,13 @@ const Category = () => {
                       }}
                       onChange={() => toggleParentCategory(childrenIds)}
                     />
-                    <span>{parent.name}</span>
+                    <span>
+                      {parent.name}
+                      <span className="ml-1 text-gray-400 text-sm">
+                        ({parentCategoryCounts[parent.category_id] || 0})
+
+                      </span>
+                    </span>
                   </label>
 
                   {/* CON */}
@@ -481,7 +504,12 @@ const Category = () => {
                           checked={filters.categories.includes(child.category_id)}
                           onChange={() => toggleChildCategory(child.category_id)}
                         />
-                        <span>{child.name}</span>
+                        <span>
+                          {child.name}
+                          <span className="ml-1 text-gray-400 text-sm">
+                            ({categoryCounts[child.category_id] || 0})
+                          </span>
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -681,13 +709,35 @@ const Category = () => {
           )}
         </div>
 
+        {/* Mobile Filter + Sort bar */}
+        <div className="flex lg:hidden justify-between items-center mb-4 gap-2">
+          <button
+            onClick={() => setIsMobileFilterOpen(true)}
+            className="flex-1 border border-gray-300 py-[3px] rounded-md font-medium"
+          >
+            Bộ lọc
+          </button>
+
+          <Select
+            value={sortBy}
+            onChange={(value) => setSortBy(value)}
+            className="flex-1"
+            size="middle"
+          >
+            <Option value="featured">Tất cả</Option>
+            <Option value="price-low">Giá: thấp → cao</Option>
+            <Option value="price-high">Giá: cao → thấp</Option>
+            <Option value="newest">Mới nhất</Option>
+          </Select>
+        </div>
+
         {/* Sort */}
         <div className="hidden lg:flex justify-end mb-4 gap-4 items-center" >
           <span className="text-sm font-medium">Sắp xếp:</span>
           <Select
             value={sortBy}
             onChange={(value) => setSortBy(value)}
-            className="w-56"
+            className="w-56 "
             size="middle"
           >
             <Option value="featured">Tất cả</Option>
@@ -776,10 +826,42 @@ const Category = () => {
           </p>
         </div>
 
-        <div className="flex  gap-8">
-          {renderContentLeft()}
+        <div className="flex gap-8">
+          {/* <div className="hidden lg:block"> */}
+            {renderContentLeft()}
+          {/* </div> */}
+
           {renderContentRight()}
         </div>
+
+        {/* MOBILE FILTER DRAWER */}
+        {isMobileFilterOpen && (
+          <>
+            {/* Overlay */}
+            <div
+              className="fixed inset-0 bg-black/40 z-40"
+              onClick={() => setIsMobileFilterOpen(false)}
+            />
+
+            {/* Bottom Sheet */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white z-50 rounded-t-2xl max-h-[70vh] overflow-y-auto p-4 animate-slideUp">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-lg">Bộ lọc</h3>
+                <button
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div>
+                {renderContentLeft()}
+              </div>
+
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // ======================= UI LIBRARIES =======================
-import { Button, Modal, Radio, Input, Tooltip, Form, Tag } from 'antd';
+import { Button, Modal, Radio, Input, Tooltip, Form, Tag, Select } from 'antd';
 import {
     InfoCircleOutlined,
     StarOutlined,
@@ -71,6 +71,7 @@ const Checkout = () => {
     const [selectedVoucher, setSelectedVoucher] = useState(null);
     const [openVoucherModal, setOpenVoucherModal] = useState(false);
     const [voucherCode, setVoucherCode] = useState("");
+    const [voucherSort, setVoucherSort] = useState("default");
 
     // ======================= STATE: ADDRESS MODAL =======================
     const [openAddEditModal, setOpenAddEditModal] = useState(false);
@@ -211,6 +212,27 @@ const Checkout = () => {
         showNotification("Đã hủy voucher", "info");
     };
 
+    const getVoucherDiscountValue = (voucher) => {
+        if (!voucher) return 0;
+
+        const total = calculateTotalAfterProductDiscount();
+
+        if (voucher.discount_type === 'percent') {
+            const discount = (total * parseFloat(voucher.value)) / 100;
+            return Math.min(discount, parseFloat(voucher.max_discount || discount));
+        } else {
+            return parseFloat(voucher.value);
+        }
+    };
+
+    const bestVoucher = vouchers.reduce((best, current) => {
+        if (!best) return current;
+
+        const bestValue = getVoucherDiscountValue(best);
+        const currentValue = getVoucherDiscountValue(current);
+
+        return currentValue > bestValue ? current : best;
+    }, null);
 
     // ======================= ADDRESS HANDLERS =======================
     const handleSubmitAddress = async (values) => {
@@ -646,61 +668,97 @@ const Checkout = () => {
                     footer={null}
                     width={600}
                 >
+                    <div className="mb-3 flex justify-end">
+                        <Select
+                            value={voucherSort}
+                            onChange={(value) => setVoucherSort(value)}
+                            style={{ width: 240 }}
+                            options={[
+                                { value: "default", label: "Mặc định" },
+                                { value: "value_desc", label: "Giảm nhiều nhất → ít nhất" },
+                                { value: "value_asc", label: "Giảm ít nhất → nhiều nhất" },
+                            ]}
+                        />
+                    </div>
                     <div className="space-y-3 max-h-[60vh] overflow-auto">
                         {vouchers.length === 0 ? (
                             <p className="text-center text-gray-500 py-8">Không có mã giảm giá khả dụng</p>
                         ) : (
-                            vouchers.map(voucher => {
-                                const validation = isVoucherValid(voucher);
-                                const isSelected = selectedVoucher?.promotion_id === voucher.promotion_id;
+                            [...vouchers]
+                                .sort((a, b) => {
+                                    if (voucherSort === "value_desc") {
+                                        return getVoucherDiscountValue(b) - getVoucherDiscountValue(a);
+                                    }
+                                    if (voucherSort === "value_asc") {
+                                        return getVoucherDiscountValue(a) - getVoucherDiscountValue(b);
+                                    }
+                                    return 0;
+                                })
+                                .map(voucher => {
+                                    const validation = isVoucherValid(voucher);
+                                    const isSelected = selectedVoucher?.promotion_id === voucher.promotion_id;
+                                    const isBest = bestVoucher?.promotion_id === voucher.promotion_id;
 
-                                return (
-                                    <div
-                                        key={voucher.promotion_id}
-                                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${!validation.valid
-                                            ? 'bg-gray-100 border-gray-300 opacity-60 cursor-not-allowed'
-                                            : isSelected
-                                                ? 'border-orange-500 bg-orange-50'
-                                                : 'border-gray-200 hover:border-orange-400'
-                                            }`}
-                                        onClick={() => validation.valid && handleApplyVoucher(voucher)}
-                                    >
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <Tag color="orange" className="text-sm font-bold">{voucher.code}</Tag>
-                                                {isSelected && <Tag color="green">Đang chọn</Tag>}
+                                    return (
+                                        <div
+                                            key={voucher.promotion_id}
+                                            className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${!validation.valid
+                                                ? 'bg-gray-100 border-gray-300 opacity-60 cursor-not-allowed'
+                                                : isSelected
+                                                    ? 'border-orange-500 bg-orange-50'
+                                                    : 'border-gray-200 hover:border-orange-400'
+                                                }`}
+                                            onClick={() => validation.valid && handleApplyVoucher(voucher)}
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Tag color="orange" className="text-sm font-bold">{voucher.code}</Tag>
+
+                                                    {isSelected && <Tag color="green">Đang chọn</Tag>}
+
+                                                    {isBest && !isSelected && (
+                                                        <Tag color="gold">⭐ Lựa chọn tốt nhất</Tag>
+                                                    )}
+                                                </div>
+
+                                                <div className="text-xs text-gray-500">
+                                                    Còn {voucher.remaining_usage} lượt
+                                                </div>
                                             </div>
+
+                                            <div className="text-sm font-medium mb-2">{voucher.description}</div>
+
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                Sẽ giảm:
+                                                <span className="font-semibold text-red-500 ml-1">
+                                                    {formatPrice(getVoucherDiscountValue(voucher))}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 text-xs text-gray-600 mb-2">
+                                                <span>
+                                                    Giảm: {voucher.discount_type === 'percent'
+                                                        ? `${voucher.value}%`
+                                                        : formatPrice(voucher.value)}
+                                                </span>
+                                                {voucher.max_discount && (
+                                                    <span>Tối đa: {formatPrice(voucher.max_discount)}</span>
+                                                )}
+                                                <span>Đơn tối thiểu: {formatPrice(voucher.min_order_value)}</span>
+                                            </div>
+
                                             <div className="text-xs text-gray-500">
-                                                Còn {voucher.remaining_usage} lượt
+                                                HSD: {voucher.start_date} - {voucher.end_date}
                                             </div>
-                                        </div>
 
-                                        <div className="text-sm font-medium mb-2">{voucher.description}</div>
-
-                                        <div className="flex items-center gap-4 text-xs text-gray-600 mb-2">
-                                            <span>
-                                                Giảm: {voucher.discount_type === 'percent'
-                                                    ? `${voucher.value}%`
-                                                    : formatPrice(voucher.value)}
-                                            </span>
-                                            {voucher.max_discount && (
-                                                <span>Tối đa: {formatPrice(voucher.max_discount)}</span>
+                                            {!validation.valid && (
+                                                <div className="mt-2 text-xs text-red-500 font-medium">
+                                                    {validation.message}
+                                                </div>
                                             )}
-                                            <span>Đơn tối thiểu: {formatPrice(voucher.min_order_value)}</span>
                                         </div>
-
-                                        <div className="text-xs text-gray-500">
-                                            HSD: {voucher.start_date} - {voucher.end_date}
-                                        </div>
-
-                                        {!validation.valid && (
-                                            <div className="mt-2 text-xs text-red-500 font-medium">
-                                                {validation.message}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })
+                                    );
+                                })
                         )}
                     </div>
                 </Modal>

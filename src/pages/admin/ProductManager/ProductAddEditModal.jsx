@@ -39,9 +39,7 @@ const BASIC_COLORS = [
     "Trắng",
     "Xám",
     "Nâu",
-
 ];
-
 
 
 const ProductAddEditModal = ({
